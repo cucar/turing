@@ -1,0 +1,4 @@
+--require ./common/tests/tests.js
+--ui bdd
+--exit
+--timeout 5000
