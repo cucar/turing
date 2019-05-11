@@ -20,7 +20,7 @@ global.callApi = async function(endpoint, args = {}, method = 'GET', headers = {
 	// call the api and return the results - it may be get or post
 	let response;
 	if (method === 'POST' || method === 'PUT') {
-		response = await fetch(`http://localhost:3000/${endpoint}`, {
+		response = await fetch(`http://localhost:3000/api/${endpoint}`, {
 			method: method,
 			body: JSON.stringify(args),
 			headers: Object.assign({
@@ -29,7 +29,7 @@ global.callApi = async function(endpoint, args = {}, method = 'GET', headers = {
 			}, headers),
 		});
 	} else if (method === 'GET' || method === 'DELETE') {
-		response = await fetch(`http://localhost:3000/${endpoint}?${queryString.stringify(args)}`, {
+		response = await fetch(`http://localhost:3000/api/${endpoint}?${queryString.stringify(args)}`, {
 			method: method,
 			headers: Object.assign({
 				'Content-Type': 'application/json',

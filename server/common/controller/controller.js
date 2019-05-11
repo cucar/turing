@@ -15,16 +15,16 @@ class Controller {
 		let object = this;
 		let objectName = this.constructor.name.toLowerCase();
 		api.use(async function(ctx, next) {
-
+			
 			// create new object for the request
 			let handlerObject = _.cloneDeep(object);
 
 			// set reference to koa in this object and various useful objects in koa
 			handlerObject.koa = ctx;
-
+			
 			// set reference to this object in koa
 			ctx[objectName] = handlerObject;
-
+			
 			// prepare an interface for koa to return the controller based on its name - this would also be implemented by the job class, which is the other possible host we may have
 			handlerObject.koa.getController = function(controller) { return this[controller]; };
 
@@ -35,7 +35,7 @@ class Controller {
 		// setup the routes for the object - default method is GET
 		for (let route of this.routes()) {
 			const method = (_.get(route, 'method') || 'GET').toLowerCase();
-			router[method](route.path, ctx => ctx[objectName][route.handler.name](ctx));
+			router[method](route.path, (ctx, next) => ctx[objectName][route.handler.name](ctx, next));
 		}
 	}
 
@@ -133,9 +133,9 @@ class Controller {
 	/*
 	 * validate required fields
 	 */
-	validateRequired(fields, object) {
+	validateRequired(code, fields, object) {
 		for (let field of fields)
-			if (!(field in (object || this.params))) this.throw(`${field} required.`);
+			if (!(field in (object || this.params))) this.throw({ code: code, message: 'The field(s) are/is required.', field: field });
 	}
 
 	/**

@@ -174,7 +174,7 @@ async function getDatabaseConnection(multipleStatements, noDatabase) {
 
 		// now go through the columns and convert booleans as needed
 		for (let col of result[1]) if (col.columnType === 1 && col.columnLength === 1) for (let row of result[0]) row[col.name] = (row[col.name] === 1);
-
+		
 		// if there are no results, just return an empty array - otherwise the results are located in the first element of the array
 		if (result[0]) return result[0]; else return [];
 	};
@@ -207,7 +207,37 @@ async function getDatabaseConnection(multipleStatements, noDatabase) {
 		results.forEach(function (row) { assocResults[row[Object.keys(row)[0]]] = row[Object.keys(row)[1]]; });
 		return assocResults;
 	};
-
+	
+	/*
+	 * function to call a stored procedure that returns a result set
+	 */
+	db.selectAllSP = async function(sp, params) {
+		
+		// execute the stored procedure and get the results
+		const result = await this.query(`call ${sp}(${params.map(() => '?').join(',')})`, params);
+		
+		// now go through the columns and convert booleans as needed
+		for (let col of result[1][0]) if (col.columnType === 1 && col.columnLength === 1) for (let row of result[0][0]) row[col.name] = (row[col.name] === 1);
+		
+		// if there are no results, just return an empty array - otherwise the results are located in the first element of the array
+		if (result[0][0]) return result[0][0]; else return [];
+	};
+	
+	/*
+	 * function to return first row from a select query
+	 */
+	db.selectRowSP = async function(sp, params) {
+		
+		// get all the records coming from select SQL
+		const rows = await this.selectAllSP(sp, params);
+		
+		// if there are no rows, return false;
+		if (!rows[0]) return false;
+		
+		// return the row
+		return rows[0];
+	};
+	
 	/*
 	 * function to return first row from a select query
 	 */

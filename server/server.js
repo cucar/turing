@@ -1,7 +1,6 @@
 const _ = require('lodash');
 const Koa = require('koa');
-const koaRouter = require('koa-router');
-const koaBody = require('koa-body');
+const KoaRouter = require('koa-router');
 const koaBodyParser = require('koa-bodyparser');
 const koaBunyanLogger = require('koa-bunyan-logger');
 const bunyanLogger = require('bunyan');
@@ -35,7 +34,6 @@ for (let controllerFolderDir of controllerFoldersDir) {
 
 // initialize and export application
 const api = new Koa();
-api.use(koaBody({ jsonLimit: '50mb', multipart: true }));
 
 // setup logging for errors
 api.use(koaBunyanLogger(bunyanLogger.createLogger({ name: 'turing', streams: [ { type: 'rotating-file', path: './log/api-error.log', level: 'error', period: '1d', count: 7 } ] })));
@@ -51,10 +49,13 @@ function handleError(err, ctx) {
 	ctx.status = 400;
 
 	// return error code and message with HTTP status code
-	ctx.body = { code: 'SRV_01', message: (err.message || 'Unknown error') };
+	ctx.body = { code: (err.code || 'SRV_01'), message: (err.message || 'Unknown error') };
+	
+	// add field detail if given
+	if (err.field) ctx.body.field = err.field;
 
-	// add stack trace in development
-	if ((api.env === 'dev') && err.stack) ctx.response.body.message += ` ${err.stack}`;
+	// add stack trace in development for unknown errors
+	if ((api.env === 'dev') && err.stack && !err.code) ctx.response.body.message += ` ${err.stack}`;
 
 	// save the error to the application error logs file
 	ctx.log.error(err);
@@ -75,9 +76,8 @@ api.use(async function(ctx, next) {
 // centralized standard error handling that does not go through the standard throw mechanisms - similar handling
 api.on('error', (err, ctx) => handleError(err, ctx));
 
-// parse json post request body - keep the limit at 50 mb - for emails, we allow attachments up to 15 mb
-// we set limit to 50 mb to be able to sync more customer's data from netsuite
-api.use(koaBodyParser({ jsonLimit: '50mb' }));
+// parse json post request body
+api.use(koaBodyParser());
 
 /**
  * quick access function for ip address
@@ -112,7 +112,7 @@ api.use(async function(ctx, next) {
 api.use(mysql.connect);
 
 // setup routes with every controller
-const router = koaRouter({ prefix: '/api' });
+const router = new KoaRouter({ prefix: '/api' });
 for (let controller of controllers) controller.setupRoutes(router, api);
 
 // now register the routes
