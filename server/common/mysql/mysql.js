@@ -275,11 +275,11 @@ async function getDatabaseConnection(multipleStatements, noDatabase) {
 
 		// prepare the insert SQL
 		let sql = `${(replace ? 'replace ' : 'insert ') + (ignoreDuplicates ? 'ignore ' : '')} into ${table} set `;
-		for (let field of fields) sql += ` ${field} = :${field},`;
+		for (let field of Object.keys(fields)) sql += ` ${field} = :${field},`;
 		sql = sql.slice(0, -1);
 
 		// if some of the fields are boolean, convert them to integers
-		for (let field of fields) if (typeof(fields[field]) === 'boolean') fields[field] = (fields[field] ? 1 : 0);
+		for (let field of Object.keys(fields)) if (typeof(fields[field]) === 'boolean') fields[field] = (fields[field] ? 1 : 0);
 
 		// execute the SQL and get the result in case the query returns an insert ID (for tables with auto_increment keys)
 		const result = await this.execute(sql, fields);
@@ -295,16 +295,16 @@ async function getDatabaseConnection(multipleStatements, noDatabase) {
 
 		// prepare the update sql statement
 		let sql = `update ${table} set `;
-		if (fields) for (let col of fields) if (col !== keyfield) sql += ` ${col} = :${col},`;
+		if (fields) for (let col of Object.keys(fields)) if (col !== keyfield) sql += ` ${col} = :${col},`;
 		if (constantfields) constantfields.forEach(function (col) { if (col !== keyfield) sql += ` ${col} = ${col},`; });
-		if (sqlfields) for (let col of sqlfields) if (col !== keyfield) sql += ` ${col} = ${sqlfields[col]},`;
+		if (sqlfields) for (let col of Object.keys(sqlfields)) if (col !== keyfield) sql += ` ${col} = ${sqlfields[col]},`;
 		if (keysfieldnewval) sql += ` ${keyfield} = :keyfieldnewval,`;
 		sql = sql.slice(0, -1);
 		sql += ` where ${keyfield} = :${keyfield}`;
 		// debug: console.log(sql);
 
 		// if some of the fields are boolean, convert them to integers
-		for (let field of fields) if (typeof(fields[field]) === 'boolean') fields[field] = (fields[field] ? 1 : 0);
+		for (let field of Object.keys(fields)) if (typeof(fields[field]) === 'boolean') fields[field] = (fields[field] ? 1 : 0);
 
 		// if the key field is getting updated, add it to the parameters
 		if (keysfieldnewval) fields.keyfieldnewval = keysfieldnewval;
