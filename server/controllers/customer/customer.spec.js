@@ -3,7 +3,6 @@
 	let testEmail = 'test@test.com';
 	let testPassword = 'Test1234!';
 	let testToken = ''; // will be filled out in login test
-	testToken = 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjdXN0b21lcl9pZCI6MTEsImlhdCI6MTU1NzYyNzA5NSwiZXhwIjoxNTU3NzEzNDk1fQ.ir2gBedP3tDzqw0h-sB0gL4VC_3NlvOp-8DMfmuofL4';
 	
 	it('should fail registration - missing password', async function() {
 		const response = await callApi('customers', { name: 'Test User', email: testEmail }, 'POST');
