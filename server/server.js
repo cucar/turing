@@ -45,8 +45,8 @@ api.use(koaBunyanLogger(bunyanLogger.createLogger({ name: 'turing', streams: [ {
  */
 function handleError(err, ctx) {
 
-	// if we handled the request successfully everything's ok we return 200 - otherwise return 400 status code for all errors
-	ctx.status = 400;
+	// if we handled the request successfully everything's ok we return 200 - otherwise return 400 status code for most errors - the only exception is authorization errors - those are 401
+	ctx.status = (err.code && err.code.startsWith('AUT') ? 401 : 400);
 
 	// return error code and message with HTTP status code
 	ctx.body = { code: (err.code || 'SRV_01'), message: (err.message || 'Unknown error') };

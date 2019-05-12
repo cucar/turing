@@ -2,7 +2,9 @@ const queryString = require('querystring');
 const fetch = require('node-fetch');
 
 // testing libraries
-global.should = require('chai').should();
+let chai = require('chai');
+chai.use(require('chai-string'));
+global.should = chai.should();
 global.sinon = require('sinon');
 global.mocha = require('mocha');
 global.describe = mocha.describe;

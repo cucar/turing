@@ -12,7 +12,11 @@
     "test": "mocha --opts mocha.opts ./**/*.spec.js"
   },
   "dependencies": {
+    "card-validator": "^6.1.0",
     "cross-env": "^5.2.0",
+    "email-validator": "^2.0.4",
+    "google-libphonenumber": "^3.2.2",
+    "jsonwebtoken": "^8.5.1",
     "koa": "^2.7.0",
     "koa-body": "^4.1.0",
     "koa-bodyparser": "^4.2.1",
@@ -21,10 +25,13 @@
     "lodash": "^4.17.11",
     "mysql2": "^1.6.5",
     "node-cleanup": "^2.1.2",
-    "nodemailer": "^6.1.1"
+    "nodemailer": "^6.1.1",
+    "password-validator": "^4.1.1",
+    "validator": "^10.11.0"
   },
   "devDependencies": {
     "chai": "^4.2.0",
+    "chai-string": "^1.5.0",
     "eslint": "^5.16.0",
     "mocha": "^6.1.4",
     "node-fetch": "^2.5.0",

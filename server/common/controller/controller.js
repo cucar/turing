@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const jwt = require('jsonwebtoken');
 const config = require('./../config/config');
 
 /*
@@ -22,12 +23,15 @@ class Controller {
 			// set reference to koa in this object and various useful objects in koa
 			handlerObject.koa = ctx;
 			
+			// prepare an interface for koa to return the controller based on its name
+			handlerObject.koa.getController = function(controller) { return this[controller]; };
+			
+			// set shared config in the controller
+			handlerObject.config = config;
+			
 			// set reference to this object in koa
 			ctx[objectName] = handlerObject;
 			
-			// prepare an interface for koa to return the controller based on its name - this would also be implemented by the job class, which is the other possible host we may have
-			handlerObject.koa.getController = function(controller) { return this[controller]; };
-
 			// follow on to the next route
 			await next();
 		});
@@ -35,17 +39,15 @@ class Controller {
 		// setup the routes for the object - default method is GET
 		for (let route of this.routes()) {
 			const method = (_.get(route, 'method') || 'GET').toLowerCase();
-			router[method](route.path, (ctx, next) => ctx[objectName][route.handler.name](ctx, next));
+			let routeMethod = (ctx, next) => ctx[objectName][route.handler.name](ctx, next);
+			if (route.auth) routeMethod = async (ctx, next) => {
+				await ctx[objectName].authenticate();
+				return ctx[objectName][route.handler.name](ctx, next);
+			};
+			router[method](route.path, routeMethod);
 		}
 	}
-
-	/*
-	 * getter for the config
-	 */
-	static get config() {
-		return config;
-	}
-
+	
 	/*
 	 * body setter - pass it on to the koa object body setter
 	 */
@@ -98,15 +100,15 @@ class Controller {
 	/*
 	 * returns the current customer information
 	 */
-	get customer() {
-		return this.koa.customer;
+	get customerInfo() {
+		return this.koa.customerInfo;
 	}
 
 	/*
 	 * sets the current user information
 	 */
-	set customer(customer) {
-		this.koa.customer = customer;
+	set customerInfo(customer) {
+		this.koa.customerInfo = customer;
 	}
 
 	/*
@@ -126,8 +128,8 @@ class Controller {
 	/**
 	 * throws an exception
 	 */
-	throw(err) {
-		this.koa.throw(err);
+	throw(code, message, field) {
+		this.koa.throw({ code, message, field });
 	}
 
 	/*
@@ -135,7 +137,7 @@ class Controller {
 	 */
 	validateRequired(code, fields, object) {
 		for (let field of fields)
-			if (!(field in (object || this.params))) this.throw({ code: code, message: 'The field(s) are/is required.', field: field });
+			if (!(field in (object || this.params))) this.throw(code, 'The field(s) are/is required.', field);
 	}
 
 	/**
@@ -168,7 +170,7 @@ class Controller {
 		else listCount = await this.db.select_val(`select count(*) from ${table} ${filtersSql}`, params);
 
 		// if the page number goes higher than the maximum count, return error
-		if (pageSize && pageNumber !== 1 && listCount <= (pageNumber - 1) * pageSize) this.throw(`Incorrect page number: ${pageNumber}`);
+		if (pageSize && pageNumber !== 1 && listCount <= (pageNumber - 1) * pageSize) this.throw('PAG_03', `Incorrect page number: ${pageNumber}`);
 
 		// prepare query parameters - add to existing parameters if there are any
 		let sqlParams = (params ? params : []);
@@ -186,7 +188,7 @@ class Controller {
 			${pageSize ? 'limit ?, ?' : ''}
 		`;
 		let listRecords = await this.db.selectAll(sql, sqlParams);
-		if (!listRecords) this.throw('No data in results');
+		if (!listRecords) this.throw('PAG_04', 'No data in results');
 
 		// in order to improve query performance, we sometimes do data transformations to list records after the data is retrieved
 		if (transformations) listRecords = _.map(listRecords, listRecord => _.merge(_.cloneDeep(listRecord), transformations(listRecord)));
@@ -198,6 +200,50 @@ class Controller {
 			list_records: listRecords
 		};
 	}
+	
+	/**
+	 * authentication for protected api calls - verifies that the session token sent is valid and not expired - should be created after login
+	 * @throws AUT_01 - No authorization header sent.
+	 * @throws AUT_02 - Authorization header does not have bearer.
+	 * @throws AUT_03 - Expired or malformed token. Please re-login.
+	 * @throws AUT_04 - Token does not contain customer id.
+	 * @throws AUT_05 - Invalid customer ID.
+	 */
+	async authenticate() {
+		
+		// check to make sure authorization header is sent with bearer scheme
+		if (!this.request.headers.hasOwnProperty('authorization')) this.throw('AUT_01', 'No authorization header sent.');
+		if (!this.request.headers.authorization.startsWith('Bearer ')) this.throw('AUT_02', 'Authorization header does not have bearer.');
+		
+		// get authentication token from header
+		let token = this.request.headers.authorization.substr(7);
+
+		// verify that the token is valid (signed by us and not expired)
+		let tokenData = '';
+		try {
+			tokenData = jwt.verify(token, this.config.token_encryption_key); // decoding token data - it should contain customer id
+		}
+		catch (ex) {
+			this.throw('AUT_03', 'Expired or malformed token. Please re-login.');
+		}
+		
+		// check to make sure token contains customer id
+		if (!tokenData.customer_id) this.throw('AUT_04', 'Token does not contain customer id.');
+		
+		// get customer info and save it in controllers
+		this.customerInfo = await this.getCustomerById(tokenData.customer_id);
+		
+		// if customer is not found, it's an invalid customer - reject
+		if (!this.customerInfo) this.throw('AUT_05', 'Invalid customer ID.');
+	}
+	
+	/*
+	 * returns customer information for a given customer ID
+	 */
+	getCustomerById(customerId) {
+		return this.db.selectRow('select * from customer where customer_id = ?', [ customerId ]);
+	}
+	
 }
 
 // export controller class
