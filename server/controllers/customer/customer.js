@@ -1,4 +1,5 @@
 const _ = require('lodash');
+const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const addressValidator = require('validator');
 const emailValidator = require('email-validator');
@@ -20,6 +21,8 @@ class Customer extends Controller {
 		return [
 			{ path: '/customers', method: 'POST', handler: this.register },
 			{ path: '/customers/login', method: 'POST', handler: this.login },
+			{ path: '/customers/facebook', method: 'POST', handler: this.loginViaFacebook },
+			{ path: '/customers/facebook/test', method: 'GET', handler: this.getFacebookTestToken },
 			{ path: '/customer', method: 'GET', handler: this.getCustomer, auth: true },
 			{ path: '/customer', method: 'PUT', handler: this.updateCustomer, auth: true },
 			{ path: '/customers/address', method: 'PUT', handler: this.updateCustomerAddress, auth: true },
@@ -70,6 +73,56 @@ class Customer extends Controller {
 		this.validateRequired('USR_02', [ 'email', 'password' ]);
 		
 		let customer = await this.getCustomerByEmail(this.param('email'));
+		
+		if (!customer) this.throw('USR_05', 'The email doesn\'t exist.');
+		
+		let token = jwt.sign({ customer_id: customer.customer_id }, this.config.token_encryption_key, { expiresIn: '24h' });
+		
+		this.body = {
+			customer: { schema: customer },
+			accessToken: `Bearer ${token}`,
+			expires_in: '24h'
+		};
+	}
+	
+	/**
+	 * returns a Facebook login dialog page
+	 */
+	getFacebookTestToken() {
+
+		const helloJS = fs.readFileSync(`${__dirname}../../../node_modules/hellojs/dist/hello.all.min.js`);
+		
+		this.body = `
+		<html>
+			<head>
+				<script>
+					
+					${helloJS}
+					
+					hello.init({ facebook: '252251124788822' }, { redirect_uri: 'redirect.html' });
+				</script>
+			</head>
+			<body>
+				<h1>Facebook Get Test Access Token</h1>
+				<button onclick="hello('facebook').login()">Facebook</button>
+			</body>
+		</html>
+		`;
+	}
+	
+	/**
+	 * login via Facebook request
+	 * @throws USR_02 - The field(s) are/is required.
+	 * @throws USR_05 - The email doesn't exist.
+	 */
+	async loginViaFacebook() {
+		
+		this.validateRequired('USR_02', [ 'access_token' ]);
+		
+		// get customer email by calling Facebook to get access token information
+		let customerEmail = 'test@test.com';
+		
+		let customer = await this.getCustomerByEmail(customerEmail);
 		
 		if (!customer) this.throw('USR_05', 'The email doesn\'t exist.');
 		
@@ -202,7 +255,9 @@ class Customer extends Controller {
 	 */
 	async getCustomerByEmail(email) {
 		// we could also do selectRowSP('customer_get_login_info', [ email ]) but that only returns 2 fields - it should probably be altered
-		return _.omit(await this.db.selectRow('select * from customer where email = ?', [ email ]), 'password');
+		let customer = _.omit(await this.db.selectRow('select * from customer where email = ?', [ email ]), 'password');
+		if (customer.credit_card) customer.credit_card = `XXXXXXXXXXXX${customer.credit_card.substr(-4)}`;
+		return customer;
 	}
 	
 }
