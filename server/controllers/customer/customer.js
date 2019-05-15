@@ -1,11 +1,11 @@
 const _ = require('lodash');
-const fs = require('fs');
 const jwt = require('jsonwebtoken');
 const addressValidator = require('validator');
 const emailValidator = require('email-validator');
 const passwordValidator = (new (require('password-validator'))()).is().min(8).is().max(100).has().uppercase().has().lowercase().has().digits().has().symbols();
 const phoneValidator = require('google-libphonenumber').PhoneNumberUtil.getInstance();
 const cardValidator = require('card-validator');
+const fetch = require('node-fetch');
 
 const Controller = require('../../common/controller/controller.js');
 
@@ -22,7 +22,6 @@ class Customer extends Controller {
 			{ path: '/customers', method: 'POST', handler: this.register },
 			{ path: '/customers/login', method: 'POST', handler: this.login },
 			{ path: '/customers/facebook', method: 'POST', handler: this.loginViaFacebook },
-			{ path: '/customers/facebook/test', method: 'GET', handler: this.getFacebookTestToken },
 			{ path: '/customer', method: 'GET', handler: this.getCustomer, auth: true },
 			{ path: '/customer', method: 'PUT', handler: this.updateCustomer, auth: true },
 			{ path: '/customers/address', method: 'PUT', handler: this.updateCustomerAddress, auth: true },
@@ -86,46 +85,27 @@ class Customer extends Controller {
 	}
 	
 	/**
-	 * returns a Facebook login dialog page
-	 */
-	getFacebookTestToken() {
-
-		const helloJS = fs.readFileSync(`${__dirname}../../../node_modules/hellojs/dist/hello.all.min.js`);
-		
-		this.body = `
-		<html>
-			<head>
-				<script>
-					
-					${helloJS}
-					
-					hello.init({ facebook: '252251124788822' }, { redirect_uri: 'redirect.html' });
-				</script>
-			</head>
-			<body>
-				<h1>Facebook Get Test Access Token</h1>
-				<button onclick="hello('facebook').login()">Facebook</button>
-			</body>
-		</html>
-		`;
-	}
-	
-	/**
 	 * login via Facebook request
+	 * TODO: this is not tested - it should work in theory but it takes too long to get a test Facebook access token in development. don't have time for it now but should test it out later.
 	 * @throws USR_02 - The field(s) are/is required.
 	 * @throws USR_05 - The email doesn't exist.
+	 * @throws USR_14 - Facebook email information could not be retrieved.
 	 */
 	async loginViaFacebook() {
 		
 		this.validateRequired('USR_02', [ 'access_token' ]);
 		
 		// get customer email by calling Facebook to get access token information
-		let customerEmail = 'test@test.com';
+		let facebookCustomer = await fetch(`https://graph.facebook.com/me?access_token=${this.params.access_token}`);
 		
-		let customer = await this.getCustomerByEmail(customerEmail);
-		
+		// error out if email cannot be retrieved from access token
+		if (!facebookCustomer.email) this.throw('USR_14', 'Facebook email information could not be retrieved.');
+
+		// check if we can find the customer from email
+		let customer = await this.getCustomerByEmail(facebookCustomer.email);
 		if (!customer) this.throw('USR_05', 'The email doesn\'t exist.');
-		
+
+		// create a token as usual as if the customer email was sent directly for login - no need for password authentication - Facebook did that
 		let token = jwt.sign({ customer_id: customer.customer_id }, this.config.token_encryption_key, { expiresIn: '24h' });
 		
 		this.body = {
