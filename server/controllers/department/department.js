@@ -24,10 +24,14 @@ class Department extends Controller {
 	
 	/**
 	 * get department info request handler
+	 * @throws DEP_01 - The ID is not a number.
+	 * @throws DEP_02 - No record with this ID.
 	 */
 	async getDepartment(ctx) {
-		console.log(ctx.params.department_id);
-		this.body = await this.db.selectRow('select * from department where department_id = ?', [ ctx.params.department_id ]);
+		if (isNaN(ctx.params.department_id)) this.throw('DEP_01', 'The ID is not a number.');
+		const department = await this.db.selectRow('select * from department where department_id = ?', [ ctx.params.department_id ]);
+		if (!department) this.throw('DEP_02', 'No record with this ID.');
+		this.body = department;
 	}
 
 }

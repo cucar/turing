@@ -8,6 +8,20 @@
 		response[0].description.should.exist;
 	});
 	
+	it('should error with non-numeric id when getting department', async function() {
+		const response = await callApi('departments/sdjk');
+		global.lastHttpResponseCode.should.equal(400);
+		response.code.should.equal('DEP_01');
+		response.message.should.equal('The ID is not a number.');
+	});
+	
+	it('should error with incorrect id when getting department', async function() {
+		const response = await callApi('departments/9873432');
+		global.lastHttpResponseCode.should.equal(400);
+		response.code.should.equal('DEP_02');
+		response.message.should.equal('No record with this ID.');
+	});
+
 	it('should get department', async function() {
 		const response = await callApi('departments/1');
 		global.lastHttpResponseCode.should.equal(200);
