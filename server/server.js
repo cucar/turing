@@ -26,7 +26,7 @@ for (let controllerFolderDir of controllerFoldersDir) {
 	const controllersFileNames = fs.readdirSync(path.resolve(controllersDir, controllerFolderDir));
 	controllers = controllers.concat(
 		_.map(
-			_.filter(controllersFileNames, fileName => !fileName.includes('.spec.js')),
+			_.filter(controllersFileNames, fileName => !fileName.includes('.spec.js') && !fileName.includes('.test.js') && fileName.endsWith('.js')),
 			fileName => require(path.resolve('./controllers', controllerFolderDir, fileName))
 		)
 	);

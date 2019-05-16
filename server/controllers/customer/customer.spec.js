@@ -58,7 +58,6 @@
 		response.accessToken.should.startWith('Bearer');
 		response.expires_in.should.equal('24h');
 		testToken = response.accessToken;
-		console.log(testToken);
 	});
 	
 	it('should fail getting customer info - no auth', async function() {

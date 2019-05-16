@@ -86,7 +86,6 @@ class Customer extends Controller {
 	
 	/**
 	 * login via Facebook request
-	 * TODO: this is not tested - it should work in theory but it takes too long to get a test Facebook access token in development. don't have time for it now but should test it out later.
 	 * @throws USR_02 - The field(s) are/is required.
 	 * @throws USR_05 - The email doesn't exist.
 	 * @throws USR_14 - Facebook email information could not be retrieved.
@@ -96,14 +95,15 @@ class Customer extends Controller {
 		this.validateRequired('USR_02', [ 'access_token' ]);
 		
 		// get customer email by calling Facebook to get access token information
-		let facebookCustomer = await fetch(`https://graph.facebook.com/me?access_token=${this.params.access_token}`);
+		let response = await fetch(`https://graph.facebook.com/me?access_token=${this.params.access_token}&fields=email`);
+		let facebookCustomer = await response.json();
 		
 		// error out if email cannot be retrieved from access token
 		if (!facebookCustomer.email) this.throw('USR_14', 'Facebook email information could not be retrieved.');
 
 		// check if we can find the customer from email
 		let customer = await this.getCustomerByEmail(facebookCustomer.email);
-		if (!customer) this.throw('USR_05', 'The email doesn\'t exist.');
+		if (_.isEmpty(customer)) this.throw('USR_05', 'The email does not exist.');
 
 		// create a token as usual as if the customer email was sent directly for login - no need for password authentication - Facebook did that
 		let token = jwt.sign({ customer_id: customer.customer_id }, this.config.token_encryption_key, { expiresIn: '24h' });
