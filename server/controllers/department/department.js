@@ -1,8 +1,5 @@
 const Controller = require('../../common/controller/controller.js');
 
-/**
- * department object to house department related functions
- */
 class Department extends Controller {
 
 	/**
@@ -10,8 +7,8 @@ class Department extends Controller {
 	 */
 	routes() {
 		return [
-			{ path: '/departments', method: 'GET', handler: this.getDepartments },
-			{ path: '/departments/:department_id', method: 'GET', handler: this.getDepartment },
+			{ path: '/departments', handler: this.getDepartments },
+			{ path: '/departments/:department_id', handler: this.getDepartment },
 		];
 	}
 	

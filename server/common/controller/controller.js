@@ -122,7 +122,7 @@ class Controller {
 	 * returns a parameter sent to the api
 	 */
 	param(field) {
-		return this.request.body[field];
+		return (this.request.body.hasOwnProperty(field) ? this.request.body[field] : this.request.query[field]);
 	}
 
 	/**
@@ -143,31 +143,34 @@ class Controller {
 	/**
 	 * lists handling - return a page from database directly to the client side
 	 */
-	async list(table, filters, columns, params, pageSize, groupBy, transformations) {
-
-		// page number and order inputs are required
-		this.validateRequired([ 'page_number', 'order_by' ]);
-		this.body = await this.getListData(table, filters, columns, params, pageSize, groupBy, transformations);
+	async list(table, filters, columns, params, groupBy, transformations) {
+		this.body = await this.getListData(table, filters, columns, params, groupBy, transformations);
 	}
 
 	/**
 	 * lists handling - return a page from database
+	 * @throws PAG_01 - Invalid order direction. Use asc or desc.
+	 * @throws PAG_02 - The field of order is not allow sorting.
+	 * @throws PAG_03 - Incorrect page number
 	 */
-	async getListData(table, filters, columns = '*', params, pageSize, groupBy, transformations) {
+	async getListData(table, columns = '*', filters, params, groupBy, transformations) {
 
 		// get the parameters
-		const pageNumber = this.param('page_number') || 1;
-		const orderBy = this.param('order_by');
-		const orderAscending = this.param('order_ascending');
+		const pageNumber = this.param('page') || 1;
+		const pageSize = parseInt(this.param('limit')) || 20;
+		const orderBy = this.param('order');
+		const orderDirection = this.param('direction');
 
+		// check inputs
+		if (orderDirection && orderDirection !== 'asc' && orderDirection !== 'desc') this.throw('PAG_01', 'Invalid order direction. Use asc or desc.');
+		
 		// prepare filters sql if any filters are given
-		let filtersSql = filters.join(' and ');
-		if (filtersSql) filtersSql = ` where ${filtersSql}`;
+		let filtersSql = (filters && filters.length > 0 ? ` where ${filters.join(' and ')}` : '');
 
 		// get record count for pagination - adjusted for grouped queries as needed
 		let listCount = 0;
-		if (groupBy || table.toLowerCase().includes('group by')) listCount = await this.db.select_val(`select count(*) from (select 1 as group_counts from ${table} ${filtersSql} ${groupBy ? groupBy : ''}) q`, params);
-		else listCount = await this.db.select_val(`select count(*) from ${table} ${filtersSql}`, params);
+		if (groupBy || table.toLowerCase().includes('group by')) listCount = await this.db.selectVal(`select count(*) from (select 1 as group_counts from ${table} ${filtersSql} ${groupBy ? groupBy : ''}) q`, params);
+		else listCount = await this.db.selectVal(`select count(*) from ${table} ${filtersSql}`, params);
 
 		// if the page number goes higher than the maximum count, return error
 		if (pageSize && pageNumber !== 1 && listCount <= (pageNumber - 1) * pageSize) this.throw('PAG_03', `Incorrect page number: ${pageNumber}`);
@@ -176,28 +179,35 @@ class Controller {
 		let sqlParams = (params ? params : []);
 		sqlParams.push((pageNumber - 1) * pageSize);
 		sqlParams.push(pageSize);
-
+		
 		// get the records in the page
 		let sql = `
 			select ${columns}
 			from ${table}
 			${filtersSql}
 			${groupBy ? groupBy : ''}
-			${orderBy ? `order by ${this.db.escape(orderBy).replace(/'/g, '')}
-			${orderAscending ? 'asc' : 'desc'}` : ''}
-			${pageSize ? 'limit ?, ?' : ''}
+			${orderBy ? `order by ${this.db.escape(orderBy).replace(/'/g, '')} ${orderDirection === 'asc' ? 'asc' : 'desc'}` : ''}
+			limit ?, ?
 		`;
-		let listRecords = await this.db.selectAll(sql, sqlParams);
-		if (!listRecords) this.throw('PAG_04', 'No data in results');
+		
+		// execute the sql and get the records
+		let listRecords = [];
+		try {
+			listRecords = await this.db.selectAll(sql, sqlParams);
+		}
+		catch (ex) {
+			// handle the order field errors in a specific error code - throw the other unexpected errors as usual
+			if (ex.code === 'ER_BAD_FIELD_ERROR' && ex.message.includes('Unknown column') && ex.message.includes('order clause')) this.throw('PAG_02', 'The field of order is not allow sorting.');
+			throw ex;
+		}
 
 		// in order to improve query performance, we sometimes do data transformations to list records after the data is retrieved
 		if (transformations) listRecords = _.map(listRecords, listRecord => _.merge(_.cloneDeep(listRecord), transformations(listRecord)));
 
 		// return the data in the page along with total count
 		return {
-			status: 'Success',
-			list_count: listCount,
-			list_records: listRecords
+			count: listCount,
+			rows: listRecords
 		};
 	}
 	

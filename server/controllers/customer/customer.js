@@ -9,9 +9,6 @@ const fetch = require('node-fetch');
 
 const Controller = require('../../common/controller/controller.js');
 
-/**
- * customer object to house customer related functions
- */
 class Customer extends Controller {
 
 	/**
