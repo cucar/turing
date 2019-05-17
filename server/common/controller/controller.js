@@ -152,17 +152,19 @@ class Controller {
 	 * @throws PAG_01 - Invalid order direction. Use asc or desc.
 	 * @throws PAG_02 - The field of order is not allow sorting.
 	 * @throws PAG_03 - Incorrect page number
+	 * @throws PAG_04 - Incorrect page size
 	 */
 	async getListData(table, columns = '*', filters, params, groupBy, transformations) {
 
 		// get the parameters
-		const pageNumber = this.param('page') || 1;
-		const pageSize = parseInt(this.param('limit')) || 20;
-		const orderBy = this.param('order');
-		const orderDirection = this.param('direction');
+		let pageNumber = this.param('page') || 1;
+		let pageSize = this.param('limit') || 20;
+		let orderBy = this.param('order');
+		let orderDirection = this.param('direction');
 
 		// check inputs
 		if (orderDirection && orderDirection !== 'asc' && orderDirection !== 'desc') this.throw('PAG_01', 'Invalid order direction. Use asc or desc.');
+		if (isNaN(pageSize)) this.throw('PAG_04', 'Invalid page size.'); else pageSize = parseInt(pageSize);
 		
 		// prepare filters sql if any filters are given
 		let filtersSql = (filters && filters.length > 0 ? ` where ${filters.join(' and ')}` : '');

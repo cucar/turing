@@ -1,7 +1,7 @@
 ﻿describe('Category Tests', function() {
 	
 	it('should error getting categories due to invalid order direction', async function() {
-		const response = await callApi('categories', { limit: 5, order: 'category_id', direction: 'bad' });
+		const response = await callApi('categories', { limit: 5, order: 'category_id', direction: 'bad_dir' });
 		global.lastHttpResponseCode.should.equal(400);
 		response.code.should.equal('PAG_01');
 		response.message.should.equal('Invalid order direction. Use asc or desc.');
@@ -20,7 +20,14 @@
 		response.code.should.equal('PAG_03');
 		response.message.should.include('Incorrect page number');
 	});
-
+	
+	it('should error getting categories due to sql injection attack', async function() {
+		const response = await callApi('categories', { limit: '5; truncate customer', order: 'category_id', direction: 'asc' });
+		global.lastHttpResponseCode.should.equal(400);
+		response.code.should.equal('PAG_04');
+		response.message.should.include('Invalid page size');
+	});
+	
 	it('should get categories', async function() {
 		const response = await callApi('categories');
 		global.lastHttpResponseCode.should.equal(200);
