@@ -26,9 +26,9 @@ class Department extends Controller {
 	 */
 	async getDepartment(ctx) {
 		if (isNaN(ctx.params.department_id)) this.throw('DEP_01', 'The ID is not a number.');
-		const department = await this.db.selectRow('select * from department where department_id = ?', [ ctx.params.department_id ]);
+		const department = await this.db.selectRowSP('catalog_get_department_details', [ ctx.params.department_id ]);
 		if (!department) this.throw('DEP_02', 'No record with this ID.');
-		this.body = department;
+		this.body = Object.assign(department, { department_id: parseInt(ctx.params.department_id) });
 	}
 
 }

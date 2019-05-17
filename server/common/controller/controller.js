@@ -143,8 +143,8 @@ class Controller {
 	/**
 	 * lists handling - return a page from database directly to the client side
 	 */
-	async list(table, filters, columns, params, groupBy, transformations) {
-		this.body = await this.getListData(table, filters, columns, params, groupBy, transformations);
+	async list(table, columns, filters, params, groupBy, transformations) {
+		this.body = await this.getListData(table, columns, filters, params, groupBy, transformations);
 	}
 
 	/**

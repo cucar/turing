@@ -209,12 +209,19 @@ async function getDatabaseConnection(multipleStatements, noDatabase) {
 	};
 	
 	/*
+	 * function to call a stored procedure
+	 */
+	db.executeSP = function(sp, params) {
+		return this.query(`call ${sp}(${params.map(() => '?').join(',')})`, params);
+	};
+	
+	/*
 	 * function to call a stored procedure that returns a result set
 	 */
 	db.selectAllSP = async function(sp, params) {
 		
 		// execute the stored procedure and get the results
-		const result = await this.query(`call ${sp}(${params.map(() => '?').join(',')})`, params);
+		const result = await this.executeSP(sp, params);
 		
 		// now go through the columns and convert booleans as needed
 		for (let col of result[1][0]) if (col.columnType === 1 && col.columnLength === 1) for (let row of result[0][0]) row[col.name] = (row[col.name] === 1);

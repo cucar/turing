@@ -26,7 +26,7 @@ class Category extends Controller {
 	 * @throws CAT_01 - No record with this ID.
 	 */
 	async getCategory(ctx) {
-		const category = await this.db.selectRow('select * from category where department_id = ?', [ ctx.params.category_id ]);
+		const category = await this.db.selectRow('select * from category where category_id = ?', [ ctx.params.category_id ]);
 		if (!category) this.throw('CAT_01', 'No record with this ID.');
 		this.body = category;
 	}
