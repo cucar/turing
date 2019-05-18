@@ -231,7 +231,7 @@ async function getDatabaseConnection(multipleStatements, noDatabase) {
 	};
 	
 	/*
-	 * function to return first row from a select query
+	 * function to return first row from a select query in a stored procedure
 	 */
 	db.selectRowSP = async function(sp, params) {
 		
@@ -243,6 +243,21 @@ async function getDatabaseConnection(multipleStatements, noDatabase) {
 		
 		// return the row
 		return rows[0];
+	};
+	
+	/*
+	 * function to return first column of the first row from a select query in a stored procedure
+	 */
+	db.selectValSP = async function(sp, params) {
+		
+		// get the first row coming from the Select SQL SP
+		const row = await this.selectRowSP(sp, params);
+		
+		// if there are no rows coming in the result, return false
+		if (!row) return false;
+		
+		// return the first column of the first row
+		return row[Object.keys(row)[0]];
 	};
 	
 	/*
