@@ -194,6 +194,10 @@ class Customer extends Controller {
 	
 	/**
 	 * update customer credit card request handler
+	 * Note: ideally we should use https://stripe.com/docs/saving-cards to tokenize the card and save it like that.
+	 * it's not clear what was asked in terms of saving the card - whether we should save token or raw card data.
+	 * keeping this call as-is (not differentiating whether it's a card or token) since it's not used for checkout at this time.
+	 * we may update it as we implement the purchase with saved card in front end.
 	 * @throws USR_02 - The field(s) are/is required.
 	 * @throws USR_08 - This is an invalid Credit Card.
 	 */
