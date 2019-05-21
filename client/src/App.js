@@ -1,5 +1,5 @@
 import React, { useEffect, Suspense } from 'react';
-import { mount, route } from 'navi';
+import { mount, route, lazy } from 'navi';
 import { Router, View } from 'react-navi';
 import CssBaseline from '@material-ui/core/CssBaseline';
 import { withStyles } from '@material-ui/core';
@@ -11,13 +11,20 @@ import Header from './header/header';
 import Nav from './nav/nav';
 import Footer from './footer/footer';
 import Home from './pages/home';
-import Catalog from './pages/catalog';
 
 function App() {
 	
 	const routes = mount({
 		'/': 		route({ title: 'Turing Home Page', view: <Home /> }),
-		'/catalog': route({ title: 'Turing Catalog Page', view: <Catalog /> })
+		'/catalog': lazy(() => import('./pages/catalog')),
+		'/product': lazy(() => import('./pages/product')),
+		'/cart': lazy(() => import('./pages/cart')),
+		'/shipping': lazy(() => import('./pages/shipping')),
+		'/review': lazy(() => import('./pages/review')),
+		'/payment': lazy(() => import('./pages/payment')),
+		'/checkout': lazy(() => import('./pages/checkout')),
+		'/account': lazy(() => import('./pages/account')),
+		'/order': lazy(() => import('./pages/order'))
 	});
 	
 	const theme = createMuiTheme({
