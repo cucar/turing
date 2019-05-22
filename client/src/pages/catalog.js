@@ -6,11 +6,12 @@ export default mount({
 	'/': route({ title: 'Turing Catalog Page', view: <Catalog /> })
 });
 
+/**
+ * shows the products in catalog
+ */
 function Catalog() {
-	return (
-		<div className="page">
-			<h1>Catalog</h1>
-			<LinkButton variant="contained" color="primary" href="/product">Product</LinkButton>
-		</div>
-	);
+	return (<>
+		<h1>Catalog</h1>
+		<LinkButton variant="contained" color="primary" href="/product">Product</LinkButton>
+	</>);
 }

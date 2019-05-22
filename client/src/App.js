@@ -1,4 +1,4 @@
-import React, { useEffect, Suspense } from 'react';
+import React, { Suspense } from 'react';
 import { mount, route, lazy } from 'navi';
 import { Router, View } from 'react-navi';
 import CssBaseline from '@material-ui/core/CssBaseline';
@@ -41,25 +41,22 @@ function App() {
 		}
 	});
 	
-	// testing data fetch from server
-	useEffect(() => {(async function() {
-		console.log(await (await fetch('/api/products')).json());
-	})()});
-
 	return (
 		<MuiThemeProvider theme={theme}>
 			<div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
 				<CssBaseline />
 				<div style={{flex: 1}}>
-					<Router routes={routes}>
-						<Layout>
-							<Suspense fallback={null}>
-								<Header />
-								<Nav />
-								<div style={{ padding: 20 }}><View /></div>
-							</Suspense>
-						</Layout>
-					</Router>
+					<div className="page">
+						<Router routes={routes}>
+							<Layout>
+								<Suspense fallback={null}>
+									<Header />
+									<Nav />
+									<div style={{ padding: 20 }}><View /></div>
+								</Suspense>
+							</Layout>
+						</Router>
+					</div>
 				</div>
 				<Footer />
 			</div>

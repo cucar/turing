@@ -6,11 +6,12 @@ export default mount({
 	'/': route({ title: 'Turing Review Page', view: <Review /> })
 });
 
+/**
+ * shows the list of products that are about to be purchased in checkout second step
+ */
 function Review() {
-	return (
-		<div className="page">
-			<h1>Review</h1>
-			<LinkButton variant="contained" color="primary" href="/payment">Payment</LinkButton>
-		</div>
-	);
+	return (<>
+		<h1>Review</h1>
+		<LinkButton variant="contained" color="primary" href="/payment">Payment</LinkButton>
+	</>);
 }

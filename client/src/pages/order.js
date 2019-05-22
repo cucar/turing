@@ -5,10 +5,11 @@ export default mount({
 	'/': route({ title: 'Turing Order Page', view: <Order /> })
 });
 
+/**
+ * shows order information for the logged in customer
+ */
 function Order() {
-	return (
-		<div className="page">
-			<h1>Order</h1>
-		</div>
-	);
+	return (<>
+		<h1>Order</h1>
+	</>);
 }

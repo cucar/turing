@@ -6,11 +6,12 @@ export default mount({
 	'/': route({ title: 'Turing Shipping Page', view: <Shipping /> })
 });
 
+/**
+ * shows the shipping information as checkout first step
+ */
 function Shipping() {
-	return (
-		<div className="page">
-			<h1>Shipping</h1>
-			<LinkButton variant="contained" color="primary" href="/review">Review</LinkButton>
-		</div>
-	);
+	return (<>
+		<h1>Shipping</h1>
+		<LinkButton variant="contained" color="primary" href="/review">Review</LinkButton>
+	</>);
 }

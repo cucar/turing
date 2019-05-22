@@ -6,11 +6,12 @@ export default mount({
 	'/': route({ title: 'Turing Product Page', view: <Product /> })
 });
 
+/**
+ * shows product details
+ */
 function Product() {
-	return (
-		<div className="page">
-			<h1>Product</h1>
-			<LinkButton variant="contained" color="primary" href="/cart">Cart</LinkButton>
-		</div>
-	);
+	return (<>
+		<h1>Product</h1>
+		<LinkButton variant="contained" color="primary" href="/cart">Cart</LinkButton>
+	</>);
 }

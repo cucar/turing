@@ -6,6 +6,8 @@
 		"@material-ui/core": "^4.0.0-rc.0",
 		"@material-ui/system": "^4.0.0-rc.0",
 		"navi": "^0.12.6",
+		"node-fetch": "^2.6.0",
+		"querystring": "^0.2.0",
 		"react": "^16.8.6",
 		"react-busy-indicator": "^1.0.0",
 		"react-dom": "^16.8.6",

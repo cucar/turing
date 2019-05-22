@@ -5,10 +5,11 @@ export default mount({
 	'/': route({ title: 'Turing Checkout Page', view: <Checkout /> })
 });
 
+/**
+ * shows the checkout page after order is placed
+ */
 function Checkout() {
-	return (
-		<div className="page">
-			<h1>Checkout</h1>
-		</div>
-	);
+	return (<>
+		<h1>Checkout</h1>
+	</>);
 }
