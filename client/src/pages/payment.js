@@ -1,8 +1,10 @@
 import React from 'react';
 import { mount, route } from 'navi';
+import Button from '@material-ui/core/Button';
 
 import { Api, ApiContext } from '../shared/api';
 import LinkButton from '../shared/linkButton';
+import callApi from '../utils/callApi';
 
 export default mount({
 	'/': route({ title: 'Turing Payment Page', view: <Payment /> })
@@ -18,6 +20,10 @@ function Payment() {
 		return (<div>{apiResponse.count}</div>);
 	};
 	
+	async function testApi() {
+		await callApi('products');
+	}
+	
 	return (<>
 		<h1>Payment</h1>
 		Api response:
@@ -28,6 +34,7 @@ function Payment() {
 		</div>
 		<br/>
 		
+		<Button variant="contained" color="primary" onClick={testApi}>Test API</Button> <br/><br/><br/>
 		<LinkButton variant="contained" color="primary" href="/checkout">Checkout</LinkButton>
 	</>);
 }

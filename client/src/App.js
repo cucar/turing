@@ -2,15 +2,15 @@ import React, { Suspense } from 'react';
 import { mount, route, lazy } from 'navi';
 import { Router, View } from 'react-navi';
 import CssBaseline from '@material-ui/core/CssBaseline';
-import { withStyles } from '@material-ui/core';
 import { createMuiTheme, MuiThemeProvider } from '@material-ui/core/styles';
 
 import './App.css';
-import Layout from './shared/layout'
 import Header from './header/header';
 import Nav from './nav/nav';
 import Footer from './footer/footer';
+import Notification from './footer/notification';
 import Home from './pages/home';
+import RouteLoader from './shared/routeLoader';
 
 function App() {
 	
@@ -40,28 +40,35 @@ function App() {
 			canvasColor: '#37474f'
 		}
 	});
-	
+
 	return (
 		<MuiThemeProvider theme={theme}>
 			<div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+				
 				<CssBaseline />
+				
 				<div style={{flex: 1}}>
 					<div className="page">
 						<Router routes={routes}>
-							<Layout>
+							<RouteLoader>
 								<Suspense fallback={null}>
 									<Header />
 									<Nav />
-									<div style={{ padding: 20 }}><View /></div>
+									<div style={{ padding: 20 }}>
+										<View />
+									</div>
 								</Suspense>
-							</Layout>
+							</RouteLoader>
 						</Router>
 					</div>
 				</div>
+				
 				<Footer />
+				
+				<Notification />
 			</div>
 		</MuiThemeProvider>
 	);
 }
 
-export default withStyles({ root: { flexGrow: 1 } })(App);
+export default App;
