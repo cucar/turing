@@ -9,22 +9,22 @@ import Header from './header/header';
 import Nav from './nav/nav';
 import Footer from './footer/footer';
 import Notification from './footer/notification';
-import Home from './pages/home';
+import Home from './pages/home/home';
 import RouteLoader from './shared/routeLoader';
 
 function App() {
 	
 	const routes = mount({
 		'/': 		route({ title: 'Turing Home Page', view: <Home /> }),
-		'/catalog': lazy(() => import('./pages/catalog')),
-		'/product': lazy(() => import('./pages/product')),
-		'/cart': lazy(() => import('./pages/cart')),
-		'/shipping': lazy(() => import('./pages/shipping')),
-		'/review': lazy(() => import('./pages/review')),
-		'/payment': lazy(() => import('./pages/payment')),
-		'/checkout': lazy(() => import('./pages/checkout')),
-		'/account': lazy(() => import('./pages/account')),
-		'/order': lazy(() => import('./pages/order'))
+		'/catalog': lazy(() => import('./pages/catalog/catalog')),
+		'/product': lazy(() => import('./pages/product/product')),
+		'/cart': lazy(() => import('./pages/cart/cart')),
+		'/shipping': lazy(() => import('./pages/shipping/shipping')),
+		'/review': lazy(() => import('./pages/review/review')),
+		'/payment': lazy(() => import('./pages/payment/payment')),
+		'/checkout': lazy(() => import('./pages/checkout/checkout')),
+		'/account': lazy(() => import('./pages/account/account')),
+		'/order': lazy(() => import('./pages/order/order'))
 	});
 	
 	const theme = createMuiTheme({

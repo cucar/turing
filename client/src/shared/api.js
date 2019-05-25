@@ -9,7 +9,11 @@ const ApiContext = React.createContext(null);
 
 /**
  * makes an api call and sets the state with the response so that it can be used in children
- */
+ * Usage:
+ * import { Api, ApiContext } from '../../shared/api';
+ * let showProducts = apiResponse => (<div>Api response: {apiResponse && apiResponse.count}</div>);
+ * <Api endpoint="products"><ApiContext.Consumer>{showProducts}</ApiContext.Consumer></Api>
+*/
 const Api = (props) => {
 
 	// api response and response received are not state variables because we don't want them to trigger render when they are changed
