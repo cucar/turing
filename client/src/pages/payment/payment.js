@@ -27,10 +27,11 @@ function Payment(props) {
 	const nameField = useRef(null);
 	
 	/**
-	 * executed upon component start - initialize stripe inputs and setup event handlers for them
+	 * executed after render - inject stripe inputs to the prepared div - the input field is in an iframe coming from stripe
+	 * it has to be from them to be able to do the tokenization call without CORS restrictions
 	 */
 	useEffect(() => {
-		stripeCardElement.current.mount('#card');
+		stripeCardElement.current.mount('#stripe-inputs');
 	}, [ props ]);
 	
 	/**
@@ -41,22 +42,26 @@ function Payment(props) {
 		// call stripe to tokenize the card
 		const { token, error } = await stripe.current.createToken(stripeCardElement.current, { name: nameField.current.value });
 		console.log(token, error);
-		if (error) alert('Adding card failed with error: ' + error.message);
+		if (error) { alert('Adding card failed with error: ' + error.message); return; }
 		
 		// this is a call setup for testing - normally the login would be done prior to coming to the payment page
-		const loginResponse = await callApi('/customers/login', { email: 'test@test.com', password: 'Test1234!' }, 'POST');
+		const loginResponse = await callApi('customers/login', { email: 'test@test.com', password: 'Test1234!' }, 'POST');
 		console.log(loginResponse);
+		if (!loginResponse) return;
 		
 		// this is a call setup for testing - normally the product would be added to the cart prior to coming to the payment page
 		const cartResponse = await callApi('shoppingcart/add', { cart_id: 'test', product_id: 1, attributes: 'L, Red' }, 'POST');
 		console.log(cartResponse);
+		if (!cartResponse) return;
 		
 		// now call our server to collect the charges - this method will call stripe to do that from the server side with the token
-		const checkoutResponse = await callApi('/orders', { cart_id: 'test', shipping_id: 1, tax_id: 1, token: token }, 'POST', { Authorization: loginResponse.accessToken });
+		// cart, shipping and tax IDs are test values - they would normally be entered and saved prior to coming to the payment page
+		const checkoutResponse = await callApi('orders', { cart_id: 'test', shipping_id: 1, tax_id: 1, stripe_token: token.id }, 'POST', { Authorization: loginResponse.accessToken });
 		console.log(checkoutResponse);
+		if (!checkoutResponse) return;
+
 		showSuccess('Checkout successful. Order ID: ' + checkoutResponse.order_id);
 		
-		// if (response.ok) console.log("Purchase Complete!")
 		// redirect to checkout page and show success message
 		
 	}, [ stripe ]);
@@ -65,7 +70,7 @@ function Payment(props) {
 		<div style={{ width: '50%', marginLeft: 'auto', marginRight: 'auto' }}>
 			<h1>Payment</h1>
 			<TextField label="Name" style={{ width: '100%' }} inputRef={nameField} />
-			<div id="card" style={{ paddingTop: 20, paddingBottom: 5, marginBottom: 15, borderBottom: '1px solid #bbbbbb' }} />
+			<div id="stripe-inputs" style={{ paddingTop: 20, paddingBottom: 5, marginBottom: 15, borderBottom: '1px solid #bbbbbb' }} />
 			<Button variant="contained" color="primary" onClick={checkout}>Checkout</Button>
 		</div>
 	);
