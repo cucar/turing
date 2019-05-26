@@ -1,5 +1,8 @@
 const Controller = require('../../common/controller/controller.js');
 
+// get stripe handle - using secret key (not publishable key) - got it from https://dashboard.stripe.com/account/apikeys
+const stripe = require('stripe')('sk_test_NjRQY4OeXsQD0ijJ7rbI4FNI00QLcA5CYY');
+
 class Order extends Controller {
 
 	/**
@@ -11,6 +14,7 @@ class Order extends Controller {
 			{ path: '/orders/inCustomer', handler: this.getCustomerOrders, auth: true },
 			{ path: '/orders/shortDetail/:order_id', handler: this.getOrderShortDetails, auth: true },
 			{ path: '/orders/:order_id', handler: this.getOrderProducts, auth: true },
+			{ path: '/orders/stripe/webhooks', method: 'POST', handler: this.postOrderEvent },
 		];
 	}
 	
@@ -44,9 +48,6 @@ class Order extends Controller {
 		
 		// we create the order ID initially to be able to send it to stripe but it is not finalized yet. if the charges don't succeed we will delete that order and leave the cart as-is.
 		try {
-			
-			// get stripe handle - using secret key (not publishable key) - got it from https://dashboard.stripe.com/account/apikeys
-			const stripe = require('stripe')('sk_test_NjRQY4OeXsQD0ijJ7rbI4FNI00QLcA5CYY');
 			
 			// stripe token is created on the client side from credit card data without coming to our server for PCI compliance - we collect the charges here with it
 			// in order to simulate declined card, just send a bad token - response should include error object with details
@@ -138,6 +139,91 @@ class Order extends Controller {
 		}
 		this.body = orders;
 	}
+	
+	/**
+	 * this endpoint is used by stripe to send event updates about an order (charged, refunded, etc.)
+	 * @throws ORD_05 - Cannot verify webhook stripe signature
+	 * @throws ORD_06 - Livemode not allowed in development.
+	 * @throws ORD_07 - Test transactions not allowed in production.
+	 * @throws ORD_08 - Event type not allowed.
+	 * @throws ORD_09 - Event order ID missing.
+	 * @throws ORD_10 - Event ID missing.
+	 */
+	async postOrderEvent() {
+		
+		// get the event sent in the webhook
+		const event = this.getStripeWebhookEvent();
+		// debug: const event = this.params;
+		
+		// check the event format to make sure it's something we can process
+		this.checkStripeEventFormat(event);
+		
+		// assign order and event IDs to local variables for better readability
+		const orderId = event.data.object.metadata.order_id;
+		const eventId = event.id;
+		
+		// check if the event was sent before - if so, ignore the duplicate request
+		const eventFound = await this.db.selectVal('select 1 from audit where order_id = ? and code = ?', [ orderId, eventId ]);
+		if (eventFound) {
+			this.body = { received: true };
+			return;
+		}
+		
+		// event was not sent before - save it for the order in audit log
+		await this.db.executeSP('orders_create_audit', [ orderId, JSON.stringify(event), eventId ]);
+		
+		// return a response to acknowledge receipt of the event
+		this.body = { received: true };
+	}
+	
+	/**
+	 * checks the incoming webhook event format from stripe
+	 * @throws ORD_06 - Livemode not allowed in development.
+	 * @throws ORD_07 - Test transactions not allowed in production.
+	 * @throws ORD_08 - Event type not allowed.
+	 * @throws ORD_09 - Event order ID missing.
+	 * @throws ORD_10 - Event ID missing.
+	 */
+	checkStripeEventFormat(event) {
+		
+		// check livemode against env - livemode not allowed in dev - same if env is prod and livemode is false - do not accept such cases
+		if (this.env === 'dev' && event.livemode)  this.throw('ORD_06', 'Livemode not allowed in development.');
+		if (this.env !== 'dev' && !event.livemode) this.throw('ORD_07', 'Test transactions not allowed in production.');
+		
+		// we only process the charge events for now - do not accept others - should not be set up without some development on this side
+		if (!event.type || !event.type.startsWith('charge') || !event.data || !event.data.object || !event.data.object.object || event.data.object.object !== 'charge')
+			this.throw('ORD_08', 'Event type not allowed.');
+		
+		// we always send charge requests with order ID in the metadata so we should see an order ID in the metadata of the charge object sent to us in the event
+		// if we can't find that information, we will ignore the webhook because we have no way of associating it to an order
+		if (!event.data.object.metadata || !event.data.object.metadata.order_id) this.throw('ORD_09', 'Event order ID missing.');
+		
+		// we use the event ID as the audit code. if it was not sent, we can't detect if it was sent before - error out
+		if (!event.id) this.throw('ORD_10', 'Event ID missing.');
+	}
+	
+	/**
+	 * returns the stripe event data from the webhook post data
+	 * @throws ORD_05 - Cannot verify webhook stripe signature
+	 */
+	getStripeWebhookEvent() {
+		
+		// this is the endpoint secret is a token setup by creating the webhook on stripe - this is the key with which stripe will call us
+		const endpointSecret = 'whsec_bJnTBcyIDvDREqNLymbVNfOzUokj8u23';
+		
+		// get the signature in the request - this is going to be used for us to verify
+		const stripeSignature = this.request.headers['stripe-signature'];
+
+		// now verify the signature and construct event data in one api call and return the result
+		try {
+			return stripe.webhooks.constructEvent(this.params, stripeSignature, endpointSecret);
+		}
+		catch (ex) {
+			this.throw('ORD_05', `Cannot verify webhook stripe signature: ${ex.message}`);
+			return null; // this statement is unreachable - the only reason it's here is because eslint cannot understand that this.throw is an exception
+		}
+	}
+
 }
 
 // exported user related functions
