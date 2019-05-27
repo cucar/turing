@@ -4,7 +4,7 @@ const Controller = require('../../common/controller/controller.js');
 const stripe = require('stripe')('sk_test_NjRQY4OeXsQD0ijJ7rbI4FNI00QLcA5CYY');
 
 class Order extends Controller {
-
+	
 	/**
 	 * handled routes
 	 */
@@ -68,7 +68,7 @@ class Order extends Controller {
 			await this.db.update('orders', { auth_code: charge.id, reference: charge.balance_transaction, status: 1, order_id: orderId }, 'order_id');
 			
 			// save the charge response as an audit log for the order
-			await this.db.insert('audit', { order_id: orderId, created_on: new Date(), message: JSON.stringify(charge), code: 0 });
+			await this.db.insert('audit', { order_id: orderId, created_on: new Date(), message: JSON.stringify(charge), code: 0, event_id: 'original_charge' });
 		}
 		catch (ex) {
 			
@@ -94,7 +94,7 @@ class Order extends Controller {
 		
 		// clear the shopping cart
 		await this.db.executeSP('shopping_cart_empty', [ this.param('cart_id') ]);
-
+		
 		// return successful response with order ID
 		this.body = { order_id: orderId };
 	}
@@ -118,7 +118,7 @@ class Order extends Controller {
 	async checkOrderAccess(orderId) {
 		if (this.customerInfo.customer_id !== await this.db.selectVal('select customer_id from orders where order_id = ?', [ orderId ])) this.throw('ORD_02', 'Unauthorized access.');
 	}
-
+	
 	/**
 	 * get order products request handler
 	 * @throws ORD_02 - Unauthorized access.
@@ -127,7 +127,7 @@ class Order extends Controller {
 		await this.checkOrderAccess(ctx.params.order_id);
 		this.body = await this.db.selectAllSP('orders_get_order_details', [ ctx.params.order_id ]);
 	}
-
+	
 	/**
 	 * returns customer orders
 	 */
@@ -163,14 +163,14 @@ class Order extends Controller {
 		const eventId = event.id;
 		
 		// check if the event was sent before - if so, ignore the duplicate request
-		const eventFound = await this.db.selectVal('select 1 from audit where order_id = ? and code = ?', [ orderId, eventId ]);
+		const eventFound = await this.db.selectVal('select 1 from audit where order_id = ? and event_id = ?', [ orderId, eventId ]);
 		if (eventFound) {
 			this.body = { received: true };
 			return;
 		}
 		
 		// event was not sent before - save it for the order in audit log
-		await this.db.executeSP('orders_create_audit', [ orderId, JSON.stringify(event), eventId ]);
+		await this.db.insert('audit', { order_id: orderId, created_on: new Date(), message: JSON.stringify(event), code: 0, event_id: eventId });
 		
 		// return a response to acknowledge receipt of the event
 		this.body = { received: true };
@@ -213,17 +213,17 @@ class Order extends Controller {
 		
 		// get the signature in the request - this is going to be used for us to verify
 		const stripeSignature = this.request.headers['stripe-signature'];
-
+		
 		// now verify the signature and construct event data in one api call and return the result
 		try {
-			return stripe.webhooks.constructEvent(this.params, stripeSignature, endpointSecret);
+			return stripe.webhooks.constructEvent(this.request.rawBody, stripeSignature, endpointSecret);
 		}
 		catch (ex) {
 			this.throw('ORD_05', `Cannot verify webhook stripe signature: ${ex.message}`);
 			return null; // this statement is unreachable - the only reason it's here is because eslint cannot understand that this.throw is an exception
 		}
 	}
-
+	
 }
 
 // exported user related functions
