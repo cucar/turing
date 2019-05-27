@@ -1,5 +1,10 @@
 use turing;
 
+select * from customer;
+select * from audit;
+
+select * from orders;
+select * from order_detail;
 select * from shopping_cart;
 
 select * from shipping where shipping_region_id = 2;

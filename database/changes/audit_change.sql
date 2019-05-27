@@ -1,0 +1,1 @@
+alter table audit add event_id varchar(100);
