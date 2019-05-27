@@ -112,19 +112,21 @@ Using [wrk](https://github.com/wg/wrk) for performance tests. Here are some link
 The methodology is very similar to what's described here (Koa example): https://github.com/Unitech/pm2/issues/3613
 
 Choosing http://turing.cagdasucar.com/api/products as the API test call. It accesses database, so it's a good average call.
- 
-Typical test results show around ~3500 requests/sec, which corresponds to 210K / minute. If we assume roughly 
-4 requests / minute for each user (including initial static web page serve request), we have capacity for ~50K users.
-Considering that this is a lowest powered Digital Ocean server (1 CPU, 1 GB mem) also hosting MySQL, it's not half bad.
-Here is a typical run:   
+
+The server the app is deployed to is a lowest powered Digital Ocean server (1 CPU, 1 GB mem) also hosting MySQL.
+I tested it with pm2 running in cluster mode with 2-3 processes but the performance suffered when 
+it's more than one process. That makes sense because we have only one CPU. 
+
+Typical test results show around ~600 requests per second, which corresponds to 36K requests per 
+minute. If we assume roughly 4 requests / minute for each user (including initial static web page 
+serve request), we have capacity for ~9K users. Here is a typical run:   
  
     [root@server1 ~]# wrk -t 100 -c 100 http://turing.cagdasucar.com/api/products
     Running 10s test @ http://turing.cagdasucar.com/api/products
       100 threads and 100 connections
       Thread Stats   Avg      Stdev     Max   +/- Stdev
-        Latency    48.09ms   59.05ms 241.67ms   83.82%
-        Req/Sec    40.78     17.44    70.00     58.88%
-      35472 requests in 10.10s, 11.16MB read
-      Non-2xx or 3xx responses: 35472
-    Requests/sec:   3511.95
-    Transfer/sec:   1.11MB
+        Latency   157.95ms   30.09ms 330.77ms   78.26%
+        Req/Sec     7.16      2.58    10.00     51.38%
+      6321 requests in 10.10s, 8.70MB read
+    Requests/sec:    625.82
+    Transfer/sec:      0.86MB
