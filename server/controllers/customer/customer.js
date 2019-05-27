@@ -69,8 +69,7 @@ class Customer extends Controller {
 		this.validateRequired('USR_02', [ 'email', 'password' ]);
 		
 		let customer = await this.getCustomerByEmail(this.param('email'));
-		
-		if (!customer) this.throw('USR_05', 'The email doesn\'t exist.');
+		if (_.isEmpty(customer)) this.throw('USR_05', 'The email does not exist.');
 		
 		let token = jwt.sign({ customer_id: customer.customer_id }, this.config.token_encryption_key, { expiresIn: '24h' });
 		

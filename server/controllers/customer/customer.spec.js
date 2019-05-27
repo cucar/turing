@@ -50,6 +50,13 @@
 		response.field.should.equal('password');
 	});
 	
+	it('should fail login - invalid customer', async function() {
+		const response = await callApi('customers/login', { email: 'test@test2.com', password: testPassword }, 'POST');
+		global.lastHttpResponseCode.should.equal(400);
+		response.code.should.equal('USR_05');
+		response.message.should.equal('The email does not exist.');
+	});
+	
 	it('should login as new customer', async function() {
 		const response = await callApi('customers/login', { email: testEmail, password: testPassword }, 'POST');
 		global.lastHttpResponseCode.should.equal(200);
