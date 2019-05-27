@@ -130,3 +130,20 @@ serve request), we have capacity for ~9K users. Here is a typical run:
       6321 requests in 10.10s, 8.70MB read
     Requests/sec:    625.82
     Transfer/sec:      0.86MB
+
+## Challenge Questions
+
+* Question: The current system can support 100,000 daily active users. How do you design a new system to support 1,000,000 daily active users? Describe your design clearly in the documentation so we can follow your steps. Implement backend code + database if possible.
+* Answer: Well, clearly we could add more web servers to scale out a bit more and setup a load 
+balancer in front of them. Hardware load balancer like F5 may be better. I'm not sure how the 
+AWS/Digital Ocean load balancers perform. If the database is a bottleneck, it's possible to setup 
+read replicas for MySQL to distribute the load. In that case, all updates would go through one 
+MySQL instance and they would be replicated to the read instances. Read can be done from any of
+the read replicas.    
+
+***
+ 
+* Question: A half of the daily active users comes from United States. How do you design a new system to handle this case? Describe your design clearly in the documentation so we can follow your steps. Implement backend code + database if possible.
+* Answer: I'm not sure what the problem is. If the load balancer has a rule that directs requests
+based on geography, that could be a problem. In that case it may be better to setup the load balancer
+to not be based on geography or setup additional servers for US load balancer rule. 
