@@ -9,7 +9,7 @@ cd "$WORKSPACE/server"
 npm install # download node libraries
 rm -rf test .eslintrc .gitignore nodemon.json # delete development specific files
 rm -rf ~/api/* # delete existing server code
-cp -r $WORKSPACE/server ~/api # copy the server code
+cp -r $WORKSPACE/server/* ~/api # copy the server code
 cd ~/api # switch folder to the server directory
 pm2 reload server # reload and restart the server - to start a new app, we do pm2 start server.js -i 1
 
