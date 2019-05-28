@@ -6,7 +6,6 @@
 
 # package and release the server first (koa)
 cd "$WORKSPACE/server"
-npm install -g pm2 # install pm2 if not already done before
 npm install # download node libraries
 rm -rf test .eslintrc .gitignore nodemon.json # delete development specific files
 rm -rf ~/api/* # delete existing server code
