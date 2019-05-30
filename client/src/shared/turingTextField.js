@@ -5,7 +5,7 @@ import TextField from '@material-ui/core/TextField/TextField';
 /**
  * turing form field component
  */
-function TuringTextField({ id, type, label, validators, value, error, onChange }) {
+function TuringTextField({ id, label, validators, value, error, onChange }) {
 	return (
 		<TextField key={id + 'input'}
 				   style={{ width: '100%' }}

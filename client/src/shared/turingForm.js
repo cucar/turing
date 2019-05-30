@@ -1,6 +1,8 @@
 import React, { useState, cloneElement } from 'react';
 import PropTypes from 'prop-types';
 
+import TuringTextField from './turingTextField';
+import TuringPasswordField from './turingPasswordField';
 import { validateEmail, validatePassword } from '../utils/validators';
 import callApi from '../utils/callApi';
 
@@ -18,8 +20,8 @@ export const Validators = {
 function TuringForm({ api, method, onApiResponseReceived, children }) {
 	
 	// build fields, buttons and other elements array from children
-	const fields = children.filter(child => child.type.name && child.type.name.includes('Field'));
-	console.log(children);
+	const fields = children.filter(child => child.type === TuringTextField || child.type === TuringPasswordField);
+	console.log(fields);
 	const buttons = children.filter(child => child.type.displayName && child.type.displayName.includes('Button'));
 	const otherElements = children.filter(child => (!child.type.name || !child.type.name.includes('Field')) && (!child.type.displayName || !child.type.displayName.includes('Button')));
 	
@@ -35,7 +37,6 @@ function TuringForm({ api, method, onApiResponseReceived, children }) {
 	 * callback handler for input changes - we have to use higher level function to be able to pass in the field ids
 	 */
 	const setFieldValue = fieldId => event => {
-		console.log('field changing', fieldId, event.target.value);
 		let newValue = {};
 		newValue[fieldId] = event.target.value;
 		setFieldValues({...fieldValues, ...newValue });
@@ -97,12 +98,8 @@ function TuringForm({ api, method, onApiResponseReceived, children }) {
 	 */
 	const buttonClick = buttonId => async () => {
 
-		console.log('button clicked', buttonId);
-		
 		// validate each field and get error messages for each field
 		const newFieldErrors = validateFields();
-		
-		console.log('fields checked', newFieldErrors);
 		
 		// if there are invalid fields, do not submit the form and display errors - otherwise call the click handler in the parent with the field values
 		if (invalidFields(newFieldErrors)) {
