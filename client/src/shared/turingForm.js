@@ -3,6 +3,8 @@ import PropTypes from 'prop-types';
 import TextField from '@material-ui/core/TextField/TextField';
 import Button from '@material-ui/core/Button/Button';
 
+import { validateEmail, validatePassword } from '../utils/validators';
+
 /**
  * turing form component - takes in fields, buttons and submit event handler function - displays the inputs and calls submit with the entered values when user clicks on buttons
  * example value for fields:
@@ -18,10 +20,13 @@ import Button from '@material-ui/core/Button/Button';
  */
 function TuringForm({ fields, buttons }) {
 	
-	// input values will be kept in the component state
+	// input values and errors will be kept in the component state
 	let initialValues = {};
-	for (let field of fields) initialValues[field.id] = '';
+	let initialErrors = {};
+	for (let field of fields) initialValues[field.id] = field.value || '';
+	for (let field of fields) initialErrors[field.id] = '';
 	const [ fieldValues, setFieldValues ] = useState(initialValues);
+	const [ fieldErrors, setFieldErrors ] = useState(initialErrors);
 	
 	/**
 	 * callback handler for input changes - we have to use higher level function to be able to pass in the field ids
@@ -29,15 +34,71 @@ function TuringForm({ fields, buttons }) {
 	const setFieldValue = fieldId => event => {
 		let newValue = {};
 		newValue[fieldId] = event.target.value;
-		const newFieldValues = {...fieldValues, ...newValue };
-		setFieldValues(newFieldValues);
+		setFieldValues({...fieldValues, ...newValue });
+	};
+	
+	/**
+	 * validates a field after form submission
+	 */
+	const validateField = (field) => {
+		
+		// if there are no validators for the field, we're all good
+		if (!field.hasOwnProperty('validators') || !field.validators) return '';
+		
+		// required validation - check if field is entered
+		if (field.validators.find(validator => validator === 'required') && !fieldValues[field.id]) return 'Required.';
+		
+		// email validation - check if field format is correct
+		if (field.validators.find(validator => validator === 'email') && !validateEmail(fieldValues[field.id])) return 'Invalid email.';
+		
+		// password validation - check if field format is correct
+		if (field.validators.find(validator => validator === 'password') && !validatePassword(fieldValues[field.id]))
+			return 'Passwords need to be between 8 and 100 characters with at least one uppercase, one lowercase, one number and one special character like punctuation.';
+		
+		// password confirmation validation - check if both entered passwords are the same
+		if (field.validators.find(validator => validator === 'password-confirm') && fieldValues[field.id] !== fieldValues.password)
+			return 'Passwords do not match.';
+		
+		// all validations passed - no error
+		return '';
+	};
+	
+	/**
+	 * returns if the fields are valid to continue with submission - updates field error display as a side effect
+	 */
+	const validateFields = () => {
+		
+		// object that holds error messages for each field
+		let errors = {};
+		
+		// do field validations with current values and get error messages for each one
+		for (let field of fields) errors[field.id] = validateField(field);
+		return errors;
+	};
+	
+	/**
+	 * returns if there are any invalid fields
+	 */
+	const invalidFields = (errors) => {
+		
+		// now check if there are any fields with errors - if so, fields are NOT validated
+		for (let field of fields) if (errors[field.id]) return true;
+		
+		// looks like no field has error - that means fields are validated - return true - we can continue with form submission
+		return false;
 	};
 	
 	/**
 	 * callback handler for form submission - we have to use higher level function to be able to pass in the button ids
 	 */
 	const buttonClick = buttonId => () => {
-		buttons.find(button => button.id === buttonId).onClick(fieldValues);
+		
+		// validate each field and get error messages for each field
+		const newFieldErrors = validateFields();
+		
+		// if there are invalid fields, do not submit the form and display errors - otherwise call the click handler in the parent with the field values
+		if (invalidFields(newFieldErrors)) setFieldErrors(newFieldErrors);
+		else buttons.find(button => button.id === buttonId).onClick(fieldValues);
 	};
 	
 	// render form inputs
@@ -50,17 +111,21 @@ function TuringForm({ fields, buttons }) {
 					<TextField key={field.id + 'input'}
 							   style={{ width: '100%' }}
 							   label={field.label}
-							   value={fieldValues[field]}
+							   value={fieldValues[field.id]}
+							   error={!!fieldErrors[field.id]}
+							   helperText={fieldErrors[field.id]}
 							   onChange={setFieldValue(field.id)} />
 				}
 				
 				{field.type === 'password' &&
-				<TextField key={field.id + 'input'}
-						   style={{ width: '100%' }}
-						   label={field.label}
-						   type="password"
-						   value={fieldValues[field]}
-						   onChange={setFieldValue(field.id)} />
+					<TextField key={field.id + 'input'}
+							   style={{ width: '100%' }}
+							   label={field.label}
+							   error={!!fieldErrors[field.id]}
+							   helperText={fieldErrors[field.id]}
+							   type="password"
+							   value={fieldValues[field.id]}
+							   onChange={setFieldValue(field.id)} />
 				}
 			</div>
 		)}

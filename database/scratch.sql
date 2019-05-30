@@ -1,7 +1,8 @@
 use turing;
 
 select * from customer;
-select * from audit;
+select * from category;
+select * from department;
 
 select * from orders;
 select * from order_detail;
