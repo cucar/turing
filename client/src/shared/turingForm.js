@@ -34,6 +34,7 @@ function TuringForm({ api, method, onApiResponseReceived, children }) {
 	 * callback handler for input changes - we have to use higher level function to be able to pass in the field ids
 	 */
 	const setFieldValue = fieldId => event => {
+		console.log('field changing', fieldId, event.target.value);
 		let newValue = {};
 		newValue[fieldId] = event.target.value;
 		setFieldValues({...fieldValues, ...newValue });
