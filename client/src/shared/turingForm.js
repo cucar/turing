@@ -128,12 +128,15 @@ function TuringForm({ api, method, onApiResponseReceived, children }) {
 		onApiResponseReceived(response);
 	};
 	
+	let fieldElements = fields.map(field => {
+		console.log(field);
+		return cloneElement(field, { id: field.key, onChange: setFieldValue(field.key), value: fieldValues[ field.key ], error: fieldErrors[ field.key ] })
+	});
+	
 	// render form inputs - first the form fields, then other elements and then the buttons
 	return (<>
 
-		<h1>Testing</h1>
-		
-		{fields.map(field => cloneElement(field, { id: field.key, onChange: setFieldValue(field.key), value: fieldValues[field.key], error: fieldErrors[field.key] }))}
+		{fieldElements}
 		
 		{otherElements}
 		
