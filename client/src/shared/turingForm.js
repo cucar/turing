@@ -19,6 +19,7 @@ function TuringForm({ api, method, onApiResponseReceived, children }) {
 	
 	// build fields, buttons and other elements array from children
 	const fields = children.filter(child => child.type.name && child.type.name.includes('Field'));
+	console.log(fields);
 	const buttons = children.filter(child => child.type.displayName && child.type.displayName.includes('Button'));
 	const otherElements = children.filter(child => (!child.type.name || !child.type.name.includes('Field')) && (!child.type.displayName || !child.type.displayName.includes('Button')));
 	
