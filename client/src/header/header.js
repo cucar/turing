@@ -1,17 +1,21 @@
 import React from 'react';
 import Toolbar from '@material-ui/core/Toolbar';
-import Typography from '@material-ui/core/Typography';
 import { Link } from 'react-navi';
+
+import './header.css';
 
 export default function Header() {
 
 	return (
-		<div className="header">
-			<Toolbar>
-				<Typography variant="h6" color="inherit">
+		<Toolbar>
+			<div className="header">
+				<div className="login-signup">
 					<Link href="/account/login">Sign In</Link> or <Link href="/account/register">Register</Link>
-				</Typography>
-			</Toolbar>
-		</div>
+				</div>
+				<div className="logout">
+					<Link href="/account/logout">Logout</Link>
+				</div>
+			</div>
+		</Toolbar>
 	);
 }

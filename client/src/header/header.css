@@ -1,0 +1,16 @@
+.header {
+	width: 100%;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-around;
+	font-size: 18px;
+	font-weight: bold;
+}
+
+.header .login-signup {
+	flex-grow: 1;
+}
+
+.header .logout {
+
+}

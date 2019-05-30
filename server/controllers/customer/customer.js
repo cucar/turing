@@ -127,6 +127,7 @@ class Customer extends Controller {
 	 * @throws USR_03 - The email is invalid.
 	 * @throws USR_06 - Invalid phone number.
 	 * @throws USR_10 - The password is insecure.
+	 * @throws USR_16 - Email already in use.
 	 */
 	async updateCustomer() {
 		
@@ -140,6 +141,9 @@ class Customer extends Controller {
 			name: this.param('name'),
 			email: this.param('email')
 		};
+		
+		if (await this.db.selectVal('select 1 from customer where email = ? and customer_id != ?', [ this.param('email'), this.customerInfo.customer_id ]))
+			this.throw('USR_16', 'Email already in use.');
 		
 		if (this.param('password')) {
 			if (!passwordValidator.validate(this.param('password')))

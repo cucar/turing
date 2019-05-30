@@ -7,6 +7,7 @@ import './account.css';
 import routeAuth from '../../utils/routeAuth';
 import Registration from './register';
 import Login from './login';
+import Logout from './logout';
 import UpdateAccount from './updateAccount';
 import { getSessionCustomer } from '../../utils/session';
 
@@ -14,6 +15,7 @@ export default mount({
 	'/': routeAuth({ title: 'Turing Account Page', view: <Account /> }),
 	'/register': route({ title: 'Sign Up', view: <Registration /> }),
 	'/login': route({ title: 'Login', view: <Login /> }),
+	'/logout': route({ title: 'Logout', view: <Logout /> }),
 	'/update/account': route({ title: 'Update Account', view: <UpdateAccount /> })
 });
 

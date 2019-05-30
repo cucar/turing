@@ -18,6 +18,13 @@ const saveSession = (session) => {
 };
 
 /**
+ * removes session information for logout operation
+ */
+const deleteSession = () => {
+	localStorage.clear();
+};
+
+/**
  * returns if there is a valid session in effect - if it is expired or not saved at all, there is no session
  */
 const loggedIn = () => {
@@ -55,4 +62,4 @@ const getAccessToken = () => {
 	return (loggedIn() ? localStorage.getItem('token') : null);
 };
 
-export { saveSession, loggedIn, getSessionCustomer, getAccessToken, updateSessionCustomer };
+export { saveSession, deleteSession, loggedIn, getSessionCustomer, getAccessToken, updateSessionCustomer };
