@@ -22,9 +22,11 @@ function TuringForm({ api, method, onApiResponseReceived, children }) {
 	
 	// build fields, buttons and other elements array from children
 	const fields = children.filter(child => child.type === TuringTextField || child.type === TuringPasswordField);
-	const buttons = children.filter(child => child.type.displayName && child.type.displayName.includes('Button'));
-	console.log(children);
-	const otherElements = children.filter(child => (child.type !== TuringTextField && child.type !== TuringPasswordField) && (!child.type.displayName || !child.type.displayName.includes('Button')));
+	const buttons = children.filter(child => child.type === Button);
+	const otherElements = children.filter(child => child.type !== TuringTextField && child.type !== TuringPasswordField && child.type !== Button);
+	console.log(fields);
+	console.log(buttons);
+	console.log(otherElements);
 	
 	// input values and errors will be kept in the component state
 	let initialValues = {};
@@ -98,6 +100,8 @@ function TuringForm({ api, method, onApiResponseReceived, children }) {
 	 * callback handler for form submission - we have to use higher level function to be able to pass in the button ids
 	 */
 	const buttonClick = buttonId => async () => {
+		
+		console.log('button click', buttonId);
 
 		// validate each field and get error messages for each field
 		const newFieldErrors = validateFields();
@@ -127,15 +131,10 @@ function TuringForm({ api, method, onApiResponseReceived, children }) {
 		onApiResponseReceived(response);
 	};
 	
-	let fieldElements = fields.map(field => {
-		console.log(field);
-		return cloneElement(field, { id: field.key, onChange: setFieldValue(field.key), value: fieldValues[ field.key ], error: fieldErrors[ field.key ] })
-	});
-	
 	// render form inputs - first the form fields, then other elements and then the buttons
 	return (<>
 
-		{fieldElements}
+		{fields.map(field => cloneElement(field, { id: field.key, onChange: setFieldValue(field.key), value: fieldValues[ field.key ], error: fieldErrors[ field.key ] }))}
 		
 		{otherElements}
 		
