@@ -3,7 +3,7 @@ import { useLoadingRoute } from 'react-navi';
 import CircularProgress from '@material-ui/core/CircularProgress';
 
 export default function RouteLoader({ children }) {
-
+	
 	// styles to make the progress centered
 	const outerStyle = { height: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center' };
 	const innerStyle = { marginLeft: 'auto', marginRight: 'auto' };

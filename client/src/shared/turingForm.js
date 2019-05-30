@@ -4,15 +4,17 @@ import Button from '@material-ui/core/Button/Button';
 
 import TuringTextField from './turingTextField';
 import TuringPasswordField from './turingPasswordField';
-import { validateEmail, validatePassword } from '../utils/validators';
+import { validateEmail, validatePassword, validatePhone } from '../utils/validators';
 import callApi from '../utils/callApi';
+import { getAccessToken } from '../utils/session';
 
 // validator constants to be exported
 export const Validators = {
 	required: 'required',
 	email: 'email',
 	password: 'password',
-	passwordConfirm: 'passwordConfirm'
+	passwordConfirm: 'passwordConfirm',
+	phone: 'phone'
 };
 
 /**
@@ -55,6 +57,9 @@ function TuringForm({ api, method, onApiResponseReceived, children }) {
 		
 		// email validation - check if field format is correct
 		if (field.props.validators.find(validator => validator === Validators.email) && !validateEmail(fieldValues[field.key])) return 'Invalid email.';
+		
+		// phone validation - check if field format is correct
+		if (field.props.validators.find(validator => validator === Validators.phone) && !validatePhone(fieldValues[field.key])) return 'Invalid phone.';
 		
 		// password validation - check if field format is correct
 		if (field.props.validators.find(validator => validator === Validators.password) && !validatePassword(fieldValues[field.key]))
@@ -117,13 +122,14 @@ function TuringForm({ api, method, onApiResponseReceived, children }) {
 		}
 		
 		// button does not have an event handler - use the default event handler - do the API call and call onApiResponseReceived when we get the response back
-		const response = await callApi(api, fieldValues, method);
+		// if the user is logged in, send the authorization header as well in the api call - if it's an authenticated call it will be used - otherwise ignored
+		const response = await callApi(api, fieldValues, method, { Authorization: getAccessToken() });
 		
 		// do not continue if there was an error - it is automatically shown
 		if (!response) return;
 		
 		// callback with the API response
-		onApiResponseReceived(response);
+		onApiResponseReceived(response, fieldValues);
 	};
 	
 	// render form inputs - first the form fields, then other elements and then the buttons

@@ -1,0 +1,8 @@
+.operations {
+	display: flex;
+	flex-direction: row;
+}
+
+.operations > * {
+	margin-right: 20px;
+}

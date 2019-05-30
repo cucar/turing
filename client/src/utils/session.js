@@ -20,7 +20,7 @@ const saveSession = (session) => {
 /**
  * returns if there is a valid session in effect - if it is expired or not saved at all, there is no session
  */
-const sessionExists = () => {
+const loggedIn = () => {
 	
 	// if there is no data saved for expiration date, there is no session
 	if (!localStorage.getItem('expires')) return false;
@@ -33,17 +33,26 @@ const sessionExists = () => {
 };
 
 /**
+ * updates customer information in session after an update
+ */
+const updateSessionCustomer = (customer) => {
+	let sessionCustomer = getSessionCustomer();
+	for (let field of Object.keys(sessionCustomer)) if (customer[field]) sessionCustomer[field] = customer[field];
+	localStorage.setItem('customer', JSON.stringify(sessionCustomer));
+};
+
+/**
  * returns customer information from session if not expired
  */
-const getCustomer = () => {
-	return (sessionExists() ? JSON.parse(localStorage.getItem('customer')) : null);
+const getSessionCustomer = () => {
+	return (loggedIn() ? JSON.parse(localStorage.getItem('customer')) : null);
 };
 
 /**
  * returns access token from session if not expired
  */
 const getAccessToken = () => {
-	return (sessionExists() ? localStorage.getItem('token') : null);
+	return (loggedIn() ? localStorage.getItem('token') : null);
 };
 
-export { saveSession, sessionExists, getCustomer, getAccessToken };
+export { saveSession, loggedIn, getSessionCustomer, getAccessToken, updateSessionCustomer };
