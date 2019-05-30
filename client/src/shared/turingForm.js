@@ -1,5 +1,6 @@
 import React, { useState, cloneElement } from 'react';
 import PropTypes from 'prop-types';
+import Button from '@material-ui/core/Button/Button';
 
 import TuringTextField from './turingTextField';
 import TuringPasswordField from './turingPasswordField';
@@ -21,9 +22,9 @@ function TuringForm({ api, method, onApiResponseReceived, children }) {
 	
 	// build fields, buttons and other elements array from children
 	const fields = children.filter(child => child.type === TuringTextField || child.type === TuringPasswordField);
-	console.log(fields);
 	const buttons = children.filter(child => child.type.displayName && child.type.displayName.includes('Button'));
-	const otherElements = children.filter(child => (!child.type.name || !child.type.name.includes('Field')) && (!child.type.displayName || !child.type.displayName.includes('Button')));
+	console.log(children);
+	const otherElements = children.filter(child => (child.type !== TuringTextField && child.type !== TuringPasswordField) && (!child.type.displayName || !child.type.displayName.includes('Button')));
 	
 	// input values and errors will be kept in the component state
 	let initialValues = {};
