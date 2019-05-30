@@ -10,7 +10,6 @@ const saveSession = (session) => {
 	// determine the session expiration and save it - expires_in comes in hours with a format like 24h
 	let expDate = new Date();
 	expDate.setHours(expDate.getHours() + parseInt(session.expires_in.replace('h')));
-	console.log(expDate);
 
 	// now set the session data in local storage
 	localStorage.setItem('customer', JSON.stringify(session.customer.schema));
