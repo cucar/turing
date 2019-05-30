@@ -29,7 +29,7 @@ function App() {
 	
 	const theme = createMuiTheme({
 		palette: {
-			type: 'dark',
+			type: 'light',
 			primary1Color: '#03a9f4',
 			primary2Color: '#0277bd',
 			primary3Color: '#01579b',
@@ -43,25 +43,21 @@ function App() {
 
 	return (
 		<MuiThemeProvider theme={theme}>
-			<div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-				
+			<div className="content">
+			
 				<CssBaseline />
 				
-				<div style={{flex: 1}}>
+				<Router routes={routes}>
+					<Header />
+					<Nav />
 					<div className="page">
-						<Router routes={routes}>
-							<RouteLoader>
-								<Suspense fallback={null}>
-									<Header />
-									<Nav />
-									<div style={{ padding: 20 }}>
-										<View />
-									</div>
-								</Suspense>
-							</RouteLoader>
-						</Router>
+						<RouteLoader>
+							<Suspense fallback={null}>
+								<View />
+							</Suspense>
+						</RouteLoader>
 					</div>
-				</div>
+				</Router>
 				
 				<Footer />
 				

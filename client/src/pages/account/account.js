@@ -2,8 +2,11 @@ import React from 'react';
 import { mount, route } from 'navi';
 import LinkButton from '../../shared/linkButton';
 
+import Registration from './register';
+
 export default mount({
-	'/': route({ title: 'Turing Account Page', view: <Account /> })
+	'/': route({ title: 'Turing Account Page', view: <Account /> }),
+	'/register': route({ title: 'New Customer Registration', view: <Registration /> })
 });
 
 /**

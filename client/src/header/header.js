@@ -1,6 +1,7 @@
 import React from 'react';
 import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
+import { Link } from 'react-navi';
 
 export default function Header() {
 
@@ -8,7 +9,7 @@ export default function Header() {
 		<div className="header">
 			<Toolbar>
 				<Typography variant="h6" color="inherit">
-					Sign In or Register
+					<Link href="/account/login">Sign In</Link> or <Link href="/account/register">Register</Link>
 				</Typography>
 			</Toolbar>
 		</div>

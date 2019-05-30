@@ -31,8 +31,10 @@ const callApi = async (endpoint, args = {}, method = 'GET', headers = {}) => {
 		if (response.status === 200) return parsedResponse;
 
 		// if the response can be parsed and there is a code and message, show them in a more structured way
-		if (parsedResponse.hasOwnProperty('code') && parsedResponse.hasOwnProperty('message'))
+		if (parsedResponse.hasOwnProperty('code') && parsedResponse.hasOwnProperty('message')) {
+			console.log(parsedResponse);
 			return showError(`${parsedResponse.message} (${parsedResponse.code})`);
+		}
 		
 		return showError(`${errString} HTTP error: ${response.status} - ${await responseClone.text()}`);
 	}

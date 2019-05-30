@@ -8,6 +8,8 @@ export default function Home() {
 
 	return (<>
 		<h1>Home</h1>
+		
+		<br/>
 		<Button variant="contained" color="primary">Button 1</Button>
 	</>);
 }

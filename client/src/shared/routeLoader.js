@@ -19,9 +19,9 @@ export default function RouteLoader({ children }) {
 	
 	// If there is a route that hasn't finished loading, it can be retrieved with useLoadingRoute
 	return (
-		<div className="Layout">
+		<div className="layout">
 			{!!loadingRouteData && <div style={outerStyle}><div style={innerStyle}><CircularProgress size={200} /></div></div>}
 			{children}
 		</div>
-	)
+	);
 }
