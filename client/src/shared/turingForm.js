@@ -1,30 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, cloneElement } from 'react';
 import PropTypes from 'prop-types';
-import TextField from '@material-ui/core/TextField/TextField';
-import Button from '@material-ui/core/Button/Button';
 
 import { validateEmail, validatePassword } from '../utils/validators';
+import callApi from '../utils/callApi';
+
+// validator constants to be exported
+export const Validators = {
+	required: 'required',
+	email: 'email',
+	password: 'password',
+	passwordConfirm: 'passwordConfirm'
+};
 
 /**
  * turing form component - takes in fields, buttons and submit event handler function - displays the inputs and calls submit with the entered values when user clicks on buttons
- * example value for fields:
- * [
- * 		{ id: 'email', type: 'text', label: 'Email', validators: [ 'required', 'email' ] },
- * 		{ id: 'name', type: 'text', label: 'Name', validators: [ 'required' ], value: 'Test User' },
- *		{ id: 'region', type: 'select', label: 'Shipping Region', options: [ { label: 'US', value: 1 }, { label: 'Canada', value: 2 } ] }
- * ]
- * example value for buttons - onClick function would be called with the values of the inputs at the time of button click:
- * [
- *     { id: 'register', label: 'Register', onClick: register }
- * ]
  */
-function TuringForm({ fields, buttons }) {
+function TuringForm({ api, method, onApiResponseReceived, children }) {
+	
+	// build fields, buttons and other elements array from children
+	const fields = children.filter(child => child.type.name && child.type.name.includes('Field'));
+	const buttons = children.filter(child => child.type.displayName && child.type.displayName.includes('Button'));
+	const otherElements = children.filter(child => (!child.type.name || !child.type.name.includes('Field')) && (!child.type.displayName || !child.type.displayName.includes('Button')));
 	
 	// input values and errors will be kept in the component state
 	let initialValues = {};
 	let initialErrors = {};
-	for (let field of fields) initialValues[field.id] = field.value || '';
-	for (let field of fields) initialErrors[field.id] = '';
+	for (let field of fields) initialValues[field.key] = field.props.value || '';
+	for (let field of fields) initialErrors[field.key] = '';
 	const [ fieldValues, setFieldValues ] = useState(initialValues);
 	const [ fieldErrors, setFieldErrors ] = useState(initialErrors);
 	
@@ -43,20 +45,20 @@ function TuringForm({ fields, buttons }) {
 	const validateField = (field) => {
 		
 		// if there are no validators for the field, we're all good
-		if (!field.hasOwnProperty('validators') || !field.validators) return '';
+		if (!field.props.hasOwnProperty('validators') || !field.props.validators) return '';
 		
 		// required validation - check if field is entered
-		if (field.validators.find(validator => validator === 'required') && !fieldValues[field.id]) return 'Required.';
+		if (field.props.validators.find(validator => validator === Validators.required) && !fieldValues[field.key]) return 'Required.';
 		
 		// email validation - check if field format is correct
-		if (field.validators.find(validator => validator === 'email') && !validateEmail(fieldValues[field.id])) return 'Invalid email.';
+		if (field.props.validators.find(validator => validator === Validators.email) && !validateEmail(fieldValues[field.key])) return 'Invalid email.';
 		
 		// password validation - check if field format is correct
-		if (field.validators.find(validator => validator === 'password') && !validatePassword(fieldValues[field.id]))
+		if (field.props.validators.find(validator => validator === Validators.password) && !validatePassword(fieldValues[field.key]))
 			return 'Passwords need to be between 8 and 100 characters with at least one uppercase, one lowercase, one number and one special character like punctuation.';
 		
 		// password confirmation validation - check if both entered passwords are the same
-		if (field.validators.find(validator => validator === 'password-confirm') && fieldValues[field.id] !== fieldValues.password)
+		if (field.props.validators.find(validator => validator === Validators.passwordConfirm) && fieldValues[field.key] !== fieldValues.password)
 			return 'Passwords do not match.';
 		
 		// all validations passed - no error
@@ -72,7 +74,7 @@ function TuringForm({ fields, buttons }) {
 		let errors = {};
 		
 		// do field validations with current values and get error messages for each one
-		for (let field of fields) errors[field.id] = validateField(field);
+		for (let field of fields) errors[field.key] = validateField(field);
 		return errors;
 	};
 	
@@ -82,7 +84,7 @@ function TuringForm({ fields, buttons }) {
 	const invalidFields = (errors) => {
 		
 		// now check if there are any fields with errors - if so, fields are NOT validated
-		for (let field of fields) if (errors[field.id]) return true;
+		for (let field of fields) if (errors[field.key]) return true;
 		
 		// looks like no field has error - that means fields are validated - return true - we can continue with form submission
 		return false;
@@ -91,56 +93,53 @@ function TuringForm({ fields, buttons }) {
 	/**
 	 * callback handler for form submission - we have to use higher level function to be able to pass in the button ids
 	 */
-	const buttonClick = buttonId => () => {
-		
+	const buttonClick = buttonId => async () => {
+
 		// validate each field and get error messages for each field
 		const newFieldErrors = validateFields();
 		
 		// if there are invalid fields, do not submit the form and display errors - otherwise call the click handler in the parent with the field values
-		if (invalidFields(newFieldErrors)) setFieldErrors(newFieldErrors);
-		else buttons.find(button => button.id === buttonId).onClick(fieldValues);
+		if (invalidFields(newFieldErrors)) {
+			setFieldErrors(newFieldErrors);
+			return;
+		}
+		
+		// find the button that generated the event
+		const button = buttons.find(button => button.key === buttonId);
+		
+		// if the button has a specific event handler, use that
+		if (button.props.onClick) {
+			button.props.onClick(fieldValues);
+			return;
+		}
+		
+		// button does not have an event handler - use the default event handler - do the API call and call onApiResponseReceived when we get the response back
+		const response = await callApi(api, fieldValues, method);
+		
+		// do not continue if there was an error - it is automatically shown
+		if (!response) return;
+		
+		// callback with the API response
+		onApiResponseReceived(response);
 	};
 	
-	// render form inputs
+	// render form inputs - first the form fields, then other elements and then the buttons
 	return (<>
+
+		{fields.map(field => cloneElement(field, { id: field.key, onChange: setFieldValue(field.key), value: fieldValues[field.key], error: fieldErrors[field.key] }))}
 		
-		{fields.map(field =>
-			<div key={field.id}>
-				
-				{field.type === 'text' &&
-					<TextField key={field.id + 'input'}
-							   style={{ width: '100%' }}
-							   label={field.label}
-							   value={fieldValues[field.id]}
-							   error={!!fieldErrors[field.id]}
-							   helperText={fieldErrors[field.id]}
-							   onChange={setFieldValue(field.id)} />
-				}
-				
-				{field.type === 'password' &&
-					<TextField key={field.id + 'input'}
-							   style={{ width: '100%' }}
-							   label={field.label}
-							   error={!!fieldErrors[field.id]}
-							   helperText={fieldErrors[field.id]}
-							   type="password"
-							   value={fieldValues[field.id]}
-							   onChange={setFieldValue(field.id)} />
-				}
-			</div>
-		)}
+		{otherElements}
 		
-		<br/>
+		{buttons.map(button => cloneElement(button, { onClick: buttonClick(button.key) }))}
 		
-		{buttons.map(button =>
-			<Button key={button.id} variant="contained" color="primary" onClick={buttonClick(button.id)}>{button.label}</Button>
-		)}
 	</>);
 }
 
 TuringForm.propTypes = {
-	fields: PropTypes.array.isRequired,
-	buttons: PropTypes.array.isRequired
+	children: PropTypes.node.isRequired,
+	api: PropTypes.string,
+	method: PropTypes.string,
+	onApiResponseReceived: PropTypes.any
 };
 
 export default TuringForm;

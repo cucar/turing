@@ -63,6 +63,7 @@ class Customer extends Controller {
 	 * login handling
 	 * @throws USR_02 - The field(s) are/is required.
 	 * @throws USR_05 - The email doesn't exist.
+	 * @throws USR_15 - Invalid password.
 	 */
 	async login() {
 		
@@ -71,10 +72,12 @@ class Customer extends Controller {
 		let customer = await this.getCustomerByEmail(this.param('email'));
 		if (_.isEmpty(customer)) this.throw('USR_05', 'The email does not exist.');
 		
+		if (await this.encryptPassword(this.param('password')) !== customer.password) this.throw('USR_15', 'Invalid password.');
+		
 		let token = jwt.sign({ customer_id: customer.customer_id }, this.config.token_encryption_key, { expiresIn: '24h' });
 		
 		this.body = {
-			customer: { schema: customer },
+			customer: { schema: _.omit(customer, 'password') },
 			accessToken: `Bearer ${token}`,
 			expires_in: '24h'
 		};
@@ -98,7 +101,7 @@ class Customer extends Controller {
 		if (!facebookCustomer.email) this.throw('USR_14', 'Facebook email information could not be retrieved.');
 
 		// check if we can find the customer from email
-		let customer = await this.getCustomerByEmail(facebookCustomer.email);
+		let customer = _.omit(await this.getCustomerByEmail(facebookCustomer.email), 'password');
 		if (_.isEmpty(customer)) this.throw('USR_05', 'The email does not exist.');
 
 		// create a token as usual as if the customer email was sent directly for login - no need for password authentication - Facebook did that
@@ -235,7 +238,7 @@ class Customer extends Controller {
 	 */
 	async getCustomerByEmail(email) {
 		// we could also do selectRowSP('customer_get_login_info', [ email ]) but that only returns 2 fields - it should probably be altered
-		let customer = _.omit(await this.db.selectRow('select * from customer where email = ?', [ email ]), 'password');
+		let customer = await this.db.selectRow('select * from customer where email = ?', [ email ]);
 		if (customer.credit_card) customer.credit_card = `XXXXXXXXXXXX${customer.credit_card.substr(-4)}`;
 		return customer;
 	}

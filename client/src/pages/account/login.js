@@ -1,10 +1,12 @@
 import React from 'react';
 import { useNavigation } from 'react-navi';
 
-import TuringForm from '../../shared/turingForm';
-import callApi from '../../utils/callApi';
+import TuringForm, { Validators } from '../../shared/turingForm';
+import TuringTextField from '../../shared/turingTextField';
+import TuringPasswordField from '../../shared/turingPasswordField';
 import { showSuccess } from '../../utils/notifications';
 import { saveSession } from '../../utils/session';
+import Button from '@material-ui/core/Button/Button';
 
 /**
  * login screen
@@ -12,37 +14,30 @@ import { saveSession } from '../../utils/session';
 export default function Login() {
 	
 	// get navigation object
-	let navigation = useNavigation();
+	let navigator = useNavigation();
 	
 	/**
-	 * login event handler
+	 * post login event handler
 	 */
-	const login = async (fields) => {
+	const customerLoggedIn = async (response) => {
 		
-		// call server with the entered inputs to login and get access token
-		const response = await callApi('customers/login', fields, 'POST');
-		console.log(response);
-		if (!response) return;
 		showSuccess('Login successful.');
 		
 		// save customer info to local storage along with session token so that it can be called for authorization requiring API calls in the future
 		saveSession(response);
 		
 		// redirect to my account page
-		navigation.navigate('/account');
+		navigator.navigate('/account');
 	};
 	
 	return (<>
 		<h1>Login</h1>
 		
-		<TuringForm
-			fields={[
-				{ id: 'email',  type: 'text', label: 'Email', validators: [ 'required', 'email' ] },
-				{ id: 'password',  type: 'password', label: 'Password', validators: [ 'required', 'password' ] },
-			]}
-			buttons={[
-				{ id: 'login', label: 'Login', onClick: login }
-			]}
-		/>
+		<TuringForm api="customers/login" method="POST" onApiResponseReceived={customerLoggedIn}>
+			<TuringTextField key="email" label="Email" validators={[ Validators.required, Validators.email ]} />
+			<TuringPasswordField key="password" label="Password" validators={[ Validators.required, Validators.password ]} />
+			<br/>
+			<Button key="login" variant="contained" color="primary">Login</Button>
+		</TuringForm>
 	</>);
 }
