@@ -7,24 +7,23 @@ import { showSuccess } from '../../utils/notifications';
 import { saveSession } from '../../utils/session';
 
 /**
- * registration / sign up screen
+ * login screen
  */
-export default function Registration() {
+export default function Login() {
 	
 	// get navigation object
 	let navigation = useNavigation();
 	
 	/**
-	 * register event handler
+	 * login event handler
 	 */
-	const register = async (fields) => {
+	const login = async (fields) => {
 		
-		// call server with the entered inputs to register the customer
-		// NOTE: we are not doing email validation right now by sending a test email and have the user verify by clicking on a link but we may do that in the future
-		const response = await callApi('customers', fields, 'POST');
+		// call server with the entered inputs to login and get access token
+		const response = await callApi('customers/login', fields, 'POST');
 		console.log(response);
 		if (!response) return;
-		showSuccess(`Registration successful. Customer ID: ${response.customer.schema.customer_id}`);
+		showSuccess('Login successful.');
 		
 		// save customer info to local storage along with session token so that it can be called for authorization requiring API calls in the future
 		saveSession(response);
@@ -34,17 +33,15 @@ export default function Registration() {
 	};
 	
 	return (<>
-		<h1>Registration</h1>
+		<h1>Login</h1>
 		
 		<TuringForm
 			fields={[
 				{ id: 'email',  type: 'text', label: 'Email', validators: [ 'required', 'email' ] },
-				{ id: 'name',  type: 'text', label: 'Name', validators: [ 'required' ] },
 				{ id: 'password',  type: 'password', label: 'Password', validators: [ 'required', 'password' ] },
-				{ id: 'password_confirm',  type: 'password', label: 'Password Confirmation', validators: [ 'required', 'password-confirm' ] }
 			]}
 			buttons={[
-				{ id: 'register', label: 'Register', onClick: register }
+				{ id: 'login', label: 'Login', onClick: login }
 			]}
 		/>
 	</>);

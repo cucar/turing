@@ -3,10 +3,12 @@ import { mount, route } from 'navi';
 import LinkButton from '../../shared/linkButton';
 
 import Registration from './register';
+import Login from './login';
 
 export default mount({
 	'/': route({ title: 'Turing Account Page', view: <Account /> }),
-	'/register': route({ title: 'New Customer Registration', view: <Registration /> })
+	'/register': route({ title: 'Sign Up', view: <Registration /> }),
+	'/login': route({ title: 'Login', view: <Login /> })
 });
 
 /**
