@@ -24,9 +24,6 @@ function TuringForm({ api, method, onApiResponseReceived, children }) {
 	const fields = children.filter(child => child.type === TuringTextField || child.type === TuringPasswordField);
 	const buttons = children.filter(child => child.type === Button);
 	const otherElements = children.filter(child => child.type !== TuringTextField && child.type !== TuringPasswordField && child.type !== Button);
-	console.log(fields);
-	console.log(buttons);
-	console.log(otherElements);
 	
 	// input values and errors will be kept in the component state
 	let initialValues = {};
@@ -101,8 +98,6 @@ function TuringForm({ api, method, onApiResponseReceived, children }) {
 	 */
 	const buttonClick = buttonId => async () => {
 		
-		console.log('button click', buttonId);
-
 		// validate each field and get error messages for each field
 		const newFieldErrors = validateFields();
 		
