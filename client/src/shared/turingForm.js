@@ -95,8 +95,12 @@ function TuringForm({ api, method, onApiResponseReceived, children }) {
 	 */
 	const buttonClick = buttonId => async () => {
 
+		console.log('button clicked', buttonId);
+		
 		// validate each field and get error messages for each field
 		const newFieldErrors = validateFields();
+		
+		console.log('fields checked', newFieldErrors);
 		
 		// if there are invalid fields, do not submit the form and display errors - otherwise call the click handler in the parent with the field values
 		if (invalidFields(newFieldErrors)) {
