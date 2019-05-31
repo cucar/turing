@@ -18,5 +18,5 @@ pm2 reload server # reload and restart the server - to start a new app, we do pm
 cd "$WORKSPACE/client"
 npm install # download node libraries
 npm run build # build react app, package it and place it under build folder
-rm -rf cd /var/www/turing.cagdasucar.com/html/* # delete existing client app code
+rm -rf /var/www/turing.cagdasucar.com/html/* # delete existing client app code
 cp -r $WORKSPACE/client/build/* /var/www/turing.cagdasucar.com/html/ # copy packaged client app code to the nginx folder
