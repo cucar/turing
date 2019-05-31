@@ -4,6 +4,7 @@ import LinkButton from '../../shared/linkButton';
 
 import './account.css';
 
+import { getSessionCustomer } from '../../utils/session';
 import routeAuth from '../../utils/routeAuth';
 import Registration from './register';
 import Login from './login';
@@ -11,7 +12,7 @@ import Logout from './logout';
 import UpdateAccount from './updateAccount';
 import UpdateAddress from './updateAddress';
 import UpdatePayment from './updatePayment';
-import { getSessionCustomer } from '../../utils/session';
+import Orders from './orders';
 
 export default mount({
 	'/': routeAuth({ title: 'Turing Account Page', view: <Account /> }),
@@ -20,7 +21,8 @@ export default mount({
 	'/logout': route({ title: 'Logout', view: <Logout /> }),
 	'/update/account': route({ title: 'Update Account', view: <UpdateAccount /> }),
 	'/update/address': route({ title: 'Update Address', view: <UpdateAddress /> }),
-	'/update/payment': route({ title: 'Update Credit Card On File', view: <UpdatePayment /> })
+	'/update/payment': route({ title: 'Update Credit Card On File', view: <UpdatePayment /> }),
+	'/orders': route({ title: 'My Orders', view: <Orders /> })
 });
 
 /**
@@ -41,6 +43,7 @@ function Account() {
 			<LinkButton variant="contained" color="primary" href="/account/update/account">Update Account</LinkButton>
 			<LinkButton variant="contained" color="primary" href="/account/update/address">Update Address</LinkButton>
 			<LinkButton variant="contained" color="primary" href="/account/update/payment">Update Card On File</LinkButton>
+			<LinkButton variant="contained" color="primary" href="/account/orders">My Orders</LinkButton>
 		</div>
 	</>);
 }

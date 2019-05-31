@@ -1,0 +1,16 @@
+.list-paper {
+	width: 100%;
+	margin-top: 10px;
+}
+
+.list-div {
+	overflow-x: auto;
+}
+
+.list-table {
+	min-width: 500px;
+}
+
+.list-table-header {
+	font-size: 14px;
+}
