@@ -35,6 +35,9 @@ const Api = ({ endpoint, args, method, headers, children }) => {
 		
 		// make the api call and store the response - hide progress when it is received
 		(async () => {
+			
+			// if we get an error here, the api response will be set to empty string and an error dialog will be shown
+			// at that point we leave it to the caller to handle the error - in any case, we received a response
 			setState({ apiResponse: await callApi(endpoint, args, method, headers), showProgress: false });
 			responseReceived.current = true;
 		})();
