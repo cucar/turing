@@ -33,7 +33,7 @@ export default function Registration() {
 	return (<>
 		<h1>Registration</h1>
 		
-		<TuringForm api="customers" method="POST" onApiResponseReceived={customerRegistered}>
+		<TuringForm endpoint="customers" method="POST" onApiResponseReceived={customerRegistered}>
 			<TuringTextField key="email" label="Email" validators={[ Validators.required, Validators.email ]} />
 			<TuringTextField key="name" label="Name" validators={[ Validators.required ]} />
 			<TuringPasswordField key="password" label="Password" validators={[ Validators.required, Validators.password ]} />

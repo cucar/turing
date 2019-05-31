@@ -37,7 +37,7 @@ export default function UpdateAddress() {
 	return (<>
 		<h1>Update Address</h1>
 		<Api endpoint="shipping/regions">
-			<TuringForm api="customers/address" method="PUT" onApiResponseReceived={customerUpdated}>
+			<TuringForm endpoint="customers/address" method="PUT" onApiResponseReceived={customerUpdated}>
 				<TuringTextField key="address_1" label="Address Line 1" validators={[ Validators.required ]} value={customer.address_1} />
 				<TuringTextField key="address_2" label="Address Line 2" validators={[]} value={customer.address_2} />
 				<TuringTextField key="city" label="City" validators={[ Validators.required ]} value={customer.city} />

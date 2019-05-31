@@ -33,7 +33,7 @@ export default function Login() {
 	return (<>
 		<h1>Login</h1>
 		
-		<TuringForm api="customers/login" method="POST" onApiResponseReceived={customerLoggedIn}>
+		<TuringForm endpoint="customers/login" method="POST" onApiResponseReceived={customerLoggedIn}>
 			<TuringTextField key="email" label="Email" validators={[ Validators.required, Validators.email ]} />
 			<TuringPasswordField key="password" label="Password" validators={[ Validators.required, Validators.password ]} />
 			<br/>

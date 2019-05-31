@@ -23,7 +23,7 @@ export const Validators = {
 /**
  * turing form component - takes in fields, buttons and submit event handler function - displays the inputs and calls submit with the entered values when user clicks on buttons
  */
-function TuringForm({ api, method, onApiResponseReceived, children }) {
+function TuringForm({ endpoint, method, onApiResponseReceived, children }) {
 
 	// build fields, buttons and other elements array from children
 	const fields = children.filter(child => child.type === TuringTextField || child.type === TuringPasswordField || child.type === TuringSelectField);
@@ -132,7 +132,7 @@ function TuringForm({ api, method, onApiResponseReceived, children }) {
 		
 		// button does not have an event handler - use the default event handler - do the API call and call onApiResponseReceived when we get the response back
 		// if the user is logged in, send the authorization header as well in the api call - if it's an authenticated call it will be used - otherwise ignored
-		const response = await callApi(api, fieldValues, method, { Authorization: getAccessToken() });
+		const response = await callApi(endpoint, fieldValues, method, { Authorization: getAccessToken() });
 		
 		// do not continue if there was an error - it is automatically shown
 		if (!response) return;
@@ -155,7 +155,7 @@ function TuringForm({ api, method, onApiResponseReceived, children }) {
 
 TuringForm.propTypes = {
 	children: PropTypes.node.isRequired,
-	api: PropTypes.string,
+	endpoint: PropTypes.string,
 	method: PropTypes.string,
 	onApiResponseReceived: PropTypes.any
 };

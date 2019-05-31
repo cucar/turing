@@ -28,7 +28,7 @@ export default function UpdateAccount() {
 	return (<>
 		<h1>Update Account</h1>
 		
-		<TuringForm api="customer" method="PUT" onApiResponseReceived={customerUpdated}>
+		<TuringForm endpoint="customer" method="PUT" onApiResponseReceived={customerUpdated}>
 			<TuringTextField key="email" label="Email" validators={[ Validators.required, Validators.email ]} value={customer.email} />
 			<TuringTextField key="name" label="Name" validators={[ Validators.required ]} value={customer.name} />
 			<TuringPasswordField key="password" label="Password" validators={[ Validators.password ]} />
