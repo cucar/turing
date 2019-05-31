@@ -19,7 +19,7 @@ export default function UpdateAddress() {
 	let navigator = useNavigation();
 	
 	/**
-	 * post login event handler
+	 * post update event handler
 	 */
 	const customerUpdated = async (response, fieldValues) => {
 		showSuccess('Update successful.');

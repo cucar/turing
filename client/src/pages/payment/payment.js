@@ -5,6 +5,7 @@ import Button from '@material-ui/core/Button/Button';
 
 import callApi from '../../utils/callApi';
 import { showSuccess } from '../../utils/notifications';
+import { stripeKey, getStripeCardElement } from '../../utils/stripe';
 
 export default mount({
 	'/': route({ title: 'Turing Payment Page', view: <Payment /> })
@@ -16,12 +17,9 @@ export default mount({
 function Payment(props) {
 	
 	// initialize stripe, elements and card input
-	const stripe = useRef(global.Stripe('pk_test_qpRDTZIbhcuKMOt22fR2FJom00s9GpUoYX'));
+	const stripe = useRef(global.Stripe(stripeKey));
 	const elements = useRef(stripe.current.elements());
-	const stripeCardElement = useRef(elements.current.create('card', { style: {
-		base: { color: '#fff', fontFamily: 'Roboto, Helvetica, Arial, sans-serif', fontSize: '15px', '::placeholder': { color: '#cccccc' } },
-		invalid: { color: '#ff4d4d' }
-	}}));
+	const stripeCardElement = useRef(getStripeCardElement(elements.current));
 	
 	// input refs
 	const nameField = useRef(null);
@@ -66,12 +64,10 @@ function Payment(props) {
 		
 	}, [ stripe ]);
 	
-	return (
-		<div style={{ width: '50%', marginLeft: 'auto', marginRight: 'auto' }}>
-			<h1>Payment</h1>
-			<TextField label="Name" style={{ width: '100%' }} inputRef={nameField} />
-			<div id="stripe-inputs" style={{ paddingTop: 20, paddingBottom: 5, marginBottom: 15, borderBottom: '1px solid #bbbbbb' }} />
-			<Button variant="contained" color="primary" onClick={checkout}>Checkout</Button>
-		</div>
-	);
+	return (<>
+		<h1>Payment</h1>
+		<TextField label="Name" inputRef={nameField} />
+		<div id="stripe-inputs" style={{ paddingTop: 20, paddingBottom: 5, marginBottom: 15, borderBottom: '1px solid #bbbbbb' }} />
+		<Button variant="contained" color="primary" onClick={checkout}>Checkout</Button>
+	</>);
 }
