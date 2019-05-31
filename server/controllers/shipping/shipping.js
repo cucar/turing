@@ -1,4 +1,5 @@
 const Controller = require('../../common/controller/controller.js');
+// debug: const Utils = require('../../common/utils/utils');
 
 class Shipping extends Controller {
 
@@ -16,6 +17,7 @@ class Shipping extends Controller {
 	 * returns all shipping regions
 	 */
 	async getShippingRegions() {
+		// debug: await Utils.wait(5);
 		this.body = await this.db.selectAll('select shipping_region_id, shipping_region from shipping_region');
 	}
 	

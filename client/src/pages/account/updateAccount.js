@@ -9,7 +9,7 @@ import Button from '@material-ui/core/Button/Button';
 import { getSessionCustomer, updateSessionCustomer } from '../../utils/session';
 
 /**
- * login screen
+ * account update screen
  */
 export default function UpdateAccount() {
 	

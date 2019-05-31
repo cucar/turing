@@ -9,6 +9,7 @@ import Registration from './register';
 import Login from './login';
 import Logout from './logout';
 import UpdateAccount from './updateAccount';
+import UpdateAddress from './updateAddress';
 import { getSessionCustomer } from '../../utils/session';
 
 export default mount({
@@ -16,7 +17,8 @@ export default mount({
 	'/register': route({ title: 'Sign Up', view: <Registration /> }),
 	'/login': route({ title: 'Login', view: <Login /> }),
 	'/logout': route({ title: 'Logout', view: <Logout /> }),
-	'/update/account': route({ title: 'Update Account', view: <UpdateAccount /> })
+	'/update/account': route({ title: 'Update Account', view: <UpdateAccount /> }),
+	'/update/address': route({ title: 'Update Address', view: <UpdateAddress /> })
 });
 
 /**

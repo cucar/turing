@@ -4,7 +4,8 @@ import Button from '@material-ui/core/Button/Button';
 
 import TuringTextField from './turingTextField';
 import TuringPasswordField from './turingPasswordField';
-import { validateEmail, validatePassword, validatePhone } from '../utils/validators';
+import TuringSelectField from './turingSelectField';
+import { validateCountry, validateEmail, validatePassword, validatePhone, validateZip } from '../utils/validators';
 import callApi from '../utils/callApi';
 import { getAccessToken } from '../utils/session';
 
@@ -14,18 +15,20 @@ export const Validators = {
 	email: 'email',
 	password: 'password',
 	passwordConfirm: 'passwordConfirm',
-	phone: 'phone'
+	phone: 'phone',
+	zip: 'zip',
+	country: 'country'
 };
 
 /**
  * turing form component - takes in fields, buttons and submit event handler function - displays the inputs and calls submit with the entered values when user clicks on buttons
  */
 function TuringForm({ api, method, onApiResponseReceived, children }) {
-	
+
 	// build fields, buttons and other elements array from children
-	const fields = children.filter(child => child.type === TuringTextField || child.type === TuringPasswordField);
+	const fields = children.filter(child => child.type === TuringTextField || child.type === TuringPasswordField || child.type === TuringSelectField);
 	const buttons = children.filter(child => child.type === Button);
-	const otherElements = children.filter(child => child.type !== TuringTextField && child.type !== TuringPasswordField && child.type !== Button);
+	const otherElements = children.filter(child => child.type !== TuringTextField && child.type !== TuringPasswordField && child.type !== TuringSelectField && child.type !== Button);
 	
 	// input values and errors will be kept in the component state
 	let initialValues = {};
@@ -55,13 +58,19 @@ function TuringForm({ api, method, onApiResponseReceived, children }) {
 		// required validation - check if field is entered
 		if (field.props.validators.find(validator => validator === Validators.required) && !fieldValues[field.key]) return 'Required.';
 		
-		// email validation - check if field format is correct
+		// email validation
 		if (field.props.validators.find(validator => validator === Validators.email) && !validateEmail(fieldValues[field.key])) return 'Invalid email.';
 		
-		// phone validation - check if field format is correct
+		// phone validation
 		if (field.props.validators.find(validator => validator === Validators.phone) && !validatePhone(fieldValues[field.key])) return 'Invalid phone.';
 		
-		// password validation - check if field format is correct
+		// zip code validation
+		if (field.props.validators.find(validator => validator === Validators.zip) && !validateZip(fieldValues[field.key], fieldValues['country'])) return 'Invalid postal code.';
+		
+		// country validation
+		if (field.props.validators.find(validator => validator === Validators.country) && !validateCountry(fieldValues[field.key])) return 'Invalid country code.';
+		
+		// password validation
 		if (field.props.validators.find(validator => validator === Validators.password) && !validatePassword(fieldValues[field.key]))
 			return 'Passwords need to be between 8 and 100 characters with at least one uppercase, one lowercase, one number and one special character like punctuation.';
 		

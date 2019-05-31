@@ -1,7 +1,7 @@
 /**
  * this file contains the validation routines for form inputs - this logic should correspond to the server side validation
  */
-// const addressValidator = require('validator');
+const addressValidator = require('validator');
 const emailValidator = require('email-validator');
 const passwordValidator = (new (require('password-validator'))()).is().min(8).is().max(100).has().uppercase().has().lowercase().has().digits().has().symbols();
 const phoneValidator = require('google-libphonenumber').PhoneNumberUtil.getInstance();
@@ -30,4 +30,14 @@ const validatePhone = (phone) => {
 	}
 };
 
-export { validateEmail, validatePassword, validatePhone };
+/**
+ * country validator
+ */
+const validateCountry = (country) => addressValidator.isPostalCodeLocales.includes(country);
+
+/**
+ * zip code validator
+ */
+const validateZip = (zip, country) => addressValidator.isPostalCode(zip, country);
+
+export { validateEmail, validatePassword, validatePhone, validateCountry, validateZip };
