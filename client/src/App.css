@@ -21,6 +21,8 @@
 	margin-right: auto;
 }
 
-.MuiButton-root {
+.buttons .MuiButton-root {
 	max-width: 250px; /* beyond this width buttons don't look good */
+	min-width: 150px;
+	margin-right: 20px;
 }

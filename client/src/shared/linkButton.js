@@ -7,7 +7,7 @@ export default function LinkButton(props) {
 	const linkStyle = { textDecorationLine: 'none', color: 'white' };
 	
 	return (
-		<Button variant={props.variant} color={props.color}>
+		<Button variant={props.variant || 'contained'} color={props.color || 'primary'}>
 			<Link style={linkStyle} href={props.href}>{props.children}</Link>
 		</Button>
 	);

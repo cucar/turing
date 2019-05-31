@@ -9,10 +9,10 @@ export default function Nav() {
 		<div className="header">
 			<AppBar color="primary" position="static">
 				<Toolbar>
-					<LinkButton href="/">Home</LinkButton>
-					<LinkButton href="/catalog">Catalog</LinkButton>
-					<LinkButton href="/cart">Cart</LinkButton>
-					<LinkButton href="/account">My Account</LinkButton>
+					<LinkButton variant="text" href="/">Home</LinkButton>
+					<LinkButton variant="text" href="/catalog">Catalog</LinkButton>
+					<LinkButton variant="text" href="/cart">Cart</LinkButton>
+					<LinkButton variant="text" href="/account">My Account</LinkButton>
 				</Toolbar>
 			</AppBar>
 		</div>

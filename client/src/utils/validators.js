@@ -38,6 +38,15 @@ const validateCountry = (country) => addressValidator.isPostalCodeLocales.includ
 /**
  * zip code validator
  */
-const validateZip = (zip, country) => addressValidator.isPostalCode(zip, country);
+const validateZip = (zip, country) => {
+	try {
+		let countryCode = (country === 'United States' || country === 'USA' ? 'US' : country); // fix US name if needed
+		return addressValidator.isPostalCode(zip, countryCode);
+	}
+	catch (ex) {
+		console.log(ex.message);
+		return false;
+	}
+};
 
 export { validateEmail, validatePassword, validatePhone, validateCountry, validateZip };

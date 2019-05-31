@@ -7,6 +7,7 @@ import TuringPasswordField from '../../shared/turingPasswordField';
 import { showSuccess } from '../../utils/notifications';
 import Button from '@material-ui/core/Button/Button';
 import { getSessionCustomer, updateSessionCustomer } from '../../utils/session';
+import LinkButton from '../../shared/linkButton';
 
 /**
  * account update screen
@@ -38,6 +39,7 @@ export default function UpdateAccount() {
 			<TuringTextField key="mob_phone" label="Mobile Phone" validators={[ Validators.phone ]} value={customer.mob_phone} />
 			<br/>
 			<Button key="login" variant="contained" color="primary">Update</Button>
+			<LinkButton key="cancel" href="/account">Cancel</LinkButton>
 		</TuringForm>
 	</>);
 }
