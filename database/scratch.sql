@@ -1,6 +1,7 @@
 use turing;
 
 select * from customer;
+
 select * from category;
 select * from department;
 
