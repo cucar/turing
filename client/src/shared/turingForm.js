@@ -8,7 +8,6 @@ import TuringSelectField from './turingSelectField';
 import LinkButton from './linkButton';
 import { validateCountry, validateEmail, validatePassword, validatePhone, validateZip } from '../utils/validators';
 import callApi from '../utils/callApi';
-import { getAccessToken } from '../utils/session';
 
 // validator constants to be exported
 export const Validators = {
@@ -140,8 +139,7 @@ function TuringForm({ endpoint, method, onApiResponseReceived, children }) {
 		}
 		
 		// button does not have an event handler - use the default event handler - do the API call and call onApiResponseReceived when we get the response back
-		// if the user is logged in, send the authorization header as well in the api call - if it's an authenticated call it will be used - otherwise ignored
-		const response = await callApi(endpoint, fieldValues, method, { Authorization: getAccessToken() });
+		const response = await callApi(endpoint, fieldValues, method);
 		
 		// do not continue if there was an error - it is automatically shown
 		if (!response) return;

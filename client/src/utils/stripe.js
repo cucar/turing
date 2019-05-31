@@ -16,4 +16,14 @@ function getStripeCardElement(elements) {
 	return cardElement;
 }
 
-export { stripeKey, getStripeCardElement };
+/**
+ * returns the stripe object - we use singleton pattern here - stripe does not like it when we have multiple handlers (mixes up the card elements)
+ */
+let stripeObject = null;
+function getStripe() {
+	if (stripeObject) return stripeObject;
+	stripeObject = global.Stripe(stripeKey);
+	return stripeObject;
+}
+
+export { getStripe, getStripeCardElement };

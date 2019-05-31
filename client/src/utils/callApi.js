@@ -1,4 +1,5 @@
 import { showError } from './notifications';
+import { getAccessToken } from './session';
 
 const queryString = require('querystring');
 const fetch = require('node-fetch');
@@ -9,13 +10,17 @@ const fetch = require('node-fetch');
 const callApi = async (endpoint, args = {}, method = 'GET', headers = {}) => {
 
 	let errString = `Error in ${endpoint} API call with ${JSON.stringify(args)} and method ${method} and headers ${JSON.stringify(headers)} - `;
+
+	// determine the headers to be sent to the server for the api call. include content type at all calls and merge with whatever headers were requested for this call.
+	// if the user is logged in, send the authorization header as well in the api call - if it's an authenticated call it will be used - otherwise ignored
+	let apiHeaders = Object.assign({ Authorization: getAccessToken(), 'Content-Type': 'application/json' }, headers);
 	
 	// call the api and return the results
 	let response = null;
 	if (method === 'POST' || method === 'PUT')
-		response = await fetch(`/api/${endpoint}`, { method: method, body: JSON.stringify(args), headers: Object.assign({ 'Content-Type': 'application/json' }, headers) });
+		response = await fetch(`/api/${endpoint}`, { method: method, body: JSON.stringify(args), headers: apiHeaders });
 	else if (method === 'GET' || method === 'DELETE')
-		response = await fetch(`/api/${endpoint}?${queryString.stringify(args)}`, { method: method, headers: Object.assign({ 'Content-Type': 'application/json' }, headers) });
+		response = await fetch(`/api/${endpoint}?${queryString.stringify(args)}`, { method: method, headers: apiHeaders });
 	else
 		return showError(`${errString} Unknown request method.`);
 	

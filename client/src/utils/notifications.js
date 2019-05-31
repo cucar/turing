@@ -2,6 +2,7 @@ import PubSub from 'pubsub-js';
 
 // the provider of this pubsub queue is the app main component - it shows the error message when it sees this in the queue
 const showNotification = (message, type) => {
+	console.log(message);
 	PubSub.publish('Notification', { message: message, type: type });
 	return '';
 };

@@ -1,7 +1,5 @@
 const Controller = require('../../common/controller/controller.js');
-
-// get stripe handle - using secret key (not publishable key) - got it from https://dashboard.stripe.com/account/apikeys
-const stripe = require('stripe')('sk_test_NjRQY4OeXsQD0ijJ7rbI4FNI00QLcA5CYY');
+const Stripe = require('../../common/stripe/stripe.js');
 
 class Order extends Controller {
 	
@@ -51,7 +49,7 @@ class Order extends Controller {
 			
 			// stripe token is created on the client side from credit card data without coming to our server for PCI compliance - we collect the charges here with it
 			// in order to simulate declined card, just send a bad token - response should include error object with details
-			const charge = await stripe.charges.create({
+			const charge = await Stripe.charge({
 				amount: orderTotal * 100, // needs to be sent in cents
 				currency: 'usd',
 				description: 'Customer Turing Order',
@@ -208,15 +206,9 @@ class Order extends Controller {
 	 */
 	getStripeWebhookEvent() {
 		
-		// this is the endpoint secret is a token setup by creating the webhook on stripe - this is the key with which stripe will call us
-		const endpointSecret = 'whsec_bJnTBcyIDvDREqNLymbVNfOzUokj8u23';
-		
-		// get the signature in the request - this is going to be used for us to verify
-		const stripeSignature = this.request.headers['stripe-signature'];
-		
-		// now verify the signature and construct event data in one api call and return the result
+		// now verify the signature and construct event data in one api call and return the result - signature is used to verify the authenticity of the message
 		try {
-			return stripe.webhooks.constructEvent(this.request.rawBody, stripeSignature, endpointSecret);
+			return Stripe.constructEvent(this.request.rawBody, this.request.headers['stripe-signature']);
 		}
 		catch (ex) {
 			this.throw('ORD_05', `Cannot verify webhook stripe signature: ${ex.message}`);

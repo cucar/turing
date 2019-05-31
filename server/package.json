@@ -12,10 +12,7 @@
     "test": "mocha --opts test/mocha.opts ./**/*.spec.js"
   },
   "dependencies": {
-    "card-validator": "^6.1.0",
     "email-validator": "^2.0.4",
-    "password-validator": "^4.1.1",
-    "validator": "^10.11.0",
     "google-libphonenumber": "^3.2.2",
     "jsonwebtoken": "^8.5.1",
     "koa": "^2.7.0",
@@ -25,7 +22,9 @@
     "lodash": "^4.17.11",
     "mysql2": "^1.6.5",
     "node-cleanup": "^2.1.2",
-    "stripe": "^7.1.0"
+    "password-validator": "^4.1.1",
+    "stripe": "^7.1.0",
+    "validator": "^10.11.0"
   },
   "devDependencies": {
     "cross-env": "^5.2.0",

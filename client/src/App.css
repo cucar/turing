@@ -26,3 +26,10 @@
 	min-width: 150px;
 	margin-right: 20px;
 }
+
+#stripe-inputs {
+	padding-top: 20px;
+	padding-bottom: 5px;
+	margin-bottom: 15px;
+	border-bottom: solid #bbbbbb 1px;
+}

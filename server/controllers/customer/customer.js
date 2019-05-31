@@ -4,10 +4,10 @@ const addressValidator = require('validator');
 const emailValidator = require('email-validator');
 const passwordValidator = (new (require('password-validator'))()).is().min(8).is().max(100).has().uppercase().has().lowercase().has().digits().has().symbols();
 const phoneValidator = require('google-libphonenumber').PhoneNumberUtil.getInstance();
-const cardValidator = require('card-validator');
 const fetch = require('node-fetch');
 
 const Controller = require('../../common/controller/controller.js');
+const Stripe = require('../../common/stripe/stripe.js');
 
 class Customer extends Controller {
 
@@ -173,6 +173,8 @@ class Customer extends Controller {
 	 */
 	async updateCustomerAddress() {
 		
+		// debug: await require('../../common/utils/utils').wait(5);
+
 		this.validateRequired('USR_02', [ 'address_1', 'city', 'region', 'postal_code', 'country', 'shipping_region_id' ]);
 		
 		if (!addressValidator.isPostalCodeLocales.includes(this.param('country')))
@@ -199,11 +201,8 @@ class Customer extends Controller {
 	}
 	
 	/**
-	 * update customer credit card request handler
-	 * Note: ideally we should use https://stripe.com/docs/saving-cards to tokenize the card and save it like that.
-	 * it's not clear what was asked in terms of saving the card - whether we should save token or raw card data.
-	 * keeping this call as-is (not differentiating whether it's a card or token) since it's not used for checkout at this time.
-	 * we may update it as we implement the purchase with saved card in front end.
+	 * update customer credit card token request handler. Note that this is NOT the actual card number. It's a token from stripe obtained on the client side.
+	 * token creation process does not touch our server. that way we can stay PCI compliant and still charge the customer saved card on file at checkout.
 	 * @throws USR_02 - The field(s) are/is required.
 	 * @throws USR_08 - This is an invalid Credit Card.
 	 */
@@ -211,11 +210,16 @@ class Customer extends Controller {
 		
 		this.validateRequired('USR_02', [ 'credit_card' ]);
 		
-		if (!cardValidator.number(this.param('credit_card')).isValid)
-			this.throw('USR_08', 'This is an invalid Credit Card.');
+		// if we already saved this customer on stripe before, just update the default payment method and we're done
+		if (this.customerInfo.credit_card) {
+			Stripe.updateCustomer(this.customerInfo.credit_card, this.param('credit_card'));
+			this.body = await this.getCustomerReturnDataById();
+			return;
+		}
 		
-		await this.db.update('customer', { customer_id: this.customerInfo.customer_id, credit_card: this.param('credit_card') }, 'customer_id');
-		
+		// never saved this customer in stripe before - save the card token with the customer email on stripe - this will get us a new customer ID and we'll store that
+		const stripeCustomer = await Stripe.createCustomer(this.param('credit_card'), this.customerInfo.email);
+		await this.db.update('customer', { customer_id: this.customerInfo.customer_id, credit_card: stripeCustomer.id }, 'customer_id');
 		this.body = await this.getCustomerReturnDataById();
 	}
 	
@@ -223,9 +227,7 @@ class Customer extends Controller {
 	 * returns customer information for a given customer ID
 	 */
 	async getCustomerReturnDataById(customerId) {
-		let customer = _.omit(await this.getCustomerById(customerId || this.customerInfo.customer_id), 'password');
-		if (customer.credit_card) customer.credit_card = `XXXXXXXXXXXX${customer.credit_card.substr(-4)}`;
-		return customer;
+		return _.omit(await this.getCustomerById(customerId || this.customerInfo.customer_id), 'password');
 	}
 
 	/*
@@ -240,11 +242,9 @@ class Customer extends Controller {
 	/*
 	 * returns customer information for a given customer email
 	 */
-	async getCustomerByEmail(email) {
+	getCustomerByEmail(email) {
 		// we could also do selectRowSP('customer_get_login_info', [ email ]) but that only returns 2 fields - it should probably be altered
-		let customer = await this.db.selectRow('select * from customer where email = ?', [ email ]);
-		if (customer.credit_card) customer.credit_card = `XXXXXXXXXXXX${customer.credit_card.substr(-4)}`;
-		return customer;
+		return this.db.selectRow('select * from customer where email = ?', [ email ]);
 	}
 	
 }

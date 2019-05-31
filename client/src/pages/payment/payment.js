@@ -5,7 +5,7 @@ import Button from '@material-ui/core/Button/Button';
 
 import callApi from '../../utils/callApi';
 import { showSuccess } from '../../utils/notifications';
-import { stripeKey, getStripeCardElement } from '../../utils/stripe';
+import { getStripe, getStripeCardElement } from '../../utils/stripe';
 
 export default mount({
 	'/': route({ title: 'Turing Payment Page', view: <Payment /> })
@@ -17,7 +17,7 @@ export default mount({
 function Payment(props) {
 	
 	// initialize stripe, elements and card input
-	const stripe = useRef(global.Stripe(stripeKey));
+	const stripe = useRef(getStripe());
 	const elements = useRef(stripe.current.elements());
 	const stripeCardElement = useRef(getStripeCardElement(elements.current));
 	
@@ -29,7 +29,9 @@ function Payment(props) {
 	 * it has to be from them to be able to do the tokenization call without CORS restrictions
 	 */
 	useEffect(() => {
-		stripeCardElement.current.mount('#stripe-inputs');
+		
+		// if stripe card input is already mounted, nothing to do - otherwise, mount it
+		if (document.getElementById('stripe-inputs').innerHTML === '') stripeCardElement.current.mount('#stripe-inputs');
 	}, [ props ]);
 	
 	/**
@@ -67,7 +69,7 @@ function Payment(props) {
 	return (<>
 		<h1>Payment</h1>
 		<TextField label="Name" inputRef={nameField} />
-		<div id="stripe-inputs" style={{ paddingTop: 20, paddingBottom: 5, marginBottom: 15, borderBottom: '1px solid #bbbbbb' }} />
+		<div id="stripe-inputs" />
 		<Button variant="contained" color="primary" onClick={checkout}>Checkout</Button>
 	</>);
 }
