@@ -1,90 +1,10 @@
-import React from 'react';
-import LinkButton from '../../shared/linkButton';
-
-import PropTypes from 'prop-types';
-import { makeStyles, useTheme } from '@material-ui/core/styles';
-import Table from '@material-ui/core/Table';
-import TableBody from '@material-ui/core/TableBody';
-import TableHead from '@material-ui/core/TableHead';
-import TableCell from '@material-ui/core/TableCell';
-import TableFooter from '@material-ui/core/TableFooter';
-import TablePagination from '@material-ui/core/TablePagination';
-import TableRow from '@material-ui/core/TableRow';
-import Paper from '@material-ui/core/Paper';
-import IconButton from '@material-ui/core/IconButton';
-import FirstPageIcon from '@material-ui/icons/FirstPage';
-import KeyboardArrowLeft from '@material-ui/icons/KeyboardArrowLeft';
-import KeyboardArrowRight from '@material-ui/icons/KeyboardArrowRight';
-import LastPageIcon from '@material-ui/icons/LastPage';
+import React, { useEffect, useRef, useState } from 'react';
+import { Paper, Table, TableBody, TableHead, TableRow, TableCell, TableFooter, TablePagination } from '@material-ui/core';
 
 import './orders.css';
+import LinkButton from '../../shared/linkButton';
 
-const useStyles1 = makeStyles(theme => ({
-	root: {
-		flexShrink: 0,
-		color: theme.palette.text.secondary,
-		marginLeft: theme.spacing(2.5),
-	},
-}));
-
-function TablePaginationActions(props) {
-	const classes = useStyles1();
-	const theme = useTheme();
-	const { count, page, rowsPerPage, onChangePage } = props;
-	
-	function handleFirstPageButtonClick(event) {
-		onChangePage(event, 0);
-	}
-	
-	function handleBackButtonClick(event) {
-		onChangePage(event, page - 1);
-	}
-	
-	function handleNextButtonClick(event) {
-		onChangePage(event, page + 1);
-	}
-	
-	function handleLastPageButtonClick(event) {
-		onChangePage(event, Math.max(0, Math.ceil(count / rowsPerPage) - 1));
-	}
-	
-	return (
-		<div className={classes.root}>
-			<IconButton
-				onClick={handleFirstPageButtonClick}
-				disabled={page === 0}
-				aria-label="First Page"
-			>
-				{theme.direction === 'rtl' ? <LastPageIcon /> : <FirstPageIcon />}
-			</IconButton>
-			<IconButton onClick={handleBackButtonClick} disabled={page === 0} aria-label="Previous Page">
-				{theme.direction === 'rtl' ? <KeyboardArrowRight /> : <KeyboardArrowLeft />}
-			</IconButton>
-			<IconButton
-				onClick={handleNextButtonClick}
-				disabled={page >= Math.ceil(count / rowsPerPage) - 1}
-				aria-label="Next Page"
-			>
-				{theme.direction === 'rtl' ? <KeyboardArrowLeft /> : <KeyboardArrowRight />}
-			</IconButton>
-			<IconButton
-				onClick={handleLastPageButtonClick}
-				disabled={page >= Math.ceil(count / rowsPerPage) - 1}
-				aria-label="Last Page"
-			>
-				{theme.direction === 'rtl' ? <FirstPageIcon /> : <LastPageIcon />}
-			</IconButton>
-		</div>
-	);
-}
-
-TablePaginationActions.propTypes = {
-	count: PropTypes.number.isRequired,
-	onChangePage: PropTypes.func.isRequired,
-	page: PropTypes.number.isRequired,
-	rowsPerPage: PropTypes.number.isRequired,
-};
-
+//************************************************** api emulation start **********************************************************************
 function createData(name, calories, fat) {
 	return { name, calories, fat };
 }
@@ -103,25 +23,78 @@ const rows = [
 	createData('Marshmallow', 318, 0),
 	createData('Nougat', 360, 19.0),
 	createData('Oreo', 437, 18.0),
+	createData('2Cupcake', 305, 3.7),
+	createData('2Donut', 452, 25.0),
+	createData('2Eclair', 262, 16.0),
+	createData('2Frozen yoghurt', 159, 6.0),
+	createData('2Gingerbread', 356, 16.0),
+	createData('2Honeycomb', 408, 3.2),
+	createData('2Ice cream sandwich', 237, 9.0),
+	createData('2Jelly Bean', 375, 0.0),
+	createData('2KitKat', 518, 26.0),
+	createData('2Lollipop', 392, 0.2),
+	createData('2Marshmallow', 318, 0),
+	createData('2Nougat', 360, 19.0),
+	createData('2Oreo', 437, 18.0),
 ].sort((a, b) => (a.calories < b.calories ? -1 : 1));
+
+function getPage(page, pageSize) {
+	return {
+		page: page,
+		pageSize: pageSize,
+		totalRecords: rows.length,
+		rows: rows.slice(page * pageSize, page * pageSize + pageSize)
+	}
+}
+//************************************************** api emulation end **********************************************************************
 
 /**
  * orders list screen
  */
 export default function Orders() {
 	
-	const [page, setPage] = React.useState(0);
-	const [rowsPerPage, setRowsPerPage] = React.useState(5);
+	// apiRequestSent is used for making sure that initial api call does not get repeated - since it needs to be updated synchronously, we can't make it state - using ref instead
+	const apiRequestSent = useRef(false);
 	
-	const emptyRows = rowsPerPage - Math.min(rowsPerPage, rows.length - page * rowsPerPage);
+	// page data needs to be set together to make sure we don't trigger render more than once
+	const [ pageData, setPageData ] = useState({ page: 0, pageSize: 10, totalRecords: 0, rows: [] });
 	
-	function handleChangePage(event, newPage) {
-		setPage(newPage);
-	}
+	// this data should be extracted from children of the list component
+	const listFields = [
+		{ id: 'desert', label: 'Dessert (100g serving)' },
+		{ id: 'calories', label: 'Calories' },
+		{ id: 'fat', label: 'Fat&nbsp;(g)' },
+	];
+
+	// this should be a local property of the list component
+	const pageSizeOptions = [ 10, 25, 100 ];
 	
-	function handleChangeRowsPerPage(event) {
-		setRowsPerPage(parseInt(event.target.value, 10));
-	}
+	/**
+	 * make initial api call and display the data - this should be part of the list component
+ 	 */
+	useEffect(() => {
+
+		// if initial api call was made in previous renders, no need to do anything - return - otherwise, set it true since we're about to make that call
+		if (apiRequestSent.current) return;
+		apiRequestSent.current = true;
+		
+		// get the initial page data from API and display it - show progress if the response takes more than 200 ms
+		setPageData(getPage(0, 10));
+	}, [ apiRequestSent ]);
+	
+	/**
+	 * list page change event handler - get the data for the requested page
+	 */
+	const onPageChange = (event, newPage) => {
+		setPageData(getPage(newPage, pageData.pageSize));
+	};
+	
+	/**
+	 * list page size change event handler - reset the page number to the first page and retrieve data with the new page size
+	 */
+	const onPageSizeChange = (event) => {
+		setPageData(getPage(0, parseInt(event.target.value)));
+	};
 
 	return (<>
 		<h1>My Orders</h1>
@@ -131,42 +104,27 @@ export default function Orders() {
 				<Table className="list-table">
 					<TableHead>
 						<TableRow>
-							<TableCell className="list-table-header">Dessert (100g serving)</TableCell>
-							<TableCell className="list-table-header" align="right">Calories</TableCell>
-							<TableCell className="list-table-header" align="right">Fat&nbsp;(g)</TableCell>
+							{listFields.map(field => (<TableCell key={field.id} className="list-table-header">{field.label}</TableCell>))}
 						</TableRow>
 					</TableHead>
 					<TableBody>
-						{rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage).map(row => (
-							<TableRow key={row.name}>
-								<TableCell component="th" scope="row">
-									{row.name}
-								</TableCell>
-								<TableCell align="right">{row.calories}</TableCell>
-								<TableCell align="right">{row.fat}</TableCell>
+						{pageData.rows.map((row, index) => (
+							<TableRow key={index}>
+								{listFields.map(field => (<TableCell key={field.id} className="list-table-cell">{row[field.id]}</TableCell>))}
 							</TableRow>
 						))}
-						
-						{emptyRows > 0 && (
-							<TableRow style={{ height: 48 * emptyRows }}>
-								<TableCell colSpan={6} />
-							</TableRow>
-						)}
 					</TableBody>
 					<TableFooter>
 						<TableRow>
 							<TablePagination
-								rowsPerPageOptions={[5, 10, 25]}
-								colSpan={3}
+								rowsPerPageOptions={pageSizeOptions}
+								colSpan={listFields.length}
 								count={rows.length}
-								rowsPerPage={rowsPerPage}
-								page={page}
-								SelectProps={{
-									native: true,
-								}}
-								onChangePage={handleChangePage}
-								onChangeRowsPerPage={handleChangeRowsPerPage}
-								ActionsComponent={TablePaginationActions}
+								rowsPerPage={pageData.pageSize}
+								page={pageData.page}
+								SelectProps={{ native: true }}
+								onChangePage={onPageChange}
+								onChangeRowsPerPage={onPageSizeChange}
 							/>
 						</TableRow>
 					</TableFooter>

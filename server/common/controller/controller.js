@@ -158,7 +158,7 @@ class Controller {
 
 		// get the parameters
 		let pageNumber = this.param('page') || 1;
-		let pageSize = this.param('limit') || 20;
+		let pageSize = this.param('limit') || 10;
 		let orderBy = this.param('order');
 		let orderDirection = this.param('direction');
 
