@@ -1,17 +1,21 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Paper, Table, TableBody, TableCell, TableFooter, TableHead, TablePagination, TableRow, TableSortLabel } from '@material-ui/core';
 import PropTypes from 'prop-types';
-
-import callApi from '../utils/callApi';
+import LinearProgress from '@material-ui/core/LinearProgress/LinearProgress';
+import { useNavigation } from 'react-navi';
 
 import './turingList.css';
-import LinearProgress from '@material-ui/core/LinearProgress/LinearProgress';
+
+import callApi from '../utils/callApi';
 
 /**
  * list component used to display records from the api page by page
  */
-function TuringList({ endpoint, defaultOrderBy, children }) {
+function TuringList({ endpoint, defaultOrderBy, detailRoute, children }) {
 	
+	// get navigation object - needed for redirecting to different screens from row click events
+	let navigator = useNavigation();
+
 	// get the list fields from children
 	const listFields = children.map(child => child.props);
 	
@@ -102,6 +106,18 @@ function TuringList({ endpoint, defaultOrderBy, children }) {
 		await getPageWithProgress(endpoint, 0, pageData.pageSize, orderField, newOrderDirection);
 	};
 	
+	/**
+	 * row click event handler - only if a detail route has been given
+	 */
+	const onRowClick = useCallback((row) => {
+		
+		// if no detail route function is given, nothing to do - ignore
+		if (!detailRoute) return;
+		
+		// run the detail route function and get the route we should go to - then redirect to it
+		navigator.navigate(detailRoute(row));
+	}, [ detailRoute, navigator ]);
+	
 	return (<>
 		
 		{pageData.showProgress && <LinearProgress />}
@@ -124,7 +140,7 @@ function TuringList({ endpoint, defaultOrderBy, children }) {
 					
 					<TableBody>
 						{pageData.rows.map((row, index) => (
-							<TableRow key={index}>
+							<TableRow key={index} onClick={() => onRowClick(row)} className={detailRoute ? 'list-table-detail' : ''}>
 								{listFields.map(field => (<TableCell key={field.id} className="list-table-cell">{row[field.id]}</TableCell>))}
 							</TableRow>
 						))}
@@ -154,7 +170,8 @@ function TuringList({ endpoint, defaultOrderBy, children }) {
 TuringList.propTypes = {
 	children: PropTypes.node,
 	endpoint: PropTypes.string.isRequired,
-	defaultOrderBy: PropTypes.string.isRequired
+	defaultOrderBy: PropTypes.string.isRequired,
+	detailRoute: PropTypes.any
 };
 
 export default TuringList;

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigation } from 'react-navi';
+import { Card, CardContent } from '@material-ui/core';
 
 import TuringForm, { Validators } from '../../shared/turingForm';
 import TuringTextField from '../../shared/turingTextField';
@@ -26,20 +27,24 @@ export default function UpdateAccount() {
 		navigator.navigate('/account');
 	};
 	
-	return (<>
-		<h1>Update Account</h1>
-		
-		<TuringForm endpoint="customer" method="PUT" onApiResponseReceived={customerUpdated}>
-			<TuringTextField key="email" label="Email" validators={[ Validators.required, Validators.email ]} value={customer.email} />
-			<TuringTextField key="name" label="Name" validators={[ Validators.required ]} value={customer.name} />
-			<TuringPasswordField key="password" label="Password" validators={[ Validators.password ]} />
-			<TuringPasswordField key="password_confirm" label="Password Confirmation" validators={[ Validators.passwordConfirm ]} />
-			<TuringTextField key="day_phone" label="Day Phone" validators={[ Validators.phone ]} value={customer.day_phone} />
-			<TuringTextField key="eve_phone" label="Evening Phone" validators={[ Validators.phone ]} value={customer.eve_phone} />
-			<TuringTextField key="mob_phone" label="Mobile Phone" validators={[ Validators.phone ]} value={customer.mob_phone} />
-			<br/>
-			<Button key="login" variant="contained" color="primary">Update</Button>
-			<LinkButton key="cancel" href="/account">Cancel</LinkButton>
-		</TuringForm>
-	</>);
+	return (
+		<Card>
+			<CardContent>
+				<h1>Update Account</h1>
+				
+				<TuringForm endpoint="customer" method="PUT" onApiResponseReceived={customerUpdated}>
+					<TuringTextField key="email" label="Email" validators={[ Validators.required, Validators.email ]} value={customer.email} />
+					<TuringTextField key="name" label="Name" validators={[ Validators.required ]} value={customer.name} />
+					<TuringPasswordField key="password" label="Password" validators={[ Validators.password ]} />
+					<TuringPasswordField key="password_confirm" label="Password Confirmation" validators={[ Validators.passwordConfirm ]} />
+					<TuringTextField key="day_phone" label="Day Phone" validators={[ Validators.phone ]} value={customer.day_phone} />
+					<TuringTextField key="eve_phone" label="Evening Phone" validators={[ Validators.phone ]} value={customer.eve_phone} />
+					<TuringTextField key="mob_phone" label="Mobile Phone" validators={[ Validators.phone ]} value={customer.mob_phone} />
+					<br/>
+					<Button key="login" variant="contained" color="primary">Update</Button>
+					<LinkButton key="cancel" href="/account">Cancel</LinkButton>
+				</TuringForm>
+			</CardContent>
+		</Card>
+	);
 }

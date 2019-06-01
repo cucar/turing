@@ -14,3 +14,7 @@
 .list-table-header {
 	font-size: 14px;
 }
+
+.list-table-detail {
+	cursor: pointer;
+}

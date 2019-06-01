@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { useNavigation } from 'react-navi';
 import Button from '@material-ui/core/Button/Button';
+import { Card, CardContent, CardActions } from '@material-ui/core';
 
 import { showSuccess, showError } from '../../utils/notifications';
 import { getSessionCustomer, updateSessionCustomer } from '../../utils/session';
@@ -34,7 +35,7 @@ export default function UpdatePayment(props) {
 	/**
 	 * update card on file event handler - tokenize the card number and then send it to our server to save it on file - then update session with same info
 	 */
-	const updateCardOnFile = useCallback(async (response, fieldValues) => {
+	const updateCardOnFile = useCallback(async () => {
 		
 		// call stripe to tokenize the card
 		const { token, error } = await stripe.current.createToken(stripeCardElement.current);
@@ -55,13 +56,17 @@ export default function UpdatePayment(props) {
 		navigator.navigate('/account');
 	}, [ stripe, navigator ]);
 	
-	return (<>
-		<h1>Credit Card On File</h1>
-		{customer.credit_card && <p>Please note that you already have a card on file. If you make an update it will be overwritten.</p>}
-		<div id="stripe-inputs" />
-		<div className="buttons">
-			<Button variant="contained" color="primary" onClick={updateCardOnFile}>Update</Button>
-			<LinkButton href="/account">Cancel</LinkButton>
-		</div>
-	</>);
+	return (
+		<Card>
+			<CardContent>
+				<h1>Credit Card On File</h1>
+				{customer.credit_card && <p>Please note that you already have a card on file. If you make an update it will be overwritten.</p>}
+				<div id="stripe-inputs" />
+			</CardContent>
+			<CardActions>
+				<Button variant="contained" color="primary" onClick={updateCardOnFile}>Update</Button>
+				<LinkButton href="/account">Cancel</LinkButton>
+			</CardActions>
+		</Card>
+	);
 }

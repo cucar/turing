@@ -27,6 +27,10 @@
 	margin-right: 20px;
 }
 
+.MuiTextField-root {
+	width: 100%;
+}
+
 #stripe-inputs {
 	padding-top: 20px;
 	padding-bottom: 5px;

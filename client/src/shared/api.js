@@ -14,7 +14,7 @@ const ApiContext = React.createContext(null);
  * let showProducts = apiResponse => (<div>Api response: {apiResponse && apiResponse.count}</div>);
  * <Api endpoint="products"><ApiContext.Consumer>{showProducts}</ApiContext.Consumer></Api>
 */
-const Api = ({ endpoint, args, method, headers, children }) => {
+const Api = ({ endpoint, args, method, headers, render }) => {
 
 	// these are concurrency control variables - since they need to be updated synchronously, we can't make them part of state - using ref instead
 	const apiRequestSent = useRef(false);
@@ -43,10 +43,20 @@ const Api = ({ endpoint, args, method, headers, children }) => {
 		})();
 	}, [ endpoint, args, method, headers, responseReceived, apiRequestSent ]);
 	
+	// api components are supposed to have only one child which would be a function of what to display with the retrieved response
+	const renderChildren = (response) => {
+	
+		// if we did not get a valid response back, do not render anything
+		if (!response) return '';
+		
+		// otherwise call the passed in render function with the api response
+		return render(response);
+	};
+	
 	// Using a Provider to pass the api context to the tree below. Any component can read the response data, no matter how deep it is.
 	return (
 		<ApiContext.Provider value={state.apiResponse}>
-			{!state.showProgress && children}
+			{!state.showProgress && renderChildren(state.apiResponse)}
 			{state.showProgress && <LinearProgress />}
 		</ApiContext.Provider>
 	);
@@ -57,7 +67,7 @@ Api.propTypes = {
 	args: PropTypes.any,
 	method: PropTypes.string,
 	headers: PropTypes.any,
-	children: PropTypes.node
+	render: PropTypes.any.isRequired
 };
 
 export { Api, ApiContext };
