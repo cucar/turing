@@ -23,15 +23,15 @@ const Api = ({ endpoint, args, method, headers, children }) => {
 	// api response and progress display setting should be set at the same time so that they won't cause double render
 	let [ state, setState ] = useState({ apiResponse: null, showProgress: false });
 	
-	// make the api call and show progress if it takes longer than 200 ms
+	// make the api call and show progress if it takes longer than 500 ms
 	useEffect(() => {
 
 		// if api request was sent in previous renders, no need to do anything - return - otherwise, set it true since we're about to make that call
 		if (apiRequestSent.current) return;
 		apiRequestSent.current = true;
 
-		// start the timer to show the progress - if we get the response within 200 ms, we won't show progress - otherwise show it until response is received
-		setTimeout(() => { if (!responseReceived.current) setState({ apiResponse: null, showProgress: true }); }, 200);
+		// start the timer to show the progress - if we get the response within 500 ms, we won't show progress - otherwise show it until response is received
+		setTimeout(() => { if (!responseReceived.current) setState({ apiResponse: null, showProgress: true }); }, 500);
 		
 		// make the api call and store the response - hide progress when it is received
 		(async () => {

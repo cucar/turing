@@ -5,6 +5,7 @@ import PropTypes from 'prop-types';
 import callApi from '../utils/callApi';
 
 import './turingList.css';
+import LinearProgress from '@material-ui/core/LinearProgress/LinearProgress';
 
 /**
  * list component used to display records from the api page by page
@@ -15,10 +16,12 @@ function TuringList({ endpoint, defaultOrderBy, children }) {
 	const listFields = children.map(child => child.props);
 	
 	// apiRequestSent is used for making sure that initial api call does not get repeated - since it needs to be updated synchronously, we can't make it state - using ref instead
+	// similar for responseReceived - it is used for showing progress if api response takes too long
 	const apiRequestSent = useRef(false);
+	const responseReceived = useRef(false);
 	
 	// page data needs to be set together to make sure we don't trigger render more than once
-	const [ pageData, setPageData ] = useState({ page: 0, pageSize: 10, orderField: defaultOrderBy, orderDirection: 'asc', totalRecords: 0, rows: [] });
+	const [ pageData, setPageData ] = useState({ page: 0, pageSize: 10, orderField: defaultOrderBy, orderDirection: 'asc', totalRecords: 0, rows: [], showProgress: true });
 	
 	// shown options for page size in the list pagination drop down
 	const pageSizeOptions = [ 10, 25, 100 ];
@@ -29,20 +32,19 @@ function TuringList({ endpoint, defaultOrderBy, children }) {
 	const getPage = async (endpoint, page, pageSize, orderField, orderDirection) => {
 		
 		// call the api and get the page data back
+		// if there was an error fetching the data, api response will be null - error will be shown via a dialog - not much we can do in that case
 		const apiResponse = await callApi(endpoint, { page: page, limit: pageSize, order: orderField, direction: orderDirection });
 		
-		// if there was an error fetching the data, api response will be null - error will be shown via a dialog - not much we can do in that case - keep current state
-		if (!apiResponse) return;
-		
 		// page data is successfully retrieved from the api - update state and trigger render
-		return {
+		setPageData({
 			page: page,
 			pageSize: pageSize,
 			orderField: orderField,
 			orderDirection: orderDirection,
 			totalRecords: apiResponse.count,
-			rows: apiResponse.rows
-		};
+			rows: apiResponse.rows,
+			showProgress: false
+		});
 	};
 	
 	/**
@@ -54,24 +56,38 @@ function TuringList({ endpoint, defaultOrderBy, children }) {
 		if (apiRequestSent.current) return;
 		apiRequestSent.current = true;
 		
-		// get the initial page data from API and display it - show progress if the response takes more than 200 ms
+		// get the initial page data from API and display it - this is called only on initial render, so progress is already shown initially and we stop it here once we get the api response
 		(async () => {
-			setPageData(await getPage(endpoint, 0, 10, defaultOrderBy, 'asc'));
+			await getPage(endpoint, 0, 10, defaultOrderBy, 'asc');
 		})();
 	}, [ apiRequestSent, defaultOrderBy, endpoint ]);
+	
+	/**
+	 * retrieves the data for a requested page - shows progress if it takes longer than 500 ms
+	 */
+	const getPageWithProgress = async (endpoint, page, pageSize, orderField, orderDirection) => {
+		
+		// start the timer to show the progress - if we get the response within 500 ms, we won't show progress - otherwise show it until response is received
+		responseReceived.current = false;
+		setTimeout(() => { if (!responseReceived.current) setPageData({...pageData, ...{ showProgress: true } }); }, 500);
+
+		// now make the actual call - when the api response is received the progress will be automatically hidden
+		await getPage(endpoint, page, pageSize, orderField, orderDirection);
+		responseReceived.current = true;
+	};
 	
 	/**
 	 * list page change event handler - get the data for the requested page
 	 */
 	const onPageChange = async (event, newPage) => {
-		setPageData(await getPage(endpoint, newPage, pageData.pageSize, pageData.orderField, pageData.orderDirection));
+		await getPageWithProgress(endpoint, newPage, pageData.pageSize, pageData.orderField, pageData.orderDirection);
 	};
 	
 	/**
 	 * list page size change event handler - reset the page number to the first page and retrieve data with the new page size
 	 */
 	const onPageSizeChange = async (event) => {
-		setPageData(await getPage(endpoint, 0, +event.target.value, pageData.orderField, pageData.orderDirection));
+		await getPageWithProgress(endpoint, 0, +event.target.value, pageData.orderField, pageData.orderDirection);
 	};
 	
 	/**
@@ -83,11 +99,14 @@ function TuringList({ endpoint, defaultOrderBy, children }) {
 		const newOrderDirection = (pageData.orderField === orderField && pageData.orderDirection === 'desc' ? 'asc' : 'desc');
 		
 		// now get the data with the new sort field and direction
-		setPageData(await getPage(endpoint, 0, pageData.pageSize, orderField, newOrderDirection));
+		await getPageWithProgress(endpoint, 0, pageData.pageSize, orderField, newOrderDirection);
 	};
 	
-	return (
-		<Paper className="list-paper">
+	return (<>
+		
+		{pageData.showProgress && <LinearProgress />}
+	
+		{!pageData.showProgress && <Paper className="list-paper">
 			<div className="list-div">
 				<Table className="list-table">
 					
@@ -128,8 +147,8 @@ function TuringList({ endpoint, defaultOrderBy, children }) {
 				
 				</Table>
 			</div>
-		</Paper>
-	);
+		</Paper>}
+	</>);
 }
 
 TuringList.propTypes = {
