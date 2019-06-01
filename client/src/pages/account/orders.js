@@ -1,49 +1,58 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Paper, Table, TableBody, TableHead, TableRow, TableCell, TableFooter, TablePagination } from '@material-ui/core';
+import { Paper, Table, TableBody, TableHead, TableRow, TableCell, TableFooter, TablePagination, TableSortLabel } from '@material-ui/core';
 
 import './orders.css';
 import LinkButton from '../../shared/linkButton';
 
 //************************************************** api emulation start **********************************************************************
-function createData(name, calories, fat) {
-	return { name, calories, fat };
+function createData(name, calories, fat, carbs, protein) {
+	return { name, calories, fat, carbs, protein };
 }
 
 const rows = [
-	createData('Cupcake', 305, 3.7),
-	createData('Donut', 452, 25.0),
-	createData('Eclair', 262, 16.0),
-	createData('Frozen yoghurt', 159, 6.0),
-	createData('Gingerbread', 356, 16.0),
-	createData('Honeycomb', 408, 3.2),
-	createData('Ice cream sandwich', 237, 9.0),
-	createData('Jelly Bean', 375, 0.0),
-	createData('KitKat', 518, 26.0),
-	createData('Lollipop', 392, 0.2),
-	createData('Marshmallow', 318, 0),
-	createData('Nougat', 360, 19.0),
-	createData('Oreo', 437, 18.0),
-	createData('2Cupcake', 305, 3.7),
-	createData('2Donut', 452, 25.0),
-	createData('2Eclair', 262, 16.0),
-	createData('2Frozen yoghurt', 159, 6.0),
-	createData('2Gingerbread', 356, 16.0),
-	createData('2Honeycomb', 408, 3.2),
-	createData('2Ice cream sandwich', 237, 9.0),
-	createData('2Jelly Bean', 375, 0.0),
-	createData('2KitKat', 518, 26.0),
-	createData('2Lollipop', 392, 0.2),
-	createData('2Marshmallow', 318, 0),
-	createData('2Nougat', 360, 19.0),
-	createData('2Oreo', 437, 18.0),
-].sort((a, b) => (a.calories < b.calories ? -1 : 1));
+	createData('Cupcake', 305, 3.7, 67, 4.3),
+	createData('Donut', 452, 25.0, 51, 4.9),
+	createData('Eclair', 262, 16.0, 24, 6.0),
+	createData('Frozen yoghurt', 159, 6.0, 24, 4.0),
+	createData('Gingerbread', 356, 16.0, 49, 3.9),
+	createData('Honeycomb', 408, 3.2, 87, 6.5),
+	createData('Ice cream sandwich', 237, 9.0, 37, 4.3),
+	createData('Jelly Bean', 375, 0.0, 94, 0.0),
+	createData('KitKat', 518, 26.0, 65, 7.0),
+	createData('Lollipop', 392, 0.2, 98, 0.0),
+	createData('Marshmallow', 318, 0, 81, 2.0),
+	createData('Nougat', 360, 19.0, 9, 37.0),
+	createData('Oreo', 437, 18.0, 63, 4.0),
+];
 
-function getPage(page, pageSize) {
+function desc(a, b, orderBy) {
+	if (b[orderBy] < a[orderBy]) return -1;
+	if (b[orderBy] > a[orderBy]) return 1;
+	return 0;
+}
+
+function stableSort(array, cmp) {
+	const stabilizedThis = array.map((el, index) => [el, index]);
+	stabilizedThis.sort((a, b) => {
+		const order = cmp(a[0], b[0]);
+		if (order !== 0) return order;
+		return a[1] - b[1];
+	});
+	return stabilizedThis.map(el => el[0]);
+}
+
+function getSorting(order, orderBy) {
+	return order === 'desc' ? (a, b) => desc(a, b, orderBy) : (a, b) => -desc(a, b, orderBy);
+}
+
+function getPage(page, pageSize, orderField, orderDirection) {
 	return {
 		page: page,
 		pageSize: pageSize,
 		totalRecords: rows.length,
-		rows: rows.slice(page * pageSize, page * pageSize + pageSize)
+		rows: stableSort(rows, getSorting(orderDirection, orderField)).slice(page * pageSize, page * pageSize + pageSize),
+		orderField: orderField,
+		orderDirection: orderDirection
 	}
 }
 //************************************************** api emulation end **********************************************************************
@@ -57,13 +66,16 @@ export default function Orders() {
 	const apiRequestSent = useRef(false);
 	
 	// page data needs to be set together to make sure we don't trigger render more than once
-	const [ pageData, setPageData ] = useState({ page: 0, pageSize: 10, totalRecords: 0, rows: [] });
+	// default order field here should be initialized from given props for the list (defaultOrderBy)
+	const [ pageData, setPageData ] = useState({ page: 0, pageSize: 10, orderField: '', orderDirection: 'asc', totalRecords: 0, rows: [] });
 	
 	// this data should be extracted from children of the list component
 	const listFields = [
-		{ id: 'desert', label: 'Dessert (100g serving)' },
+		{ id: 'name', label: 'Dessert (100g serving)' },
 		{ id: 'calories', label: 'Calories' },
-		{ id: 'fat', label: 'Fat&nbsp;(g)' },
+		{ id: 'fat', label: 'Fat (g)' },
+		{ id: 'carbs', label: 'Carbs (g)' },
+		{ id: 'protein', label: 'Protein (g)' }
 	];
 
 	// this should be a local property of the list component
@@ -86,27 +98,47 @@ export default function Orders() {
 	 * list page change event handler - get the data for the requested page
 	 */
 	const onPageChange = (event, newPage) => {
-		setPageData(getPage(newPage, pageData.pageSize));
+		setPageData(getPage(newPage, pageData.pageSize, pageData.orderField, pageData.orderDirection));
 	};
 	
 	/**
 	 * list page size change event handler - reset the page number to the first page and retrieve data with the new page size
 	 */
 	const onPageSizeChange = (event) => {
-		setPageData(getPage(0, parseInt(event.target.value)));
+		setPageData(getPage(0, +event.target.value, pageData.orderField, pageData.orderDirection));
 	};
+	
+	/**
+	 * list sort request event handler - reset the page number to the first page and retrieve data with the new sort field/direction
+	 */
+	const onOrderChange = orderField => () => {
+		
+		// switch direction if the same field is clicked multiple times
+		const newOrderDirection = (pageData.orderField === orderField && pageData.orderDirection === 'desc' ? 'asc' : 'desc');
 
+		// now get the data with the new sort field and direction
+		setPageData(getPage(0, pageData.pageSize, orderField, newOrderDirection));
+	};
+	
 	return (<>
 		<h1>My Orders</h1>
 		
 		<Paper className="list-paper">
 			<div className="list-div">
 				<Table className="list-table">
+					
 					<TableHead>
 						<TableRow>
-							{listFields.map(field => (<TableCell key={field.id} className="list-table-header">{field.label}</TableCell>))}
+							{listFields.map(field => (
+								<TableCell key={field.id} className="list-table-header" sortDirection={pageData.orderField === field.id ? pageData.orderDirection : false}>
+									<TableSortLabel active={pageData.orderField === field.id} direction={pageData.orderDirection} onClick={onOrderChange(field.id)}>
+										{field.label}
+									</TableSortLabel>
+								</TableCell>
+							))}
 						</TableRow>
 					</TableHead>
+					
 					<TableBody>
 						{pageData.rows.map((row, index) => (
 							<TableRow key={index}>
@@ -114,6 +146,7 @@ export default function Orders() {
 							</TableRow>
 						))}
 					</TableBody>
+					
 					<TableFooter>
 						<TableRow>
 							<TablePagination
@@ -128,6 +161,7 @@ export default function Orders() {
 							/>
 						</TableRow>
 					</TableFooter>
+					
 				</Table>
 			</div>
 		</Paper>
