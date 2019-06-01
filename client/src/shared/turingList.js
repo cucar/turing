@@ -9,7 +9,10 @@ import './turingList.css';
 /**
  * list component used to display records from the api page by page
  */
-function TuringList({ endpoint, listFields, defaultOrderBy }) {
+function TuringList({ endpoint, defaultOrderBy, children }) {
+	
+	// get the list fields from children
+	const listFields = children.map(child => child.props);
 	
 	// apiRequestSent is used for making sure that initial api call does not get repeated - since it needs to be updated synchronously, we can't make it state - using ref instead
 	const apiRequestSent = useRef(false);
@@ -132,8 +135,7 @@ function TuringList({ endpoint, listFields, defaultOrderBy }) {
 TuringList.propTypes = {
 	children: PropTypes.node,
 	endpoint: PropTypes.string.isRequired,
-	defaultOrderBy: PropTypes.string.isRequired,
-	listFields: PropTypes.array.isRequired
+	defaultOrderBy: PropTypes.string.isRequired
 };
 
 export default TuringList;
