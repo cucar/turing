@@ -3,83 +3,58 @@ import { Paper, Table, TableBody, TableHead, TableRow, TableCell, TableFooter, T
 
 import './orders.css';
 import LinkButton from '../../shared/linkButton';
-
-//************************************************** api emulation start **********************************************************************
-function createData(name, calories, fat, carbs, protein) {
-	return { name, calories, fat, carbs, protein };
-}
-
-const rows = [
-	createData('Cupcake', 305, 3.7, 67, 4.3),
-	createData('Donut', 452, 25.0, 51, 4.9),
-	createData('Eclair', 262, 16.0, 24, 6.0),
-	createData('Frozen yoghurt', 159, 6.0, 24, 4.0),
-	createData('Gingerbread', 356, 16.0, 49, 3.9),
-	createData('Honeycomb', 408, 3.2, 87, 6.5),
-	createData('Ice cream sandwich', 237, 9.0, 37, 4.3),
-	createData('Jelly Bean', 375, 0.0, 94, 0.0),
-	createData('KitKat', 518, 26.0, 65, 7.0),
-	createData('Lollipop', 392, 0.2, 98, 0.0),
-	createData('Marshmallow', 318, 0, 81, 2.0),
-	createData('Nougat', 360, 19.0, 9, 37.0),
-	createData('Oreo', 437, 18.0, 63, 4.0),
-];
-
-function desc(a, b, orderBy) {
-	if (b[orderBy] < a[orderBy]) return -1;
-	if (b[orderBy] > a[orderBy]) return 1;
-	return 0;
-}
-
-function stableSort(array, cmp) {
-	const stabilizedThis = array.map((el, index) => [el, index]);
-	stabilizedThis.sort((a, b) => {
-		const order = cmp(a[0], b[0]);
-		if (order !== 0) return order;
-		return a[1] - b[1];
-	});
-	return stabilizedThis.map(el => el[0]);
-}
-
-function getSorting(order, orderBy) {
-	return order === 'desc' ? (a, b) => desc(a, b, orderBy) : (a, b) => -desc(a, b, orderBy);
-}
-
-function getPage(page, pageSize, orderField, orderDirection) {
-	return {
-		page: page,
-		pageSize: pageSize,
-		totalRecords: rows.length,
-		rows: stableSort(rows, getSorting(orderDirection, orderField)).slice(page * pageSize, page * pageSize + pageSize),
-		orderField: orderField,
-		orderDirection: orderDirection
-	}
-}
-//************************************************** api emulation end **********************************************************************
+import callApi from '../../utils/callApi';
 
 /**
  * orders list screen
  */
 export default function Orders() {
 	
+	// these should come as props to the list
+	const apiEndPoint = 'orders/inCustomer';
+	const defaultOrderBy = 'order_id';
+	
+	// this data should be extracted from children of the list component
+	const listFields = [
+		{ id: 'order_id', label: 'Order ID' },
+		{ id: 'total_amount', label: 'Amount' },
+		{ id: 'created_on', label: 'Order Date' },
+		{ id: 'auth_code', label: 'Auth Code' },
+		{ id: 'reference', label: 'Auth Reference' },
+		{ id: 'shipping_type', label: 'Shipping' },
+		{ id: 'tax_type', label: 'Tax' }
+	];
+	
 	// apiRequestSent is used for making sure that initial api call does not get repeated - since it needs to be updated synchronously, we can't make it state - using ref instead
 	const apiRequestSent = useRef(false);
 	
 	// page data needs to be set together to make sure we don't trigger render more than once
-	// default order field here should be initialized from given props for the list (defaultOrderBy)
-	const [ pageData, setPageData ] = useState({ page: 0, pageSize: 10, orderField: '', orderDirection: 'asc', totalRecords: 0, rows: [] });
+	const [ pageData, setPageData ] = useState({ page: 0, pageSize: 10, orderField: defaultOrderBy, orderDirection: 'asc', totalRecords: 0, rows: [] });
 	
-	// this data should be extracted from children of the list component
-	const listFields = [
-		{ id: 'name', label: 'Dessert (100g serving)' },
-		{ id: 'calories', label: 'Calories' },
-		{ id: 'fat', label: 'Fat (g)' },
-		{ id: 'carbs', label: 'Carbs (g)' },
-		{ id: 'protein', label: 'Protein (g)' }
-	];
-
-	// this should be a local property of the list component
+	// shown options for page size in the list pagination drop down
 	const pageSizeOptions = [ 10, 25, 100 ];
+	
+	/**
+	 * retrieves the data for a requested page
+	 */
+	const getPage = async (page, pageSize, orderField, orderDirection) => {
+		
+		// call the api and get the page data back
+		const apiResponse = await callApi(apiEndPoint, { page: page, limit: pageSize, order: orderField, direction: orderDirection });
+		
+		// if there was an error fetching the data, api response will be null - error will be shown via a dialog - not much we can do in that case - keep current state
+		if (!apiResponse) return;
+		
+		// page data is successfully retrieved from the api - update state and trigger render
+		setPageData({
+			page: page,
+			pageSize: pageSize,
+			orderField: orderField,
+			orderDirection: orderDirection,
+			totalRecords: apiResponse.count,
+			rows: apiResponse.rows
+		});
+	};
 	
 	/**
 	 * make initial api call and display the data - this should be part of the list component
@@ -91,21 +66,21 @@ export default function Orders() {
 		apiRequestSent.current = true;
 		
 		// get the initial page data from API and display it - show progress if the response takes more than 200 ms
-		setPageData(getPage(0, 10));
+		getPage(0, 10);
 	}, [ apiRequestSent ]);
 	
 	/**
 	 * list page change event handler - get the data for the requested page
 	 */
 	const onPageChange = (event, newPage) => {
-		setPageData(getPage(newPage, pageData.pageSize, pageData.orderField, pageData.orderDirection));
+		getPage(newPage, pageData.pageSize, pageData.orderField, pageData.orderDirection);
 	};
 	
 	/**
 	 * list page size change event handler - reset the page number to the first page and retrieve data with the new page size
 	 */
 	const onPageSizeChange = (event) => {
-		setPageData(getPage(0, +event.target.value, pageData.orderField, pageData.orderDirection));
+		getPage(0, +event.target.value, pageData.orderField, pageData.orderDirection);
 	};
 	
 	/**
@@ -117,7 +92,7 @@ export default function Orders() {
 		const newOrderDirection = (pageData.orderField === orderField && pageData.orderDirection === 'desc' ? 'asc' : 'desc');
 
 		// now get the data with the new sort field and direction
-		setPageData(getPage(0, pageData.pageSize, orderField, newOrderDirection));
+		getPage(0, pageData.pageSize, orderField, newOrderDirection);
 	};
 	
 	return (<>
@@ -152,7 +127,7 @@ export default function Orders() {
 							<TablePagination
 								rowsPerPageOptions={pageSizeOptions}
 								colSpan={listFields.length}
-								count={rows.length}
+								count={pageData.totalRecords}
 								rowsPerPage={pageData.pageSize}
 								page={pageData.page}
 								SelectProps={{ native: true }}

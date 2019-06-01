@@ -130,12 +130,15 @@ class Order extends Controller {
 	 * returns customer orders
 	 */
 	async getCustomerOrders() {
-		let orders = await this.db.selectAllSP('orders_get_by_customer_id', [ this.customerInfo.customer_id ]);
-		for (let order of orders) {
-			order.total_amount = parseFloat(order.total_amount);
-			order.status = (order.status === 1 ? 'paid' : 'unpaid');
-		}
-		this.body = orders;
+		await this.list(
+			`orders o
+			left join shipping s on o.shipping_id = s.shipping_id
+			left join tax t on o.tax_id = t.tax_id
+			`,
+			'o.order_id, o.total_amount, date_format(o.created_on, "%Y-%m-%d") as created_on, o.auth_code, o.reference, s.shipping_type, t.tax_type',
+			[ 'customer_id = ?' ],
+			[ this.customerInfo.customer_id ]
+		);
 	}
 	
 	/**

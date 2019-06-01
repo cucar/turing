@@ -157,7 +157,7 @@ class Controller {
 	async getListData(table, columns = '*', filters, params, groupBy, transformations) {
 
 		// get the parameters
-		let pageNumber = this.param('page') || 1;
+		let pageNumber = parseInt(this.param('page')) || 0;
 		let pageSize = this.param('limit') || 10;
 		let orderBy = this.param('order');
 		let orderDirection = this.param('direction');
@@ -173,13 +173,13 @@ class Controller {
 		let listCount = 0;
 		if (groupBy || table.toLowerCase().includes('group by')) listCount = await this.db.selectVal(`select count(*) from (select 1 as group_counts from ${table} ${filtersSql} ${groupBy ? groupBy : ''}) q`, params);
 		else listCount = await this.db.selectVal(`select count(*) from ${table} ${filtersSql}`, params);
-
+		
 		// if the page number goes higher than the maximum count, return error
-		if (pageSize && pageNumber !== 1 && listCount <= (pageNumber - 1) * pageSize) this.throw('PAG_03', `Incorrect page number: ${pageNumber}`);
-
+		if (pageSize && pageNumber !== 0 && listCount <= pageNumber * pageSize) this.throw('PAG_03', `Incorrect page number: ${pageNumber}`);
+		
 		// prepare query parameters - add to existing parameters if there are any
 		let sqlParams = (params ? params : []);
-		sqlParams.push((pageNumber - 1) * pageSize);
+		sqlParams.push(pageNumber * pageSize);
 		sqlParams.push(pageSize);
 		
 		// get the records in the page
