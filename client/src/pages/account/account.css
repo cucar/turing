@@ -1,8 +1,10 @@
 .operations {
 	display: flex;
 	flex-direction: row;
+	flex-wrap: wrap;
 }
 
 .operations > * {
 	margin-right: 20px;
+	margin-bottom: 20px;
 }

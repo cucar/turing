@@ -14,6 +14,7 @@ class Product extends Controller {
 			{ path: '/products/:product_id/locations', handler: this.getProductLocations },
 			{ path: '/products/:product_id/reviews', handler: this.getProductReviews },
 			{ path: '/products/:product_id/reviews', method: 'POST', handler: this.postProductReview, auth: true },
+			{ path: '/products/reviews/inCustomer', handler: this.getCustomerReviews, auth: true },
 			{ path: '/products/inCategory/:category_id', handler: this.getCategoryProducts },
 			{ path: '/products/inDepartment/:department_id', handler: this.getDepartmentProducts },
 		];
@@ -141,6 +142,18 @@ class Product extends Controller {
 		await this.db.executeSP('catalog_create_product_review', [ this.customerInfo.customer_id, this.param('product_id'), this.param('review'), this.param('rating') ]);
 		
 		this.body = {}; // no data needed to be returned for success
+	}
+	
+	/**
+	 * returns customer reviews
+	 */
+	async getCustomerReviews() {
+		await this.list({
+			table: 'review r left join product p on r.product_id = p.product_id',
+			columns: 'p.name as product_name, r.created_on, r.rating, r.review',
+			filters: [ 'r.customer_id = ?' ],
+			params: [ this.customerInfo.customer_id ]
+		});
 	}
 }
 

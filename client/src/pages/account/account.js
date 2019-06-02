@@ -15,6 +15,7 @@ import UpdateAddress from './updateAddress';
 import UpdatePayment from './updatePayment';
 import Orders from './orders';
 import OrderDetail from './orderDetail';
+import Reviews from './reviews';
 
 export default mount({
 	'/': routeAuth({ title: 'Turing Account Page', view: <Account /> }),
@@ -25,7 +26,8 @@ export default mount({
 	'/update/address': route({ title: 'Update Address', view: <UpdateAddress /> }),
 	'/update/payment': route({ title: 'Update Credit Card On File', view: <UpdatePayment /> }),
 	'/orders': route({ title: 'My Orders', view: <Orders /> }),
-	'/orders/:id': route(req => ({ title: 'My Orders', view: <OrderDetail orderId={req.params.id}/> }))
+	'/orders/:id': route(req => ({ title: 'My Orders', view: <OrderDetail orderId={req.params.id}/> })),
+	'/reviews': route({ title: 'My Reviews', view: <Reviews /> })
 });
 
 /**
@@ -50,6 +52,7 @@ function Account() {
 					<LinkButton variant="contained" color="primary" href="/account/update/address">Update Address</LinkButton>
 					<LinkButton variant="contained" color="primary" href="/account/update/payment">Update Card On File</LinkButton>
 					<LinkButton variant="contained" color="primary" href="/account/orders">My Orders</LinkButton>
+					<LinkButton variant="contained" color="primary" href="/account/reviews">My Reviews</LinkButton>
 				</div>
 			</CardActions>
 		</Card>

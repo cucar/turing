@@ -124,7 +124,8 @@ function TuringList({ endpoint, defaultOrderBy, detailRoute, children }) {
 	
 		{!pageData.showProgress && <Paper className="list-paper">
 			<div className="list-div">
-				<Table className="list-table">
+				{pageData.totalRecords === 0 && <div className="list-no-records">No records found.</div>}
+				{pageData.totalRecords > 0 && <Table className="list-table">
 					
 					<TableHead>
 						<TableRow>
@@ -161,7 +162,7 @@ function TuringList({ endpoint, defaultOrderBy, detailRoute, children }) {
 						</TableRow>
 					</TableFooter>}
 				
-				</Table>
+				</Table>}
 			</div>
 		</Paper>}
 	</>);

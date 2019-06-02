@@ -27,3 +27,8 @@
 .list-table-detail {
 	cursor: pointer;
 }
+
+.list-no-records {
+	margin: 20px;
+	font-size: 16px;
+}
