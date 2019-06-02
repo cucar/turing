@@ -151,13 +151,13 @@ class Customer extends Controller {
 			customerUpdateData.password = await this.encryptPassword(this.param('password'));
 		}
 		
-		for (let phoneField of [ 'day_phone', 'eve_phone', 'mob_phone' ])
-			if (this.param(phoneField)) {
-				// TODO: only do phone validation for US phone numbers for now - the others can be added but would require a more strict check of country codes
-				if (!phoneValidator.isValidNumber(phoneValidator.parse(this.param(phoneField), 'US')))
-					this.throw('USR_06', 'Invalid phone number.');
-				customerUpdateData[phoneField] = this.param(phoneField);
-			}
+		for (let phoneField of [ 'day_phone', 'eve_phone', 'mob_phone' ]) {
+			
+			// TODO: only do phone validation for US phone numbers for now - the others can be added but would require a more strict check of country codes
+			if (this.param(phoneField) && !phoneValidator.isValidNumber(phoneValidator.parse(this.param(phoneField), 'US'))) this.throw('USR_06', 'Invalid phone number.');
+			
+			customerUpdateData[ phoneField ] = this.param(phoneField);
+		}
 		
 		await this.db.update('customer', customerUpdateData, 'customer_id');
 		
