@@ -113,9 +113,9 @@ function TuringForm({ endpoint, method, onApiResponseReceived, children }) {
 	};
 	
 	/**
-	 * callback handler for form submission - we have to use higher level function to be able to pass in the button ids
+	 * callback handler for form submission
 	 */
-	const buttonClick = buttonId => async () => {
+	const submitForm = async () => {
 		
 		// validate each field and get error messages for each field
 		const newFieldErrors = validateFields();
@@ -123,18 +123,6 @@ function TuringForm({ endpoint, method, onApiResponseReceived, children }) {
 		// if there are invalid fields, do not submit the form and display errors - otherwise call the click handler in the parent with the field values
 		if (invalidFields(newFieldErrors)) {
 			setFieldErrors(newFieldErrors);
-			return;
-		}
-		
-		// find the button that generated the event
-		const button = buttons.find(button => button.key === buttonId);
-		
-		// if this is a link button, skip validation and everything - we'll just route as usual
-		if (button.type === LinkButton) return;
-		
-		// if the button has a specific event handler, use that
-		if (button.props.onClick) {
-			button.props.onClick(fieldValues);
 			return;
 		}
 		
@@ -148,11 +136,38 @@ function TuringForm({ endpoint, method, onApiResponseReceived, children }) {
 		onApiResponseReceived(response, fieldValues);
 	};
 	
+	/**
+	 * callback handler for button click - we have to use higher level function to be able to pass in the button ids
+	 */
+	const buttonClick = buttonId => async () => {
+		
+		// find the button that generated the event
+		const button = buttons.find(button => button.key === buttonId);
+		
+		// if this is a link button, skip validation and everything - we'll just route as usual
+		if (button.type === LinkButton) return;
+		
+		// if the button has a specific event handler, use that
+		if (button.props.onClick) {
+			button.props.onClick(fieldValues);
+			return;
+		}
+		
+		// now do the form submission actions - call the API
+		await submitForm();
+	};
+	
 	// render form inputs - first the form fields, then other elements and then the buttons
 	return (<>
 
 		<div className="formInputs">
-			{fields.map(field => cloneElement(field, { id: field.key, onChange: setFieldValue(field.key), value: fieldValues[ field.key ], error: fieldErrors[ field.key ] }))}
+			{fields.map(field => cloneElement(field, {
+				id: field.key,
+				value: fieldValues[ field.key ],
+				error: fieldErrors[ field.key ],
+				onChange: setFieldValue(field.key),
+				onEnter: submitForm
+			}))}
 		</div>
 		
 		{otherElements}

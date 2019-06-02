@@ -5,7 +5,7 @@ import TextField from '@material-ui/core/TextField/TextField';
 /**
  * turing form field component
  */
-function TuringPasswordField({ id, type, label, validators, value, error, onChange }) {
+function TuringPasswordField({ id, type, label, validators, value, error, onChange, onEnter }) {
 	return (
 		<TextField key={id + 'input'}
 				   style={{ width: '100%' }}
@@ -14,7 +14,9 @@ function TuringPasswordField({ id, type, label, validators, value, error, onChan
 				   helperText={error}
 				   type="password"
 				   value={value}
-				   onChange={onChange} />
+				   onChange={onChange}
+				   onKeyPress={async (ev) => { if (ev.key === 'Enter') { ev.preventDefault(); await onEnter(); } }}
+		/>
 	);
 }
 
