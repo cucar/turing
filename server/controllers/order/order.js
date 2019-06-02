@@ -103,10 +103,13 @@ class Order extends Controller {
 	 */
 	async getOrderShortDetails(ctx) {
 		await this.checkOrderAccess(ctx.params.order_id);
-		const order = await this.db.selectRowSP('orders_get_order_short_details', [ ctx.params.order_id ]);
-		order.total_amount = parseFloat(order.total_amount);
-		order.status = (order.status === 1 ? 'paid' : 'unpaid');
-		this.body = order;
+		this.body = await this.db.selectRow(`
+			select o.order_id, o.total_amount, date_format(o.created_on, "%Y-%m-%d") as created_on, o.auth_code, o.reference, s.shipping_type, t.tax_type
+			from orders o
+			left join shipping s on o.shipping_id = s.shipping_id
+			left join tax t on o.tax_id = t.tax_id
+			where o.order_id = ?
+		`, [ ctx.params.order_id ]);
 	}
 	
 	/**
@@ -123,7 +126,12 @@ class Order extends Controller {
 	 */
 	async getOrderProducts(ctx) {
 		await this.checkOrderAccess(ctx.params.order_id);
-		this.body = await this.db.selectAllSP('orders_get_order_details', [ ctx.params.order_id ]);
+		await this.list(
+			'order_detail',
+			'order_id, product_id, attributes, product_name, quantity, unit_cost, (quantity * unit_cost) AS subtotal',
+			[ 'order_id = ?' ],
+			[ ctx.params.order_id ]
+		);
 	}
 	
 	/**

@@ -13,6 +13,15 @@
 
 .list-table-header {
 	font-size: 14px;
+	background-color: grey;
+	color: white;
+}
+
+.list-table-header .MuiTableSortLabel-root:hover,
+.list-table-header .MuiTableSortLabel-root.MuiTableSortLabel-active,
+.list-table-header .MuiTableSortLabel-root:hover .MuiTableSortLabel-icon,
+.list-table-header .MuiTableSortLabel-root.MuiTableSortLabel-active.MuiTableSortLabel-root.MuiTableSortLabel-active .MuiTableSortLabel-icon {
+	color: white;
 }
 
 .list-table-detail {

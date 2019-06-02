@@ -1,11 +1,18 @@
 use turing;
 
+select * from orders;
+update orders set auth_code = '',reference = '' where auth_code is null;
+
+update orders set customer_id = 14;
+                        
 select * from customer;
+update customer set credit_card = null where customer_id = 14;
 
 select * from category;
 select * from department;
 
 select * from orders;
+select * from tax;
 select * from order_detail;
 select * from shopping_cart;
 
