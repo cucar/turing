@@ -44,7 +44,7 @@ const loggedIn = () => {
  */
 const updateSessionCustomer = (customer) => {
 	let sessionCustomer = getSessionCustomer();
-	for (let field of Object.keys(sessionCustomer)) if (customer[field]) sessionCustomer[field] = customer[field];
+	for (let field of Object.keys(sessionCustomer)) if (customer.hasOwnProperty(field)) sessionCustomer[field] = customer[field];
 	localStorage.setItem('customer', JSON.stringify(sessionCustomer));
 };
 
