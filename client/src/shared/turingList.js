@@ -146,7 +146,7 @@ function TuringList({ endpoint, defaultOrderBy, detailRoute, children }) {
 						))}
 					</TableBody>
 					
-					<TableFooter>
+					{pageData.totalRecords > pageData.pageSize && <TableFooter>
 						<TableRow>
 							<TablePagination
 								rowsPerPageOptions={pageSizeOptions}
@@ -159,7 +159,7 @@ function TuringList({ endpoint, defaultOrderBy, detailRoute, children }) {
 								onChangeRowsPerPage={onPageSizeChange}
 							/>
 						</TableRow>
-					</TableFooter>
+					</TableFooter>}
 				
 				</Table>
 			</div>

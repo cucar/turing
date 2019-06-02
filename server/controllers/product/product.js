@@ -25,7 +25,7 @@ class Product extends Controller {
 	async getProducts() {
 		
 		// not sure why display filter is needed - it was implemented that way in SP
-		await this.list('product', this.getProductColumnsSql(), [ 'display in (1, 3)' ]);
+		await this.list({ table: 'product', columns: this.getProductColumnsSql(), filters: [ 'display in (1, 3)' ] });
 	}
 	
 	/**
@@ -48,12 +48,12 @@ class Product extends Controller {
 		
 		this.validateRequired('PRD_02', [ 'query_string' ], ctx.request.query);
 		
-		await this.list(
-			'product',
-			this.getProductColumnsSql(),
-			[ (this.param('all_words') === 'on' ? 'match (name, description) against (? in boolean mode)' : 'match (name, description) against (?)') ],
-			[ this.param('query_string') ]
-		);
+		await this.list({
+			table: 'product',
+			columns: this.getProductColumnsSql(),
+			filters: [ (this.param('all_words') === 'on' ? 'match (name, description) against (? in boolean mode)' : 'match (name, description) against (?)') ],
+			params: [ this.param('query_string') ]
+		});
 	}
 	
 	/**
@@ -80,22 +80,27 @@ class Product extends Controller {
 	 * returns products of a category
 	 */
 	async getCategoryProducts(ctx) {
-		await this.list('product', this.getProductColumnsSql(), [ 'product_id in (select product_id from product_category where category_id = ?)' ], [ ctx.params.category_id ]);
+		await this.list({
+			table: 'product',
+			columns: this.getProductColumnsSql(),
+			filters: [ 'product_id in (select product_id from product_category where category_id = ?)' ],
+			params: [ ctx.params.category_id ]
+		});
 	}
 	
 	/**
 	 * returns products of a department
 	 */
 	async getDepartmentProducts(ctx) {
-		await this.list(
-			'product',
-			this.getProductColumnsSql(),
-			[
+		await this.list({
+			table: 'product',
+			columns: this.getProductColumnsSql(),
+			filters: [
 				'product_id in (select product_id from product_category pc join category c on pc.category_id = c.category_id where c.department_id = ?)',
 				'display in (2,3)' // not sure why this is needed - it was implemented this way in catalog_get_products_on_department
 			],
-			[ ctx.params.department_id ]
-		);
+			params: [ ctx.params.department_id ]
+		});
 	}
 	
 	/**

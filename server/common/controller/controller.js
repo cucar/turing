@@ -143,8 +143,8 @@ class Controller {
 	/**
 	 * lists handling - return a page from database directly to the client side
 	 */
-	async list(table, columns, filters, params, groupBy, transformations) {
-		this.body = await this.getListData(table, columns, filters, params, groupBy, transformations);
+	async list({ table, columns, filters, params, groupBy, transformations, pagination }) {
+		this.body = await this.getListData({ table, columns, filters, params, groupBy, transformations, pagination });
 	}
 
 	/**
@@ -154,7 +154,7 @@ class Controller {
 	 * @throws PAG_03 - Incorrect page number
 	 * @throws PAG_04 - Incorrect page size
 	 */
-	async getListData(table, columns = '*', filters, params, groupBy, transformations) {
+	async getListData({ table, columns = '*', filters, params, groupBy, transformations, pagination = true }) {
 
 		// get the parameters
 		let pageNumber = parseInt(this.param('page')) || 0;
@@ -168,19 +168,23 @@ class Controller {
 		
 		// prepare filters sql if any filters are given
 		let filtersSql = (filters && filters.length > 0 ? ` where ${filters.join(' and ')}` : '');
-
-		// get record count for pagination - adjusted for grouped queries as needed
+		
+		// get record count for pagination - adjusted for grouped queries as needed - if no pagination is needed, we'll get the list count from records result set
 		let listCount = 0;
-		if (groupBy || table.toLowerCase().includes('group by')) listCount = await this.db.selectVal(`select count(*) from (select 1 as group_counts from ${table} ${filtersSql} ${groupBy ? groupBy : ''}) q`, params);
-		else listCount = await this.db.selectVal(`select count(*) from ${table} ${filtersSql}`, params);
+		if (pagination) {
+			if (groupBy || table.toLowerCase().includes('group by')) listCount = await this.db.selectVal(`select count(*) from (select 1 as group_counts from ${table} ${filtersSql} ${groupBy ? groupBy : ''}) q`, params);
+			else listCount = await this.db.selectVal(`select count(*) from ${table} ${filtersSql}`, params);
+		}
 		
 		// if the page number goes higher than the maximum count, return error
-		if (pageSize && pageNumber !== 0 && listCount <= pageNumber * pageSize) this.throw('PAG_03', `Incorrect page number: ${pageNumber}`);
+		if (pagination && pageSize && pageNumber !== 0 && listCount <= pageNumber * pageSize) this.throw('PAG_03', `Incorrect page number: ${pageNumber}`);
 		
 		// prepare query parameters - add to existing parameters if there are any
 		let sqlParams = (params ? params : []);
-		sqlParams.push(pageNumber * pageSize);
-		sqlParams.push(pageSize);
+		if (pagination) {
+			sqlParams.push(pageNumber * pageSize);
+			sqlParams.push(pageSize);
+		}
 		
 		// get the records in the page
 		let sql = `
@@ -189,7 +193,7 @@ class Controller {
 			${filtersSql}
 			${groupBy ? groupBy : ''}
 			${orderBy ? `order by ${this.db.escape(orderBy).replace(/'/g, '')} ${orderDirection === 'asc' ? 'asc' : 'desc'}` : ''}
-			limit ?, ?
+			${pagination ? 'limit ?, ?' : ''}
 		`;
 		
 		// execute the sql and get the records
@@ -202,7 +206,10 @@ class Controller {
 			if (ex.code === 'ER_BAD_FIELD_ERROR' && ex.message.includes('Unknown column') && ex.message.includes('order clause')) this.throw('PAG_02', 'The field of order is not allow sorting.');
 			throw ex;
 		}
-
+		
+		// some lists should be sent without pagination - all in a single page - example: products of an order - if that's requested, get the list count from the records themselves, saving us a query
+		if (!pagination) listCount = listRecords.length;
+		
 		// in order to improve query performance, we sometimes do data transformations to list records after the data is retrieved
 		if (transformations) listRecords = _.map(listRecords, listRecord => _.merge(_.cloneDeep(listRecord), transformations(listRecord)));
 

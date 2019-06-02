@@ -126,27 +126,25 @@ class Order extends Controller {
 	 */
 	async getOrderProducts(ctx) {
 		await this.checkOrderAccess(ctx.params.order_id);
-		await this.list(
-			'order_detail',
-			'order_id, product_id, attributes, product_name, quantity, unit_cost, (quantity * unit_cost) AS subtotal',
-			[ 'order_id = ?' ],
-			[ ctx.params.order_id ]
-		);
+		await this.list({
+			table: 'order_detail',
+			columns: 'order_id, product_id, attributes, product_name, quantity, unit_cost, (quantity * unit_cost) AS subtotal',
+			filters: [ 'order_id = ?' ],
+			params: [ ctx.params.order_id ],
+			pagination: false // send all order products in one page
+		});
 	}
 	
 	/**
 	 * returns customer orders
 	 */
 	async getCustomerOrders() {
-		await this.list(
-			`orders o
-			left join shipping s on o.shipping_id = s.shipping_id
-			left join tax t on o.tax_id = t.tax_id
-			`,
-			'o.order_id, o.total_amount, date_format(o.created_on, "%Y-%m-%d") as created_on, o.auth_code, o.reference, s.shipping_type, t.tax_type',
-			[ 'customer_id = ?' ],
-			[ this.customerInfo.customer_id ]
-		);
+		await this.list({
+			table: 'orders o left join shipping s on o.shipping_id = s.shipping_id left join tax t on o.tax_id = t.tax_id',
+			columns: 'o.order_id, o.total_amount, date_format(o.created_on, "%Y-%m-%d") as created_on, o.auth_code, o.reference, s.shipping_type, t.tax_type',
+			filters: [ 'customer_id = ?' ],
+			params: [ this.customerInfo.customer_id ]
+		});
 	}
 	
 	/**

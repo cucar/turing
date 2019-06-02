@@ -18,7 +18,7 @@ class Category extends Controller {
 	 * returns all categories paginated
 	 */
 	async getCategories() {
-		await this.list('category');
+		await this.list({ table: 'category' });
 	}
 	
 	/**
