@@ -17,7 +17,7 @@ import './login.css';
 export default function Login() {
 
 	// the app id may need to be modified later - this is a test facebook app
-	const facebookAppId = 252251124788822;
+	const facebookAppId = 2229156180500829;
 	
 	// get navigation object
 	let navigator = useNavigation();
