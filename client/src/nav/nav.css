@@ -31,3 +31,19 @@
 	color: white;
 }
 
+@media only screen and (max-width: 600px) {
+	.nav .menu .links > * {
+		margin-top: 14px;
+		font-size: 13px;
+	}
+}
+
+@media only screen and (max-width: 380px) {
+	.nav .menu .links > * {
+		margin-top: 16px;
+		font-size: 11px;
+	}
+	.nav .menu .cart {
+		margin-right: 0;
+	}
+}

@@ -14,6 +14,7 @@ import { getSessionCustomer } from '../utils/session';
 import LinkButton from '../shared/linkButton';
 import './header.css';
 
+
 export default function Header() {
 	
 	// get navigation object - needed for redirecting to different screens from my account menu click events
