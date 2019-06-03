@@ -32,8 +32,7 @@ export default function Header() {
 	 * make the call to search for products
 	 */
 	const searchProducts = async () => {
-		console.log('searching products for: ', searchField.current.value);
-		// if (searchField.current.value) await callApi(searchField.current.value);
+		navigator.navigate(`/catalog?search=${searchField.current.value}`);
 	};
 	
 	/**
