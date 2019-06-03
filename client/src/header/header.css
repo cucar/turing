@@ -70,6 +70,7 @@
 	.header .search {
 		margin-top: 5px;
 		margin-bottom: 0;
+		width: 202px;
 	}
 	.header .account {
 		position: relative;
