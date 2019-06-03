@@ -69,7 +69,7 @@ export default function Login() {
 			If you already registered with our site before, you can also login with Facebook:
 		</div>
 		
-		<FacebookLogin appId={facebookAppId} fields="name,email" callback={customerLoggedInToFacebook} version="v3.3" render={renderProps => (
+		<FacebookLogin appId={facebookAppId} fields="name,email" callback={customerLoggedInToFacebook} isMobile={false} version="3.3" render={renderProps => (
 			<Button className="facebook-login-button" variant="contained" color="primary" onClick={renderProps.onClick}>Login With Facebook</Button>
 		)} />
 	</>);
