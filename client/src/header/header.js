@@ -1,17 +1,18 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Toolbar from '@material-ui/core/Toolbar';
-import { Link, useNavigation } from 'react-navi';
+import { useNavigation } from 'react-navi';
 import TextField from '@material-ui/core/TextField/TextField';
 import InputAdornment from '@material-ui/core/InputAdornment';
 import Avatar from '@material-ui/core/Avatar';
 import Search from '@material-ui/icons/Search';
 import IconButton from '@material-ui/core/IconButton';
 import Popover from '@material-ui/core/Popover';
+import Button from '@material-ui/core/Button/Button';
 import PubSub from 'pubsub-js';
 
 import { getSessionCustomer } from '../utils/session';
+import LinkButton from '../shared/linkButton';
 import './header.css';
-import Button from '@material-ui/core/Button/Button';
 
 export default function Header() {
 	
@@ -110,13 +111,13 @@ export default function Header() {
 				<div className="account">
 				
 					{!customer && <div className="login-register">
-						<Link href="/account/login">Sign In</Link>
-						or
-						<Link href="/account/register">Register</Link>
+						<LinkButton href="/account/register">Sign Up</LinkButton>
+						<br/>
+						<LinkButton href="/account/login">Login</LinkButton>
 					</div>}
 				
 					{!!customer && <div className="logout-myaccount">
-						<Avatar onClick={avatarClicked}>CU</Avatar>
+						<Avatar onClick={avatarClicked}>{customer.name.split(' ').map(name => name.substr(0, 1).toUpperCase()).join('')}</Avatar>
 						<Popover
 							open={Boolean(myAccountMenu)}
 							anchorEl={myAccountMenu}

@@ -41,15 +41,22 @@
 	cursor: pointer;
 }
 
+.header .account .login-register > * {
+	margin-bottom: 10px;
+	width: 100%;
+}
+
 .logout-myaccount-menu {
 	display: flex;
 	flex-direction: column;
 	background-color: white;
-	/*border: solid grey 1px;*/
 	padding: 20px;
 }
 
 @media only screen and (max-width: 600px) {
+	.header {
+		height: 125px;
+	}
 	.header .logo {
 		height: 60px;
 	}
@@ -59,9 +66,12 @@
 	}
 	.header .search {
 		margin-top: 5px;
+		margin-bottom: 0;
 	}
 	.header .account {
 		position: relative;
 		top: -40px;
+		margin-right: 0;
+		margin-top: 0;
 	}
 }
