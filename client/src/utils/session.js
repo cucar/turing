@@ -2,6 +2,8 @@
  * this file contains the routines used for storing and accessing session information after login/register
  */
 
+import PubSub from 'pubsub-js';
+
 /**
  * saves session information after login/register
  */
@@ -15,13 +17,21 @@ const saveSession = (session) => {
 	localStorage.setItem('customer', JSON.stringify(session.customer.schema));
 	localStorage.setItem('token', session.accessToken);
 	localStorage.setItem('expires', expDate);
+	
+	// once the login session is set, we need to update the view so that it can be shown that customer logged in - update listeners for that (top right section in header with avatar)
+	PubSub.publish('Authentication', 'Login');
 };
 
 /**
  * removes session information for logout operation
  */
 const deleteSession = () => {
+	
+	// remove the session data
 	localStorage.clear();
+	
+	// once the user logs out, we need to update the view so that it can be shown that customer is not logged in - update listeners for that (top right section in header with avatar)
+	PubSub.publish('Authentication', 'Logout');
 };
 
 /**
