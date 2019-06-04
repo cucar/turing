@@ -8,53 +8,119 @@ class Product extends Controller {
 	routes() {
 		return [
 			{ path: '/products', handler: this.getProducts },
-			{ path: '/products/search', handler: this.searchProducts },
 			{ path: '/products/:product_id', handler: this.getProduct },
 			{ path: '/products/:product_id/details', handler: this.getProductDetails },
 			{ path: '/products/:product_id/locations', handler: this.getProductLocations },
 			{ path: '/products/:product_id/reviews', handler: this.getProductReviews },
 			{ path: '/products/:product_id/reviews', method: 'POST', handler: this.postProductReview, auth: true },
 			{ path: '/products/reviews/inCustomer', handler: this.getCustomerReviews, auth: true },
-			{ path: '/products/inCategory/:category_id', handler: this.getCategoryProducts },
-			{ path: '/products/inDepartment/:department_id', handler: this.getDepartmentProducts },
 		];
 	}
 	
 	/**
 	 * returns all products paginated
+	 * note: the catalog_get_products_on_catalog SP was using a filter for diplay in (1,3) - not sure why that was needed but it's not included here - we may need to add it later
 	 */
 	async getProducts() {
 		
-		// not sure why display filter is needed - it was implemented that way in SP
-		await this.list({ table: 'product', columns: this.getProductColumnsSql(), filters: [ 'display in (1, 3)' ] });
+		// debug slow response:
+		// await require('../../common/utils/utils.js').wait(10);
+		
+		const { sqlFilters, sqlParams } = this.getProductFiltersAndParams();
+		await this.list({ table: Product.getProductListTables(), columns: Product.getProductListColumns(), filters: sqlFilters, params: sqlParams });
 	}
 	
 	/**
-	 * returns the description column sql expression used in sending product information
+	 * returns the sql filters and parameters to be used for products list
 	 */
-	getProductColumnsSql() {
-		const descriptionLength = this.param('description_length') || 200;
+	getProductFiltersAndParams() {
+		let sqlFilters = [];
+		let sqlParams = [];
+		
+		if (this.param('discounted')) {
+			sqlFilters.push('p.discounted_price > 0');
+		}
+		
+		if (this.param('min_price')) {
+			sqlFilters.push('(p.discounted_price >= ? or (p.discounted_price = 0 and p.price >= ?))');
+			sqlParams.push(this.param('min_price'));
+			sqlParams.push(this.param('min_price'));
+		}
+		
+		if (this.param('max_price')) {
+			sqlFilters.push('((p.discounted_price > 0 and p.discounted_price <= ?) or (p.discounted_price = 0 and p.price <= ?))');
+			sqlParams.push(this.param('max_price'));
+			sqlParams.push(this.param('max_price'));
+		}
+		
+		if (this.param('department_ids')) {
+			let departmentIds = this.param('department_ids').split(',').map(departmentId => parseInt(departmentId));
+			sqlFilters.push(`c.department_id in (${departmentIds.join(',')})`);
+		}
+		
+		if (this.param('category_ids')) {
+			let categoryIds = this.param('category_ids').split(',').map(categoryId => parseInt(categoryId));
+			sqlFilters.push(`c.category_id in (${categoryIds.join(',')})`);
+		}
+		
+		if (this.param('search')) {
+			sqlFilters.push(`match (p.name, p.description) against (? in ${Product.searchInBooleanMode(this.param('search')) ? 'boolean' : 'natural language'} mode)`);
+			sqlParams.push(this.param('search'));
+		}
+		
+		if (this.param('attribute_value_ids')) {
+			let attributeValueIds = this.param('attribute_value_ids').split(',').map(attributeValueId => parseInt(attributeValueId));
+			sqlFilters.push(`p.product_id in (select pa.product_id from product_attribute pa where pa.attribute_value_id in (${attributeValueIds.join(',')}))`);
+		}
+		
+		return { sqlFilters, sqlParams };
+	}
+	
+	/**
+	 * returns the tables sql expression used in sending products list
+	 */
+	static getProductListTables() {
 		return `
-			product_id, name,
-			if(length(description) <= ${descriptionLength}, description, concat(left(description, ${descriptionLength}), '...')) as description,
-			price, discounted_price, thumbnail, display
+			product p
+			join product_category pc on p.product_id = pc.product_id
+			join category c on pc.category_id = c.category_id
 		`;
 	}
 	
 	/**
-	 * searches products table and returns matches paginated
-	 * @throws PRD_02 - query_string field required.
+	 * returns the description column sql expression used in sending products list
 	 */
-	async searchProducts(ctx) {
+	static getProductListColumns() {
+		return `
+			p.product_id, p.name,
+			if(length(p.description) <= 200, p.description, concat(left(p.description, 200), '...')) as description,
+			p.price, p.discounted_price, p.thumbnail, p.display
+		`;
+	}
+
+	/**
+	 * determines the search mode we should use for mysql full text product search - boolean match or natural language match
+	 */
+	static searchInBooleanMode(term) {
 		
-		this.validateRequired('PRD_02', [ 'query_string' ], ctx.request.query);
+		// if the search term starts with paranthesis or plus sign, it's boolean search - examples:
+		// +apple +juice: Find rows that contain both words
+		// +apple macintosh: Find rows that contain the word “apple”, but rank rows higher if they also contain “macintosh”.
+		// (apple banana): Find rows that contain at least one of the two words.
+		if (term.startsWith('+') || term.startsWith('(')) return true;
 		
-		await this.list({
-			table: 'product',
-			columns: this.getProductColumnsSql(),
-			filters: [ (this.param('all_words') === 'on' ? 'match (name, description) against (? in boolean mode)' : 'match (name, description) against (?)') ],
-			params: [ this.param('query_string') ]
-		});
+		// if the search term contains a dash, it's probably boolean search. example: +apple -macintosh: Find rows that contain the word “apple” but not “macintosh”.
+		// it's definitely possible to have a case like search for dodd-frank and have it misdiagnose the search type but in general it holds true
+		if (term.includes('-')) return true;
+
+		// if the term contains tilde, star or greater/smaller than, it's boolean search - examples:
+		// +apple ~macintosh: Find rows that contain the word “apple”, but if the row also contains the word “macintosh”, rate it lower than if row does not.
+		// +apple +(>turnover <strudel): Find rows that contain the words “apple” and “turnover”, or “apple” and “strudel” (in any order), but rank “apple turnover” higher than “apple strudel”.
+		// apple*: Find rows that contain words such as “apple”, “apples”, “applesauce”, or “applet”.
+		if (term.includes('~') || term.includes('>') || term.includes('<') || term.includes('*')) return true;
+		
+		// in other cases we assume that it will be natural language mode - it's certainly possible to get it wrong but both modes perform pretty good in general
+		return false;
 	}
 	
 	/**
@@ -75,33 +141,6 @@ class Product extends Controller {
 		const product = await this.db.selectRow('select product_id, name, description, price, discounted_price, image, image_2 as image2 from product where product_id = ?', [ ctx.params.product_id ]);
 		if (!product) this.throw('PRD_01', 'No record with this ID.');
 		this.body = product;
-	}
-	
-	/**
-	 * returns products of a category
-	 */
-	async getCategoryProducts(ctx) {
-		await this.list({
-			table: 'product',
-			columns: this.getProductColumnsSql(),
-			filters: [ 'product_id in (select product_id from product_category where category_id = ?)' ],
-			params: [ ctx.params.category_id ]
-		});
-	}
-	
-	/**
-	 * returns products of a department
-	 */
-	async getDepartmentProducts(ctx) {
-		await this.list({
-			table: 'product',
-			columns: this.getProductColumnsSql(),
-			filters: [
-				'product_id in (select product_id from product_category pc join category c on pc.category_id = c.category_id where c.department_id = ?)',
-				'display in (2,3)' // not sure why this is needed - it was implemented this way in catalog_get_products_on_department
-			],
-			params: [ ctx.params.department_id ]
-		});
 	}
 	
 	/**

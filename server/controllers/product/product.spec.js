@@ -1,31 +1,43 @@
-﻿describe('Product Tests', function() {
+﻿const product = require('./product.js');
+
+describe('Product Tests', function() {
 	
 	let testEmail = 'test@test.com';
 	let testPassword = 'Test1234!';
 	let testToken = ''; // will be filled out in tests
 
 	it('should get products - cut description at 10 characters - set page size to 5 records', async function() {
-		const response = await callApi('products', { description_length: 10, limit: 5 });
+		const response = await callApi('products', { limit: 5 });
 		global.lastHttpResponseCode.should.equal(200);
 		response.count.should.be.above(0);
 		response.rows.length.should.be.at.most(5);
 		response.rows[0].product_id.should.exist;
 		response.rows[0].name.should.exist;
 		response.rows[0].description.should.exist;
-		response.rows[0].description.length.should.equal(13);
 		response.rows[0].price.should.exist;
 		response.rows[0].discounted_price.should.exist;
 		response.rows[0].thumbnail.should.exist;
 	});
 	
+	it('should test search decisions in boolean/natural language mode', function() {
+		product.constructor.searchInBooleanMode('(apple banana)').should.be.true;
+		product.constructor.searchInBooleanMode('+apple +juice').should.be.true;
+		product.constructor.searchInBooleanMode('+apple macintosh').should.be.true;
+		product.constructor.searchInBooleanMode('+apple -macintosh').should.be.true;
+		product.constructor.searchInBooleanMode('+apple ~macintosh').should.be.true;
+		product.constructor.searchInBooleanMode('+apple +(>turnover <strudel)').should.be.true;
+		product.constructor.searchInBooleanMode('apple*').should.be.true;
+		product.constructor.searchInBooleanMode('"some words"').should.be.false;
+	});
+	
 	it('should search products', async function() {
-		const response = await callApi('products/search', { limit: 5, order: 'product_id', description_length: 10, query_string: 'fellow', all_words: 'on' });
+		const response = await callApi('products', { limit: 5, order: 'product_id', search_term: 'fellow' });
+		console.log(response);
 		global.lastHttpResponseCode.should.equal(200);
 		response.rows.length.should.be.at.most(5);
 		response.rows[0].product_id.should.exist;
 		response.rows[0].name.should.exist;
 		response.rows[0].description.should.exist;
-		response.rows[0].description.length.should.equal(13);
 		response.rows[0].price.should.exist;
 		response.rows[0].discounted_price.should.exist;
 		response.rows[0].thumbnail.should.exist;
@@ -53,32 +65,49 @@
 	});
 	
 	it('should get products of a category', async function() {
-		const response = await callApi('products/inCategory/1', { limit: 5, order: 'product_id', description_length: 10 });
+		const response = await callApi('products', { category_ids: '1,3' });
 		global.lastHttpResponseCode.should.equal(200);
 		response.count.should.be.above(0);
-		response.rows.length.should.equal(5);
+		response.rows.length.should.equal(10);
 		response.rows[0].product_id.should.exist;
 		response.rows[0].name.should.exist;
 		response.rows[0].description.should.exist;
-		response.rows[0].description.length.should.equal(13);
 		response.rows[0].price.should.exist;
 		response.rows[0].discounted_price.should.exist;
 		response.rows[0].thumbnail.should.exist;
 	});
 	
 	it('should get products of a department', async function() {
-		const response = await callApi('products/inDepartment/1', { limit: 5, order: 'product_id', description_length: 10 });
+		const response = await callApi('products', { department_ids: '1,3' });
+		console.log(response);
 		global.lastHttpResponseCode.should.equal(200);
-		response.rows.length.should.equal(5);
+		response.rows.length.should.equal(10);
 		response.rows[0].product_id.should.exist;
 		response.rows[0].name.should.exist;
 		response.rows[0].description.should.exist;
-		response.rows[0].description.length.should.equal(13);
 		response.rows[0].price.should.exist;
 		response.rows[0].discounted_price.should.exist;
 		response.rows[0].thumbnail.should.exist;
 	});
 	
+	it('should get discounted products', async function() {
+		const response = await callApi('products', { discounted: 1 });
+		global.lastHttpResponseCode.should.equal(200);
+		response.count.should.be.above(0);
+	});
+	
+	it('should get products within price range', async function() {
+		const response = await callApi('products', { min_price: 10, max_price: 20 });
+		global.lastHttpResponseCode.should.equal(200);
+		response.count.should.be.above(0);
+	});
+	
+	it('should get products with attribute values', async function() {
+		const response = await callApi('products', { attribute_value_ids: '2,7' });
+		global.lastHttpResponseCode.should.equal(200);
+		response.count.should.be.above(0);
+	});
+
 	it('should get product details', async function() {
 		const response = await callApi('products/1/details');
 		global.lastHttpResponseCode.should.equal(200);
