@@ -6,6 +6,7 @@ import Typography from '@material-ui/core/Typography/Typography';
 import { Api } from '../../shared/api';
 import CatalogProduct from './catalogProduct';
 import DepartmentHeader from './departmentHeader';
+import LinkButton from '../../shared/linkButton';
 
 export default mount({
 	'/': route(req => ({ title: 'Turing Catalog Page', view: <Catalog filters={req.params} /> }))
@@ -50,8 +51,19 @@ function Catalog({ filters }) {
 		{getCatalogHeader()}
 		{getSearchInfo()}
 		
+		{/*We will show the layered navigation here along with the applied filters */}
+		
 		{/* we pass the route parameters (query string) as-is to the api */}
 		<Api endpoint="products" args={filters} render={products => (<>
+			{products.count === 0 &&
+				<Card>
+					<CardContent>
+						<Typography variant="body1">Could not find any products that match the search criteria.</Typography>
+						<br/>
+						<LinkButton href="/catalog">View All Products</LinkButton>
+					</CardContent>
+				</Card>
+			}
 			{products.rows.map(product =>
 				(
 					<CatalogProduct key={product.product_id} product={product}/>

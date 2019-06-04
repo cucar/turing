@@ -34,3 +34,7 @@
 .catalog-product-link {
 	height: 50px;
 }
+
+.discounted-from {
+	text-decoration: line-through;
+}

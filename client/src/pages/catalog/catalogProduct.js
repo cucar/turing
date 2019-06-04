@@ -26,13 +26,13 @@ export default function CatalogProduct({ product }) {
 					</div>
 					<div className="catalog-product-price">
 						<div>
-							<Typography variant="h6">${product.price}</Typography>
+							<Typography variant="h6">${parseFloat(product.discounted_price) > 0 ? product.discounted_price : product.price}</Typography>
 							<br/>
-							${product.discounted_price}
+							{parseFloat(product.discounted_price) > 0 && <span className="discounted-from">${product.price}</span>}
 						</div>
 					</div>
 					<div className="catalog-product-link">
-						<LinkButton href={`/products/${product.product_id}`} >View</LinkButton>
+						<LinkButton href={`/product/${product.product_id}`} >View</LinkButton>
 					</div>
 				</div>
 			</CardContent>
