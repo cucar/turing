@@ -1,0 +1,36 @@
+.catalog-product {
+	display: flex;
+	flex-direction: row;
+}
+
+.catalog-product-image {
+	margin-right: 20px;
+	padding: 0;
+}
+
+.catalog-product-image > img {
+	border: solid grey 1px;
+}
+
+.catalog-product-info {
+	flex-grow: 1;
+}
+
+.catalog-product-price {
+	width: 200px;
+	height: 120px;
+	padding-top: 10px;
+}
+
+.catalog-product-price > div {
+	float: right;
+	margin-right: 40px;
+}
+
+.catalog-product-link {
+	padding-top: 10px;
+}
+
+.catalog-product-link {
+	height: 50px;
+}

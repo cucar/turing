@@ -15,7 +15,7 @@ const ApiContext = React.createContext(null);
  * <Api endpoint="products"><ApiContext.Consumer>{showProducts}</ApiContext.Consumer></Api>
 */
 const Api = ({ endpoint, args, method, headers, render }) => {
-
+	
 	// these are concurrency control variables - since they need to be updated synchronously, we can't make them part of state - using ref instead
 	const apiRequestSent = useRef(false);
 	const responseReceived = useRef(false);
@@ -29,7 +29,7 @@ const Api = ({ endpoint, args, method, headers, render }) => {
 		// if api request was sent in previous renders, no need to do anything - return - otherwise, set it true since we're about to make that call
 		if (apiRequestSent.current) return;
 		apiRequestSent.current = true;
-
+		
 		// start the timer to show the progress - if we get the response within 500 ms, we won't show progress - otherwise show it until response is received
 		setTimeout(() => { if (!responseReceived.current) setState({ apiResponse: null, showProgress: true }); }, 500);
 		
@@ -38,8 +38,10 @@ const Api = ({ endpoint, args, method, headers, render }) => {
 			
 			// if we get an error here, the api response will be set to empty string and an error dialog will be shown
 			// at that point we leave it to the caller to handle the error - in any case, we received a response
+			// we also reset api request sent flag used to control progress display at render
 			setState({ apiResponse: await callApi(endpoint, args, method, headers), showProgress: false });
 			responseReceived.current = true;
+			apiRequestSent.current = false;
 		})();
 	}, [ endpoint, args, method, headers, responseReceived, apiRequestSent ]);
 	

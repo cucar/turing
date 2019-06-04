@@ -40,7 +40,7 @@ export default function Nav() {
 						<div className="links">
 							<LinkButton variant="text" href="/">Home</LinkButton>
 							<Api endpoint="departments" render={departments => departments.map(department => (
-								<LinkButton key={department.department_id} variant="text" href={`/catalog?department_id=${department.department_id}`}>{department.name}</LinkButton>
+								<LinkButton key={department.department_id} variant="text" href={`/catalog?department_ids=${department.department_id}`}>{department.name}</LinkButton>
 							))} />
 						</div>
 						<div className="cart">
