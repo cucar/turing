@@ -10,3 +10,12 @@ table.pagination *, div.sort * {
 	font-size: 14px;
 	color: black;
 }
+
+.filters .filter-header {
+	display: inline-block;
+	font-weight: bold;
+	font-size: 16px;
+	margin-right: 10px;
+	position: relative;
+	top: 2px;
+}

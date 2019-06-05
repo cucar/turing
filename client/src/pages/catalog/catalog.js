@@ -1,14 +1,12 @@
 import React from 'react';
 import { mount, route } from 'navi';
 import { useNavigation } from 'react-navi';
-import { Card, CardContent, Table, TableBody, TablePagination, TableRow } from '@material-ui/core';
-import Typography from '@material-ui/core/Typography/Typography';
-import Select from '@material-ui/core/Select/Select';
-import MenuItem from '@material-ui/core/MenuItem/MenuItem';
+import { Card, CardContent, Table, TableBody, TablePagination, TableRow, FormControlLabel, Checkbox, Typography, Select, MenuItem } from '@material-ui/core';
 
 import { Api } from '../../shared/api';
 import CatalogProduct from './catalogProduct';
 import DepartmentHeader from './departmentHeader';
+import CategoryHeader from './categoryHeader';
 import LinkButton from '../../shared/linkButton';
 
 import './catalog.css';
@@ -42,7 +40,7 @@ function Catalog({ filters }) {
 		if (filters.hasOwnProperty('department_ids') && !filters.department_ids.includes(',') && !filters.category_ids) return (<DepartmentHeader departmentId={filters.department_ids} />);
 
 		// if only one category is selected in category ids in the filters, it's category page - show category name and description here*/
-		if (filters.hasOwnProperty('category_ids') && !filters.category_ids.includes(',')) return (<DepartmentHeader departmentId={filters.category_ids} />);
+		if (filters.hasOwnProperty('category_ids') && !filters.category_ids.includes(',')) return (<CategoryHeader categoryId={filters.category_ids} />);
 
 		// in other cases it's all products list with some kind of custom filtering - we will show them in layered navigation
 		return '';
@@ -77,6 +75,16 @@ function Catalog({ filters }) {
 		navigator.navigate(`catalog?${queryString.stringify({...filters, ...{ page: 0, order: event.target.value } })}`);
 	};
 	
+	/**
+	 * department filter change - reset the page number to the first page and retrieve data with the new sort field/direction
+	 */
+	const onDepartmentFilter = (departmentId) => () => {
+		let departmentIds = (filters.department_ids ? filters.department_ids.split(',') : []);
+		if (departmentIds.includes(departmentId.toString())) departmentIds = departmentIds.filter(d => d !== departmentId.toString());
+		else departmentIds.push(departmentId);
+		navigator.navigate(`catalog?${queryString.stringify({...filters, ...{ page: 0, department_ids: departmentIds.join(',') } })}`);
+	};
+
 	return (<>
 		
 		{/* info about what we're going to display */}
@@ -101,7 +109,28 @@ function Catalog({ filters }) {
 		{/* make the api call to get the products and display them - we pass the route parameters (query string) as-is to the api */}
 		<Api endpoint="products" args={filters} render={products => (<>
 			
-			{/* We will show the layered navigation here along with the applied filters */}
+			{/* show the layered navigation here along with the applied filters */}
+			<Card>
+				<CardContent>
+					<div className="filters">
+						<span className="filter-header">Departments:</span>
+						{products.departments.map(department => (
+							<FormControlLabel
+								key={department.department_id}
+								control={
+									<Checkbox
+										checked={filters.department_ids ? filters.department_ids.split(',').includes(department.department_id.toString()) : false}
+										onChange={onDepartmentFilter(department.department_id)}
+										color="primary"
+									/>
+								}
+								label={department.department_name}
+							/>
+						))}
+					</div>
+				</CardContent>
+			</Card>
+			<br/>
 			
 			{/* no products found in result set view */}
 			{products.count === 0 &&

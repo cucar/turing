@@ -38,9 +38,9 @@ class Product extends Controller {
 		const orderField = (this.param('order') ? this.param('order').replace('_asc', '').replace('_desc', '') : 'product_id');
 		const orderDirection = (this.param('order') && this.param('order').endsWith('asc') ? 'asc' : 'desc');
 
-		// now get the products and return them
+		// now get the products page data
 		const { sqlFilters, sqlParams } = this.getProductFiltersAndParams();
-		await this.list({
+		let products = await this.getListData({
 			table: 'product p',
 			columns: Product.getProductListColumns(),
 			filters: sqlFilters,
@@ -48,6 +48,38 @@ class Product extends Controller {
 			order: orderField,
 			direction: orderDirection
 		});
+
+		// get attributes layered navigation information
+		products.attributes = await this.getLayeredNavigationAttributes();
+		products.categories = await this.db.selectAll('select category_id, name as category_name from category');
+		products.departments = await this.db.selectAll('select department_id, name as department_name from department');
+		products.prices = await this.getLayeredNavigationPrices(sqlFilters, sqlParams);
+		
+		// return the data along with the layered navigation information
+		this.body = products;
+	}
+	
+	/**
+	 * returns the layered navigation available filters for non-attributes in a result set - departments, categories, price and discount filters
+	 */
+	getLayeredNavigationPrices(sqlFilters, sqlParams) {
+		return this.db.selectRow(`
+			select min(coalesce(nullif(p.discounted_price, 0), p.price)) as min_price, max(coalesce(nullif(p.discounted_price, 0), p.price)) as max_price
+			from product p
+			${sqlFilters.length > 0 ? `where ${sqlFilters.join(' and ')}` : ''}
+		`, sqlParams);
+	}
+	
+	/**
+	 * returns the layered navigation available filters for attributes in a result set
+	 */
+	getLayeredNavigationAttributes() {
+		return this.db.selectAll(`
+			select a.attribute_id, a.name as attribute_name, av.attribute_value_id, av.value as attribute_value
+			from attribute_value av
+			join attribute a on av.attribute_id = a.attribute_id
+			order by a.attribute_id, av.attribute_value_id
+		`);
 	}
 	
 	/**
@@ -90,7 +122,7 @@ class Product extends Controller {
 		
 		if (this.param('attribute_value_ids')) {
 			let attributeValueIds = this.param('attribute_value_ids').split(',').map(attributeValueId => parseInt(attributeValueId));
-			sqlFilters.push(`p.product_id in (select pa.product_id from product_attribute pa where pa.attribute_value_id in (${attributeValueIds.join(',')}))`);
+			sqlFilters.push(`p.product_id in (select paf.product_id from product_attribute paf where paf.attribute_value_id in (${attributeValueIds.join(',')}))`);
 		}
 		
 		return { sqlFilters, sqlParams };
