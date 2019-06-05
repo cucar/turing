@@ -25,6 +25,7 @@
 	max-width: 250px; /* beyond this width buttons don't look good */
 	min-width: 150px;
 	margin-right: 20px;
+	margin-bottom: 20px;
 }
 
 .MuiTextField-root {
@@ -36,4 +37,37 @@
 	padding-bottom: 5px;
 	margin-bottom: 15px;
 	border-bottom: solid #bbbbbb 1px;
+}
+
+@media only screen and (max-width: 600px) {
+
+	td.MuiTablePagination-root .MuiToolbar-gutters {
+		padding-left: 0;
+	}
+	
+	td.MuiTablePagination-root .MuiTablePagination-input {
+		display: inline-block;
+		width: auto;
+	}
+	
+	td.MuiTablePagination-root .MuiTablePagination-input .MuiSelect-root {
+		width: auto;
+		margin-right: 5px;
+		margin-left: 0;
+		padding-right: 0;
+	}
+	
+	td.MuiTablePagination-root .MuiTablePagination-input .MuiSelect-root .MuiSelect-select {
+		padding-left: 0;
+		padding-right: 15px;
+		width: 30px;
+	}
+	
+	td.MuiTablePagination-root .MuiTablePagination-actions {
+		margin-left: 0;
+	}
+	
+	td.MuiTablePagination-root .MuiTablePagination-actions .MuiIconButton-root {
+		padding: 3px;
+	}
 }

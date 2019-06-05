@@ -16,6 +16,11 @@
 	flex-grow: 1;
 }
 
+.catalog-product-header {
+	font-size: 2em;
+	font-weight: bold;
+}
+
 .catalog-product-price {
 	width: 200px;
 	height: 120px;
@@ -27,6 +32,18 @@
 	margin-right: 40px;
 }
 
+.catalog-product-effective-price {
+	font-size: 1.5em;
+	font-weight: bold;
+	margin-bottom: 20px;
+	display: block;
+}
+
+.catalog-product-discounted-from {
+	font-size: 1.3em;
+	text-decoration: line-through;
+}
+
 .catalog-product-link {
 	padding-top: 10px;
 }
@@ -35,6 +52,54 @@
 	height: 50px;
 }
 
-.discounted-from {
-	text-decoration: line-through;
+@media only screen and (max-width: 600px) {
+
+	.catalog-product {
+		display: block;
+	}
+	
+	.catalog-product-image {
+		display: inline-block;
+		width: auto;
+		float: left;
+	}
+	
+	.catalog-product-info {
+		min-height: 120px;
+	}
+	
+	.catalog-product-header {
+		font-size: 1.5em;
+	}
+	
+	.catalog-product-price {
+		width: 150px;
+		height: auto;
+		display: inline-block;
+	}
+
+	.catalog-product-price > div {
+		float: none;
+		margin-right: 0;
+	}
+	
+	.catalog-product-effective-price {
+		display: inline-block;
+		font-size: 1.2em;
+		margin-bottom: 0;
+		margin-right: 15px;
+	}
+	
+	.catalog-product-discounted-from {
+		font-size: 1em;
+	}
+	
+	.catalog-product-link {
+		float: right;
+		width: auto;
+		height: auto;
+		padding-top: 10px;
+		padding-bottom: 0;
+	}
 }
+
