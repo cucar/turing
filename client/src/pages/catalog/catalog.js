@@ -1,12 +1,17 @@
 import React from 'react';
 import { mount, route } from 'navi';
-import { Card, CardContent } from '@material-ui/core';
+import { useNavigation } from 'react-navi';
+import { Card, CardContent, Table, TableBody, TablePagination, TableRow } from '@material-ui/core';
 import Typography from '@material-ui/core/Typography/Typography';
 
 import { Api } from '../../shared/api';
 import CatalogProduct from './catalogProduct';
 import DepartmentHeader from './departmentHeader';
 import LinkButton from '../../shared/linkButton';
+
+import './catalog.css';
+
+const queryString = require('querystring');
 
 export default mount({
 	'/': route(req => ({ title: 'Turing Catalog Page', view: <Catalog filters={req.params} /> }))
@@ -17,6 +22,15 @@ export default mount({
  */
 function Catalog({ filters }) {
 	
+	// get navigation object - needed for updating view for changes in filters
+	let navigator = useNavigation();
+	
+	// shown options for page size in the pagination drop down
+	const pageSizeOptions = [ 10, 25, 100 ];
+	
+	// when ever we're re-rendering, scroll to top
+	window.scrollTo(0, 0);
+
 	/**
 	 * get category or department description and show it if needed
 	 */
@@ -46,7 +60,21 @@ function Catalog({ filters }) {
 			<br/>
 		</>);
 	};
-
+	
+	/**
+	 * list page change event handler - redirect to the new page with new route params
+	 */
+	const onPageChange = async (event, newPage) => {
+		navigator.navigate(`catalog?${queryString.stringify({...filters, ...{ page: newPage } })}`);
+	};
+	
+	/**
+	 * list page size change event handler - reset the page number to the first page and retrieve data with the new page size
+	 */
+	const onPageSizeChange = async (event) => {
+		navigator.navigate(`catalog?${queryString.stringify({...filters, ...{ page: 0, page_size: +event.target.value } })}`);
+	};
+	
 	return (<>
 		{getCatalogHeader()}
 		{getSearchInfo()}
@@ -69,8 +97,25 @@ function Catalog({ filters }) {
 					<CatalogProduct key={product.product_id} product={product}/>
 				)
 			)}
+			<Card>
+				<CardContent>
+					<Table className="pagination">
+						<TableBody>
+							<TableRow>
+								<TablePagination
+								rowsPerPageOptions={pageSizeOptions}
+								count={products.count}
+								rowsPerPage={filters.page_size ? parseInt(filters.page_size) : 10}
+								page={parseInt(filters.page) || 0}
+								SelectProps={{ native: true }}
+								onChangePage={onPageChange}
+								onChangeRowsPerPage={onPageSizeChange}
+								/>
+							</TableRow>
+						</TableBody>
+					</Table>
+				</CardContent>
+			</Card>
 		</>)}/>
-		
-		{/*Pagination here*/}
 	</>);
 }

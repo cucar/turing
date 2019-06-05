@@ -1,0 +1,8 @@
+table.pagination td {
+	border-bottom-width: 0;
+}
+
+table.pagination * {
+	font-size: 14px;
+	color: black;
+}

@@ -20,11 +20,16 @@ class Product extends Controller {
 	/**
 	 * returns all products paginated
 	 * note: the catalog_get_products_on_catalog SP was using a filter for diplay in (1,3) - not sure why that was needed but it's not included here - we may need to add it later
+	 * @throws PRD_05 - Page size not allowed.
 	 */
 	async getProducts() {
 		
 		// debug slow response:
 		// await require('../../common/utils/utils.js').wait(10);
+		
+		// do not allow custom page sizes - only 10, 25 and 100 allowed
+		const pageSizeOptions = [ 10, 25, 100 ];
+		if (this.param('limit') && !pageSizeOptions.includes(parseInt(this.param('limit')))) this.throw('PRD_05', 'Page size not allowed.');
 		
 		const { sqlFilters, sqlParams } = this.getProductFiltersAndParams();
 		await this.list({ table: Product.getProductListTables(), columns: Product.getProductListColumns(), filters: sqlFilters, params: sqlParams });
