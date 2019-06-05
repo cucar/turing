@@ -21,6 +21,7 @@ class Product extends Controller {
 	 * returns all products paginated
 	 * note: the catalog_get_products_on_catalog SP was using a filter for diplay in (1,3) - not sure why that was needed but it's not included here - we may need to add it later
 	 * @throws PRD_05 - Page size not allowed.
+	 * @throws PRD_06 - Order not allowed.
 	 */
 	async getProducts() {
 		
@@ -31,8 +32,22 @@ class Product extends Controller {
 		const pageSizeOptions = [ 10, 25, 100 ];
 		if (this.param('limit') && !pageSizeOptions.includes(parseInt(this.param('limit')))) this.throw('PRD_05', 'Page size not allowed.');
 		
+		// only allow product id and price ordering - others are not made available at this time
+		const orderOptions = [ 'product_id_desc', 'product_id_asc', 'effective_price_desc', 'effective_price_asc' ];
+		if (this.param('order') && !orderOptions.includes(this.param('order'))) this.throw('PRD_06', 'Order not allowed.');
+		const orderField = (this.param('order') ? this.param('order').replace('_asc', '').replace('_desc', '') : 'product_id');
+		const orderDirection = (this.param('order') && this.param('order').endsWith('asc') ? 'asc' : 'desc');
+
+		// now get the products and return them
 		const { sqlFilters, sqlParams } = this.getProductFiltersAndParams();
-		await this.list({ table: Product.getProductListTables(), columns: Product.getProductListColumns(), filters: sqlFilters, params: sqlParams });
+		await this.list({
+			table: 'product p',
+			columns: Product.getProductListColumns(),
+			filters: sqlFilters,
+			params: sqlParams,
+			order: orderField,
+			direction: orderDirection
+		});
 	}
 	
 	/**
@@ -60,12 +75,12 @@ class Product extends Controller {
 		
 		if (this.param('department_ids')) {
 			let departmentIds = this.param('department_ids').split(',').map(departmentId => parseInt(departmentId));
-			sqlFilters.push(`c.department_id in (${departmentIds.join(',')})`);
+			sqlFilters.push(`p.product_id in (select pc.product_id from product_category pc join category c on pc.category_id = c.category_id where c.department_id in (${departmentIds.join(',')}))`);
 		}
 		
 		if (this.param('category_ids')) {
 			let categoryIds = this.param('category_ids').split(',').map(categoryId => parseInt(categoryId));
-			sqlFilters.push(`c.category_id in (${categoryIds.join(',')})`);
+			sqlFilters.push(`p.product_id in (select pc.product_id from product_category pc where pc.category_id in (${categoryIds.join(',')}))`);
 		}
 		
 		if (this.param('search')) {
@@ -82,27 +97,16 @@ class Product extends Controller {
 	}
 	
 	/**
-	 * returns the tables sql expression used in sending products list
-	 */
-	static getProductListTables() {
-		return `
-			product p
-			join product_category pc on p.product_id = pc.product_id
-			join category c on pc.category_id = c.category_id
-		`;
-	}
-	
-	/**
 	 * returns the description column sql expression used in sending products list
 	 */
 	static getProductListColumns() {
 		return `
 			p.product_id, p.name,
 			if(length(p.description) <= 200, p.description, concat(left(p.description, 200), '...')) as description,
-			p.price, p.discounted_price, p.thumbnail, p.display
+			p.price, p.discounted_price, coalesce(nullif(p.discounted_price, 0), p.price) as effective_price, p.thumbnail, p.display
 		`;
 	}
-
+	
 	/**
 	 * determines the search mode we should use for mysql full text product search - boolean match or natural language match
 	 */
