@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Paper, Table, TableBody, TableCell, TableFooter, TableHead, TablePagination, TableRow, TableSortLabel } from '@material-ui/core';
+import { Divider, List, ListItem, Paper, Table, TableBody, TableCell, TableFooter, TableHead, TablePagination, TableRow, TableSortLabel } from '@material-ui/core';
 import PropTypes from 'prop-types';
 import LinearProgress from '@material-ui/core/LinearProgress/LinearProgress';
 import { useNavigation } from 'react-navi';
@@ -7,6 +7,8 @@ import { useNavigation } from 'react-navi';
 import './turingList.css';
 
 import callApi from '../utils/callApi';
+import Select from '@material-ui/core/Select/Select';
+import MenuItem from '@material-ui/core/MenuItem/MenuItem';
 
 /**
  * list component used to display records from the api page by page
@@ -29,6 +31,19 @@ function TuringList({ endpoint, defaultOrderBy, detailRoute, children }) {
 	
 	// shown options for page size in the list pagination drop down
 	const pageSizeOptions = [ 10, 25, 100 ];
+	
+	// view changes from table to list for mobile devices
+	const isMobile = () => window.innerWidth <= 900;
+	const [ mobile, setMobile ] = useState(isMobile());
+	
+	/**
+	 * event listener to update the mobile view flag - responsive design
+	 */
+	useEffect(() => {
+		const onWindowResize = () => setMobile(isMobile());
+		window.addEventListener('resize', onWindowResize);
+		return () => window.removeEventListener('resize', onWindowResize);
+	});
 	
 	/**
 	 * retrieves the data for a requested page
@@ -95,7 +110,7 @@ function TuringList({ endpoint, defaultOrderBy, detailRoute, children }) {
 	};
 	
 	/**
-	 * list sort request event handler - reset the page number to the first page and retrieve data with the new sort field/direction
+	 * list sort request event handler for the non-mobile view - reset the page number to the first page and retrieve data with the new sort field/direction
 	 */
 	const onOrderChange = orderField => async () => {
 		
@@ -106,6 +121,18 @@ function TuringList({ endpoint, defaultOrderBy, detailRoute, children }) {
 		await getPageWithProgress(endpoint, 0, pageData.pageSize, orderField, newOrderDirection);
 	};
 	
+	/**
+	 * list sort request event handler for the mobile view - reset the page number to the first page and retrieve data with the new sort field/direction
+	 */
+	const onMobileOrderChange = async (event) => {
+		
+		// new order comes from sort options dropdown where order field and direction are concatenated with a pipe - split them
+		const orderParts = event.target.value.split('|');
+		
+		// now get the data with the new sort field and direction
+		await getPageWithProgress(endpoint, 0, pageData.pageSize, orderParts[0], orderParts[1]);
+	};
+
 	/**
 	 * row click event handler - only if a detail route has been given
 	 */
@@ -119,13 +146,19 @@ function TuringList({ endpoint, defaultOrderBy, detailRoute, children }) {
 	}, [ detailRoute, navigator ]);
 	
 	return (<>
-		
+
+		{/* show progress until we receive the data from the api */}
 		{pageData.showProgress && <LinearProgress />}
-	
+		
+		{/* api data received - show it in the list */}
 		{!pageData.showProgress && <Paper className="list-paper">
 			<div className="list-div">
+
+				{/* no records found in the api data - show that */}
 				{pageData.totalRecords === 0 && <div className="list-no-records">No records found.</div>}
-				{pageData.totalRecords > 0 && <Table className="list-table">
+				
+				{/* desktop view for the list using table components */}
+				{pageData.totalRecords > 0 && !mobile && <Table className="list-table">
 					
 					<TableHead>
 						<TableRow>
@@ -163,6 +196,58 @@ function TuringList({ endpoint, defaultOrderBy, detailRoute, children }) {
 					</TableFooter>}
 				
 				</Table>}
+				
+				{/* mobile view for the list using list components */}
+				{pageData.totalRecords > 0 && mobile && <>
+					
+					<div className="list-mobile-sort">
+						<span>Sort Order:</span> &nbsp;
+						<Select value={`${pageData.orderField}|${pageData.orderDirection}`} onChange={onMobileOrderChange} inputProps={{ name: 'order', id: 'order' }}>
+							{listFields.reduce((res, field) => res.concat([
+								{ ...field, sort: `${field.id}|asc`, label: `${field.label} Ascending` },
+								{ ...field, sort: `${field.id}|desc`, label: `${field.label} Descending` }
+							]), []).map(field => (
+								<MenuItem key={field.sort} value={field.sort}>{field.label}</MenuItem>
+							))}
+						</Select>
+					</div>
+					
+					<Divider />
+
+					<List>
+						{pageData.rows.map((row, index) => (
+							<div key={index} className="list-mobile-item-divider-wrap">
+								<ListItem onClick={() => onRowClick(row)} className={detailRoute ? 'list-mobile-item-container list-table-detail' : 'list-mobile-item-container'}>
+									{listFields.map(field => (
+										<div key={field.id} className="list-mobile-item">
+											<span className="list-mobile-label">{field.label}:</span>
+											<span className="list-mobile-data">{row[field.id]}</span>
+										</div>
+									))}
+								</ListItem>
+								<Divider />
+							</div>
+						))}
+					</List>
+					
+					{pageData.totalRecords > pageData.pageSize && <Table className="pagination">
+						<TableBody>
+							<TableRow>
+								<TablePagination
+									rowsPerPageOptions={pageSizeOptions}
+									colSpan={listFields.length}
+									count={pageData.totalRecords}
+									rowsPerPage={pageData.pageSize}
+									page={pageData.page}
+									SelectProps={{ native: true }}
+									onChangePage={onPageChange}
+									onChangeRowsPerPage={onPageSizeChange}
+								/>
+							</TableRow>
+						</TableBody>
+					</Table>}
+				</>}
+				
 			</div>
 		</Paper>}
 	</>);

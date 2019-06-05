@@ -32,3 +32,20 @@
 	margin: 20px;
 	font-size: 16px;
 }
+
+.list-mobile-item-container {
+	flex-direction: column;
+	align-items: flex-start;
+}
+
+.list-mobile-item-container .list-mobile-item .list-mobile-label {
+	font-weight: 500;
+	width: 120px;
+	display: inline-block;
+}
+
+.list-mobile-sort {
+	width: 100%;
+	padding: 20px;
+	text-align: right;
+}
