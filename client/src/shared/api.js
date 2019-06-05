@@ -39,6 +39,7 @@ const Api = ({ endpoint, args, method, headers, render }) => {
 			// if we get an error here, the api response will be set to empty string and an error dialog will be shown
 			// at that point we leave it to the caller to handle the error - in any case, we received a response
 			// we also reset api request sent flag used to control progress display at render
+			responseReceived.current = false;
 			setState({ apiResponse: await callApi(endpoint, args, method, headers), showProgress: false });
 			responseReceived.current = true;
 			apiRequestSent.current = false;
