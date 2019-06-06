@@ -223,7 +223,7 @@ class Product extends Controller {
 			let attributeValueLabel = attributeValueParts[3];
 			
 			// this is the value object we will add under the attribute
-			let attributeValue = { id: attributeValueId, label: attributeValueLabel };
+			let attributeValue = { value: attributeValueId, label: attributeValueLabel };
 			
 			// find the attribute in the attributes array - if found, add the value to it - if not, add the attribute along with the first value of it
 			let attribute = _.find(attributes, [ 'attribute_id', attributeId ]);
