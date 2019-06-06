@@ -1,12 +1,13 @@
 import React from 'react';
 import { mount, route } from 'navi';
 import { useNavigation } from 'react-navi';
-import { Card, CardContent, Table, TableBody, TablePagination, TableRow, FormControlLabel, Checkbox, Typography, Select, MenuItem } from '@material-ui/core';
+import { Card, CardContent, Table, TableBody, TablePagination, TableRow, Typography, Select, MenuItem } from '@material-ui/core';
 
 import { Api } from '../../shared/api';
 import CatalogProduct from './catalogProduct';
 import DepartmentHeader from './departmentHeader';
 import CategoryHeader from './categoryHeader';
+import CatalogFilters from './catalogFilters';
 import LinkButton from '../../shared/linkButton';
 
 import './catalog.css';
@@ -47,14 +48,6 @@ function Catalog({ filters }) {
 	};
 	
 	/**
-	 * shows search term filter that's applied to the results when applicable
-	 */
-	const getSearchInfo= () => {
-		if (!filters.search) return '';
-		return (<Typography variant="h4">Searching: {filters.search}</Typography>);
-	};
-	
-	/**
 	 * list page change event handler - redirect to the new page with new route params
 	 */
 	const onPageChange = async (event, newPage) => {
@@ -75,23 +68,12 @@ function Catalog({ filters }) {
 		navigator.navigate(`catalog?${queryString.stringify({...filters, ...{ page: 0, order: event.target.value } })}`);
 	};
 	
-	/**
-	 * department filter change - reset the page number to the first page and retrieve data with the new sort field/direction
-	 */
-	const onDepartmentFilter = (departmentId) => () => {
-		let departmentIds = (filters.department_ids ? filters.department_ids.split(',') : []);
-		if (departmentIds.includes(departmentId.toString())) departmentIds = departmentIds.filter(d => d !== departmentId.toString());
-		else departmentIds.push(departmentId);
-		navigator.navigate(`catalog?${queryString.stringify({...filters, ...{ page: 0, department_ids: departmentIds.join(',') } })}`);
-	};
-
 	return (<>
 		
 		{/* info about what we're going to display */}
 		<Card>
 			<CardContent>
 				{getCatalogHeader()}
-				{getSearchInfo()}
 				<div className="sort">
 					<span>Sort Order:</span> &nbsp;
 					<Select value={filters.order || 'product_id_desc'} onChange={onOrderChange} inputProps={{ name: 'order', id: 'order' }}>
@@ -110,27 +92,7 @@ function Catalog({ filters }) {
 		<Api endpoint="products" args={filters} render={products => (<>
 			
 			{/* show the layered navigation here along with the applied filters */}
-			<Card>
-				<CardContent>
-					<div className="filters">
-						<span className="filter-header">Departments:</span>
-						{products.departments.map(department => (
-							<FormControlLabel
-								key={department.department_id}
-								control={
-									<Checkbox
-										checked={filters.department_ids ? filters.department_ids.split(',').includes(department.department_id.toString()) : false}
-										onChange={onDepartmentFilter(department.department_id)}
-										color="primary"
-									/>
-								}
-								label={department.department_name}
-							/>
-						))}
-					</div>
-				</CardContent>
-			</Card>
-			<br/>
+			<CatalogFilters products={products} filters={filters} />
 			
 			{/* no products found in result set view */}
 			{products.count === 0 &&
@@ -144,11 +106,7 @@ function Catalog({ filters }) {
 			}
 			
 			{/* products list */}
-			{products.rows.map(product =>
-				(
-					<CatalogProduct key={product.product_id} product={product}/>
-				)
-			)}
+			{products.rows.map(product => (<CatalogProduct key={product.product_id} product={product}/>))}
 
 			{/* pagination and sort controls */}
 			<Card>
