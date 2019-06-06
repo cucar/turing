@@ -57,6 +57,7 @@ describe('Product Tests', function() {
 		response.description.should.exist;
 		response.price.should.exist;
 		response.discounted_price.should.exist;
+		response.avg_rating.should.exist;
 		response.category.category_id.should.exist;
 		response.category.category_name.should.exist;
 		response.images.length.should.equal(2);

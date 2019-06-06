@@ -180,7 +180,13 @@ class Product extends Controller {
 					from product_category pc
 					join category c on c.category_id = pc.category_id
 					where pc.product_id = p.product_id
-				) as category
+					limit 1
+				) as category,
+				(
+					select avg(r.rating)
+					from review r
+					where r.product_id = p.product_id
+				) as avg_rating
 			from product p
 			where p.product_id = ?
 		`, [ ctx.params.product_id ]);
