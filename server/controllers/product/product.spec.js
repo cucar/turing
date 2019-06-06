@@ -6,11 +6,11 @@ describe('Product Tests', function() {
 	let testPassword = 'Test1234!';
 	let testToken = ''; // will be filled out in tests
 
-	it('should get products - cut description at 10 characters - set page size to 5 records', async function() {
-		const response = await callApi('products', { limit: 5 });
+	it('should get products - set page size to 10 records', async function() {
+		const response = await callApi('products', { limit: 10 });
 		global.lastHttpResponseCode.should.equal(200);
 		response.count.should.be.above(0);
-		response.rows.length.should.be.at.most(5);
+		response.rows.length.should.be.at.most(10);
 		response.rows[0].product_id.should.exist;
 		response.rows[0].name.should.exist;
 		response.rows[0].description.should.exist;
@@ -31,10 +31,9 @@ describe('Product Tests', function() {
 	});
 	
 	it('should search products', async function() {
-		const response = await callApi('products', { limit: 5, order: 'product_id', search_term: 'fellow' });
-		console.log(response);
+		const response = await callApi('products', { order: 'product_id_desc', search_term: 'fellow' });
 		global.lastHttpResponseCode.should.equal(200);
-		response.rows.length.should.be.at.most(5);
+		response.rows.length.should.be.at.most(10);
 		response.rows[0].product_id.should.exist;
 		response.rows[0].name.should.exist;
 		response.rows[0].description.should.exist;
@@ -58,10 +57,9 @@ describe('Product Tests', function() {
 		response.description.should.exist;
 		response.price.should.exist;
 		response.discounted_price.should.exist;
-		response.image.should.exist;
-		response.image_2.should.exist;
-		response.thumbnail.should.exist;
-		response.display.should.exist;
+		response.category.category_id.should.exist;
+		response.category.category_name.should.exist;
+		response.images.length.should.equal(2);
 	});
 	
 	it('should get products of a category', async function() {
@@ -79,7 +77,6 @@ describe('Product Tests', function() {
 	
 	it('should get products of a department', async function() {
 		const response = await callApi('products', { department_ids: '1,3' });
-		console.log(response);
 		global.lastHttpResponseCode.should.equal(200);
 		response.rows.length.should.equal(10);
 		response.rows[0].product_id.should.exist;
@@ -108,28 +105,6 @@ describe('Product Tests', function() {
 		response.count.should.be.above(0);
 	});
 
-	it('should get product details', async function() {
-		const response = await callApi('products/1/details');
-		global.lastHttpResponseCode.should.equal(200);
-		response.product_id.should.equal(1);
-		response.name.should.exist;
-		response.description.should.exist;
-		response.price.should.exist;
-		response.discounted_price.should.exist;
-		response.image.should.exist;
-		response.image2.should.exist;
-	});
-	
-	it('should get product locations', async function() {
-		const response = await callApi('products/81/locations');
-		global.lastHttpResponseCode.should.equal(200);
-		response.length.should.be.at.least(1);
-		response[0].category_id.should.exist;
-		response[0].category_name.should.exist;
-		response[0].department_id.should.exist;
-		response[0].department_name.should.exist;
-	});
-	
 	it('should register new customer', async function() {
 		const response = await callApi('customers', { name: 'Test User', email: testEmail, password: testPassword }, 'POST');
 		global.lastHttpResponseCode.should.equal(200);

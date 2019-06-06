@@ -1,3 +1,4 @@
+const _ = require('lodash');
 const Controller = require('../../common/controller/controller.js');
 
 class Product extends Controller {
@@ -9,8 +10,6 @@ class Product extends Controller {
 		return [
 			{ path: '/products', handler: this.getProducts },
 			{ path: '/products/:product_id', handler: this.getProduct },
-			{ path: '/products/:product_id/details', handler: this.getProductDetails },
-			{ path: '/products/:product_id/locations', handler: this.getProductLocations },
 			{ path: '/products/:product_id/reviews', handler: this.getProductReviews },
 			{ path: '/products/:product_id/reviews', method: 'POST', handler: this.postProductReview, auth: true },
 			{ path: '/products/reviews/inCustomer', handler: this.getCustomerReviews, auth: true },
@@ -172,32 +171,33 @@ class Product extends Controller {
 	 * @throws PRD_01 - No record with this ID.
 	 */
 	async getProduct(ctx) {
-		const product = await this.db.selectRow('select * from product where product_id = ?', [ ctx.params.product_id ]);
+		
+		// get product information
+		let product = await this.db.selectRow(`
+			select p.product_id, p.name, p.description, p.price, p.discounted_price, p.image, p.image_2,
+				(
+					select concat(c.category_id, '|', c.name) as product_category
+					from product_category pc
+					join category c on c.category_id = pc.category_id
+					where pc.product_id = p.product_id
+				) as category
+			from product p
+			where p.product_id = ?
+		`, [ ctx.params.product_id ]);
 		if (!product) this.throw('PRD_01', 'No record with this ID.');
+		
+		// ideally the images of the products should be kept in a separate table - in this design we have them in the products table
+		// because there are only 2 images per product but we return them in an array to prepare for a structure that would allow more images
+		product.images = [ product.image, product.image_2 ];
+		product = _.omit(product, [ 'image', 'image_2' ]);
+		
+		// we fetch category id and name together in sql - split them here for easier use on the client side
+		product.category = {
+			category_id: product.category.split('|')[0],
+			category_name: product.category.split('|')[1]
+		};
+		
 		this.body = product;
-	}
-	
-	/**
-	 * get product details request handler
-	 * @throws PRD_01 - No record with this ID.
-	 */
-	async getProductDetails(ctx) {
-		const product = await this.db.selectRow('select product_id, name, description, price, discounted_price, image, image_2 as image2 from product where product_id = ?', [ ctx.params.product_id ]);
-		if (!product) this.throw('PRD_01', 'No record with this ID.');
-		this.body = product;
-	}
-	
-	/**
-	 * returns the locations of a product
-	 */
-	async getProductLocations(ctx) {
-		this.body = await this.db.selectAll(`
-			select c.category_id, c.name AS category_name, c.department_id, d.name as department_name
-			from category c
-			join department d on d.department_id = c.department_id
-			where c.category_id in (select category_id from product_category where product_id = ?)
-		`, [ ctx.params.product_id ]
-		);
 	}
 	
 	/**
