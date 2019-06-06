@@ -9,13 +9,15 @@ import TuringSelectField from '../../shared/turingSelectField';
 import TuringForm, { Validators } from '../../shared/turingForm';
 import Button from '@material-ui/core/Button/Button';
 
+import './productDetail.css';
+
 /**
  * shows product details
  */
 export default function ProductDetail({ productId }) {
 	
 	/**
-	 * event handler for adding a product to cart
+	 * event handler for adding a product to cart - call pub-sub event called "CartUpdate" so that the shopping cart in nav menu can be updated with new product count
 	 */
 	const onAddToCart = () => {
 		console.log('added product to cart');
@@ -32,6 +34,7 @@ export default function ProductDetail({ productId }) {
 						<div className="product-info">
 							
 							<div className="product-category">
+								<h3>Category</h3>
 								{JSON.stringify(product.category)}
 							</div>
 							

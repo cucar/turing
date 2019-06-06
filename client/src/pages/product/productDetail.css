@@ -1,11 +1,10 @@
 .product-detail {
 	width: 100%;
-}
-
-.product-images {
-	width: 50%;
+	display: flex;
+	flex-direction: row;
 }
 
 .product-info {
+	display: inline-block;
 	width: 50%;
 }
