@@ -2,11 +2,7 @@ table.pagination td {
 	border-bottom-width: 0;
 }
 
-div.sort {
-	float: right;
-}
-
-table.pagination *, div.sort * {
+table.pagination * {
 	font-size: 14px;
 	color: black;
 }

@@ -1,3 +1,12 @@
+div.sort {
+	float: right;
+}
+
+div.sort * {
+	font-size: 14px;
+	color: black;
+}
+
 .catalog-filters .catalog-filter-header {
 	display: inline-block;
 	font-weight: bold;

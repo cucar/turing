@@ -1,7 +1,7 @@
 import React from 'react';
 import { mount, route } from 'navi';
 import { useNavigation } from 'react-navi';
-import { Card, CardContent, Table, TableBody, TablePagination, TableRow, Typography, Select, MenuItem } from '@material-ui/core';
+import { Card, CardContent, Table, TableBody, TablePagination, TableRow, Typography } from '@material-ui/core';
 
 import { Api } from '../../shared/api';
 import CatalogProduct from './catalogProduct';
@@ -61,32 +61,10 @@ function Catalog({ filters }) {
 		navigator.navigate(`catalog?${queryString.stringify({...filters, ...{ page: 0, limit: +event.target.value } })}`);
 	};
 	
-	/**
-	 * list sort request event handler - reset the page number to the first page and retrieve data with the new sort field/direction
-	 */
-	const onOrderChange = (event) => {
-		navigator.navigate(`catalog?${queryString.stringify({...filters, ...{ page: 0, order: event.target.value } })}`);
-	};
-	
 	return (<>
 		
-		{/* info about what we're going to display */}
-		<Card>
-			<CardContent>
-				{getCatalogHeader()}
-				<div className="sort">
-					<span>Sort Order:</span> &nbsp;
-					<Select value={filters.order || 'product_id_desc'} onChange={onOrderChange} inputProps={{ name: 'order', id: 'order' }}>
-						<MenuItem value="product_id_desc">Newest</MenuItem>
-						<MenuItem value="product_id_asc">Oldest</MenuItem>
-						<MenuItem value="effective_price_asc">Lowest Price</MenuItem>
-						<MenuItem value="effective_price_desc">Highest Price</MenuItem>
-					</Select>
-				</div>
-				<br/>
-			</CardContent>
-		</Card>
-		<br/>
+		{/* if we're displaying a particular department or category, show info about it */}
+		{getCatalogHeader()}
 		
 		{/* make the api call to get the products and display them - we pass the route parameters (query string) as-is to the api */}
 		<Api endpoint="products" args={filters} render={products => (<>

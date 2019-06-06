@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, Checkbox, FormControlLabel, TextField, InputAdornment, IconButton } from '@material-ui/core';
+import { Card, CardContent, Checkbox, FormControlLabel, TextField, InputAdornment, IconButton, Select, MenuItem } from '@material-ui/core';
 import Search from '@material-ui/icons/Search';
 import { useNavigation } from 'react-navi';
 
@@ -15,8 +15,9 @@ export default function CatalogFilters({ products, filters }) {
 	// get navigation object - needed for updating view for changes in filters
 	let navigator = useNavigation();
 	
-	// search field value is stored in this ref
 	const [ searchTerm, setSearchTerm ] = useState(filters.search ? filters.search : '');
+	const [ minPrice, setMinPrice ] = useState(filters.min_price ? filters.min_price : '');
+	const [ maxPrice, setMaxPrice ] = useState(filters.max_price ? filters.max_price : '');
 	
 	/**
 	 * when global search is triggered, we end up getting re-rendered - update state in such a case
@@ -63,25 +64,79 @@ export default function CatalogFilters({ products, filters }) {
 	};
 	
 	/**
+	 * price filter change - reset the page number to the first page and retrieve data with the new sort field/direction
+	 */
+	const onMinPriceFilter = () => {
+		navigator.navigate(`catalog?${queryString.stringify({...filters, ...{ page: 0, min_price: minPrice } })}`);
+	};
+	
+	/**
+	 * min price text field key press event - if enter is pressed, make the same call as search button click
+	 */
+	const minPriceKeyPressed = (event) => {
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			onMinPriceFilter();
+		}
+	};
+	
+	/**
+	 * price filter change - reset the page number to the first page and retrieve data with the new sort field/direction
+	 */
+	const onMaxPriceFilter = () => {
+		navigator.navigate(`catalog?${queryString.stringify({...filters, ...{ page: 0, max_price: maxPrice } })}`);
+	};
+	
+	/**
+	 * max price text field key press event - if enter is pressed, make the same call as search button click
+	 */
+	const maxPriceKeyPressed = (event) => {
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			onMaxPriceFilter();
+		}
+	};
+	
+	/**
 	 * make the call to search for products
 	 */
-	const searchProducts = async () => {
+	const searchProducts = () => {
 		navigator.navigate(`catalog?${queryString.stringify({...filters, ...{ page: 0, search: searchTerm } })}`);
 	};
 	
 	/**
 	 * search text field key press event - if enter is pressed, make the same call as search button click
 	 */
-	const searchKeyPressed = async (event) => {
+	const searchKeyPressed = (event) => {
 		if (event.key === 'Enter') {
 			event.preventDefault();
-			await searchProducts();
+			searchProducts();
 		}
+	};
+	
+	/**
+	 * list sort request event handler - reset the page number to the first page and retrieve data with the new sort field/direction
+	 */
+	const onOrderChange = (event) => {
+		navigator.navigate(`catalog?${queryString.stringify({...filters, ...{ page: 0, order: event.target.value } })}`);
 	};
 	
 	return (<>
 		<Card>
 			<CardContent>
+				
+				{/* even though not necessarily a filter, sort option probably fits here the best */}
+				<div className="sort">
+					<span>Sort Order:</span> &nbsp;
+					<Select value={filters.order || 'product_id_desc'} onChange={onOrderChange} inputProps={{ name: 'order', id: 'order' }}>
+						<MenuItem value="product_id_desc">Newest</MenuItem>
+						<MenuItem value="product_id_asc">Oldest</MenuItem>
+						<MenuItem value="effective_price_asc">Lowest Price</MenuItem>
+						<MenuItem value="effective_price_desc">Highest Price</MenuItem>
+					</Select>
+				</div>
+				<br/>
+
 				<div className="catalog-filters">
 
 					{/* search filter */}
@@ -92,8 +147,26 @@ export default function CatalogFilters({ products, filters }) {
 							onChange={event => setSearchTerm(event.target.value)}
 							onKeyPress={searchKeyPressed}
 							InputProps={{ endAdornment: (
+								<InputAdornment position="end">
+									<IconButton onClick={searchProducts}>
+										<Search />
+									</IconButton>
+								</InputAdornment>
+							)}}
+						/>
+					</div>
+					
+					{/* minium price filter - we should use react-number-format library here sometime in the future */}
+					<div className="catalog-filter">
+						<TextField
+							label="Min Price"
+							type="number"
+							value={minPrice}
+							onChange={event => setMinPrice(event.target.value)}
+							onKeyPress={minPriceKeyPressed}
+							InputProps={{ endAdornment: (
 									<InputAdornment position="end">
-										<IconButton onClick={searchProducts}>
+										<IconButton onClick={onMinPriceFilter}>
 											<Search />
 										</IconButton>
 									</InputAdornment>
@@ -101,6 +174,24 @@ export default function CatalogFilters({ products, filters }) {
 						/>
 					</div>
 					
+					{/* maximum price filter - we should use react-number-format library here sometime in the future */}
+					<div className="catalog-filter">
+						<TextField
+							label="Max Price"
+							type="number"
+							value={maxPrice}
+							onChange={event => setMaxPrice(event.target.value)}
+							onKeyPress={maxPriceKeyPressed}
+							InputProps={{ endAdornment: (
+									<InputAdornment position="end">
+										<IconButton onClick={onMaxPriceFilter}>
+											<Search />
+										</IconButton>
+									</InputAdornment>
+								)}}
+						/>
+					</div>
+
 					{/* department filter */}
 					<div className="catalog-filter">
 						<span className="catalog-filter-header">Departments:</span>
