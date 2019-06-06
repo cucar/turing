@@ -14,7 +14,7 @@ function TuringSelectField({ id, label, validators, value, error, options, onCha
 	return (
 		<FormControl style={{ width: '100%' }} error={!!error}>
 			<InputLabel htmlFor={id}>{label}</InputLabel>
-			<Select value={value.toString()} onChange={onChange} inputProps={{ name: id, id: id }}>
+			<Select value={value ? value.toString() : ''} onChange={onChange} inputProps={{ name: id, id: id }}>
 				{options.map(option => <MenuItem key={option.value.toString()} value={option.value.toString()}>{option.label}</MenuItem>)}
 			</Select>
 			<FormHelperText>{error}</FormHelperText>

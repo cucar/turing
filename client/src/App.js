@@ -20,11 +20,9 @@ function App() {
 		'/product': lazy(() => import('./pages/product/product')),
 		'/cart': lazy(() => import('./pages/cart/cart')),
 		'/shipping': lazy(() => import('./pages/shipping/shipping')),
-		'/review': lazy(() => import('./pages/review/review')),
 		'/payment': lazy(() => import('./pages/payment/payment')),
 		'/checkout': lazy(() => import('./pages/checkout/checkout')),
-		'/account': lazy(() => import('./pages/account/account')),
-		'/order': lazy(() => import('./pages/order/order'))
+		'/account': lazy(() => import('./pages/account/account'))
 	});
 	
 	const theme = createMuiTheme({
