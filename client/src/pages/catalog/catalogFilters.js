@@ -54,7 +54,14 @@ export default function CatalogFilters({ products, filters }) {
 		else attributeValueIds.push(attributeValueId);
 		navigator.navigate(`catalog?${queryString.stringify({...filters, ...{ page: 0, attribute_value_ids: attributeValueIds.join(',') } })}`);
 	};
-
+	
+	/**
+	 * discount filter change - reset the page number to the first page and retrieve data with the new sort field/direction
+	 */
+	const onDiscountFilter = () => {
+		navigator.navigate(`catalog?${queryString.stringify({...filters, ...{ page: 0, discounted: (filters.discounted === '1' ? '0' : '1') } })}`);
+	};
+	
 	/**
 	 * make the call to search for products
 	 */
@@ -158,6 +165,24 @@ export default function CatalogFilters({ products, filters }) {
 							</div>
 						</div>
 					))}
+					
+					{/* discount filter */}
+					<div className="catalog-filter">
+						<span className="catalog-filter-header">Discounted:</span>
+						<div className="catalog-filter-checkboxes">
+							<FormControlLabel
+								className="catalog-filter-checkbox"
+								control={
+									<Checkbox
+										checked={filters.discounted === '1'}
+										onChange={onDiscountFilter}
+										color="primary"
+									/>
+								}
+								label="Discounted"
+							/>
+						</div>
+					</div>
 					
 				</div>
 			</CardContent>

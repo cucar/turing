@@ -92,7 +92,7 @@ class Product extends Controller {
 		let sqlFilters = [];
 		let sqlParams = [];
 		
-		if (this.param('discounted')) {
+		if (this.param('discounted') === '1') {
 			sqlFilters.push('p.discounted_price > 0');
 		}
 		
