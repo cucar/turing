@@ -22,7 +22,7 @@ export default function CatalogFilters({ products, filters }) {
 	 * when global search is triggered, we end up getting re-rendered - update state in such a case
 	 */
 	useEffect(() => {
-		setSearchTerm(filters.search);
+		setSearchTerm(filters.search ? filters.search : '');
 	}, [ filters.search ]);
 	
 	/**
@@ -40,11 +40,21 @@ export default function CatalogFilters({ products, filters }) {
 	 */
 	const onCategoryFilter = (categoryId) => () => {
 		let categoryIds = (filters.category_ids ? filters.category_ids.split(',') : []);
-		if (categoryIds.includes(categoryId.toString())) categoryIds = categoryIds.filter(d => d !== categoryId.toString());
+		if (categoryIds.includes(categoryId.toString())) categoryIds = categoryIds.filter(c => c !== categoryId.toString());
 		else categoryIds.push(categoryId);
 		navigator.navigate(`catalog?${queryString.stringify({...filters, ...{ page: 0, category_ids: categoryIds.join(',') } })}`);
 	};
 	
+	/**
+	 * attribute filter change - reset the page number to the first page and retrieve data with the new sort field/direction
+	 */
+	const onAttributeFilter = (attributeValueId) => () => {
+		let attributeValueIds = (filters.attribute_value_ids ? filters.attribute_value_ids.split(',') : []);
+		if (attributeValueIds.includes(attributeValueId.toString())) attributeValueIds = attributeValueIds.filter(a => a !== attributeValueId.toString());
+		else attributeValueIds.push(attributeValueId);
+		navigator.navigate(`catalog?${queryString.stringify({...filters, ...{ page: 0, attribute_value_ids: attributeValueIds.join(',') } })}`);
+	};
+
 	/**
 	 * make the call to search for products
 	 */
@@ -66,7 +76,8 @@ export default function CatalogFilters({ products, filters }) {
 		<Card>
 			<CardContent>
 				<div className="catalog-filters">
-					
+
+					{/* search filter */}
 					<div className="catalog-filter">
 						<TextField
 							label="Search"
@@ -83,12 +94,14 @@ export default function CatalogFilters({ products, filters }) {
 						/>
 					</div>
 					
+					{/* department filter */}
 					<div className="catalog-filter">
 						<span className="catalog-filter-header">Departments:</span>
 						<div className="catalog-filter-checkboxes">
 							{products.departments.map(department => (
 								<FormControlLabel
 									key={department.department_id}
+									className="catalog-filter-checkbox"
 									control={
 										<Checkbox
 											checked={filters.department_ids ? filters.department_ids.split(',').includes(department.department_id.toString()) : false}
@@ -102,12 +115,14 @@ export default function CatalogFilters({ products, filters }) {
 						</div>
 					</div>
 					
+					{/* category filter */}
 					<div className="catalog-filter">
 						<span className="catalog-filter-header">Categories:</span>
 						<div className="catalog-filter-checkboxes">
 							{products.categories.map(category => (
 								<FormControlLabel
 									key={category.category_id}
+									className="catalog-filter-checkbox"
 									control={
 										<Checkbox
 											checked={filters.category_ids ? filters.category_ids.split(',').includes(category.category_id.toString()) : false}
@@ -120,7 +135,30 @@ export default function CatalogFilters({ products, filters }) {
 							))}
 						</div>
 					</div>
-
+					
+					{/* attribute filters */}
+					{products.attributes.map(attribute => (
+						<div className="catalog-filter" key={attribute.attribute_id}>
+							<span className="catalog-filter-header">{attribute.attribute_name}:</span>
+							<div className="catalog-filter-checkboxes">
+								{attribute.values.map(attributeValue => (
+									<FormControlLabel
+										key={attributeValue.attribute_value_id}
+										className="catalog-filter-checkbox"
+										control={
+											<Checkbox
+												checked={filters.attribute_value_ids ? filters.attribute_value_ids.split(',').includes(attributeValue.attribute_value_id.toString()) : false}
+												onChange={onAttributeFilter(attributeValue.attribute_value_id)}
+												color="primary"
+											/>
+										}
+										label={attributeValue.attribute_value}
+									/>
+								))}
+							</div>
+						</div>
+					))}
+					
 				</div>
 			</CardContent>
 		</Card>

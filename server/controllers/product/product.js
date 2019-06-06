@@ -73,13 +73,16 @@ class Product extends Controller {
 	/**
 	 * returns the layered navigation available filters for attributes in a result set
 	 */
-	getLayeredNavigationAttributes() {
-		return this.db.selectAll(`
-			select a.attribute_id, a.name as attribute_name, av.attribute_value_id, av.value as attribute_value
-			from attribute_value av
-			join attribute a on av.attribute_id = a.attribute_id
-			order by a.attribute_id, av.attribute_value_id
-		`);
+	async getLayeredNavigationAttributes() {
+		
+		// get all attributes first
+		let attributes = await this.db.selectAll('select attribute_id, name as attribute_name from attribute order by attribute_id');
+		
+		// now populate the values for each attribute
+		for (let attribute of attributes)
+			attribute.values = await this.db.selectAll('select attribute_value_id, value as attribute_value from attribute_value where attribute_id = ? order by attribute_value_id', [ attribute.attribute_id ]);
+
+		return attributes;
 	}
 	
 	/**

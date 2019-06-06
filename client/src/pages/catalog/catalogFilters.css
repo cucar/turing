@@ -12,6 +12,10 @@
 	top: -2px;
 }
 
+.catalog-filter-checkbox {
+	width: 105px;
+}
+
 .catalog-filter-text-field {
 	display: inline-block;
 	position: relative;
