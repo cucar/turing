@@ -61,6 +61,7 @@ describe('Product Tests', function() {
 		response.category.category_id.should.exist;
 		response.category.category_name.should.exist;
 		response.images.length.should.equal(2);
+		response.attributes.length.should.be.at.least(0);
 	});
 	
 	it('should get products of a category', async function() {

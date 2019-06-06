@@ -172,7 +172,9 @@ class Product extends Controller {
 	 */
 	async getProduct(ctx) {
 		
-		// get product information
+		// get product information - NOTE: this query is efficient but limited in its use of group_concat - ideally we should use JSON_OBJECTAGG or JSON_ARRAYAGG but they are not available in MariaDB yet,
+		// which is used on Linux server. group_concat limit is 1024 characters by default and when you run the attribute aggregation as below it does not take more than that. the other issue may be the use
+		// of pipe or comma characters but none of the values contain them. so we should be good for now but when more attributes or attribute values are added this query should be amended to accommodate for it
 		let product = await this.db.selectRow(`
 			select p.product_id, p.name, p.description, p.price, p.discounted_price, p.image, p.image_2,
 				(
@@ -186,7 +188,14 @@ class Product extends Controller {
 					select avg(r.rating)
 					from review r
 					where r.product_id = p.product_id
-				) as avg_rating
+				) as avg_rating,
+				(
+					select group_concat(concat(av.attribute_id, '|', a.name, '|', pa.attribute_value_id, '|', av.value)) as attributes
+					from product_attribute pa
+					join attribute_value av on av.attribute_value_id = pa.attribute_value_id
+					join attribute a on a.attribute_id = av.attribute_id
+					where pa.product_id = p.product_id
+				) as attributes
 			from product p
 			where p.product_id = ?
 		`, [ ctx.params.product_id ]);
@@ -202,6 +211,27 @@ class Product extends Controller {
 			category_id: product.category.split('|')[0],
 			category_name: product.category.split('|')[1]
 		};
+		
+		// we fetch attribute values group_concat'ed together in sql for efficiency - split them here for easier use on the client side
+		product.attributes = product.attributes.split(',').reduce((attributes, attributeValueString) => {
+			
+			// decode the attribute value information
+			let attributeValueParts = attributeValueString.split('|');
+			let attributeId = attributeValueParts[0];
+			let attributeName = attributeValueParts[1];
+			let attributeValueId = attributeValueParts[2];
+			let attributeValueLabel = attributeValueParts[3];
+			
+			// this is the value object we will add under the attribute
+			let attributeValue = { id: attributeValueId, label: attributeValueLabel };
+			
+			// find the attribute in the attributes array - if found, add the value to it - if not, add the attribute along with the first value of it
+			let attribute = _.find(attributes, [ 'attribute_id', attributeId ]);
+			if (!attribute) attributes.push({ attribute_id: attributeId, attribute_name: attributeName, values: [ attributeValue ] });
+			else attribute.values.push(attributeValue);
+			
+			return attributes;
+		}, []);
 		
 		this.body = product;
 	}
