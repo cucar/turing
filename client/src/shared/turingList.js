@@ -13,7 +13,7 @@ import MenuItem from '@material-ui/core/MenuItem/MenuItem';
 /**
  * list component used to display records from the api page by page
  */
-function TuringList({ endpoint, defaultOrderBy, detailRoute, children }) {
+function TuringList({ endpoint, defaultOrderBy, defaultOrderDirection = 'asc', allowSort = true, forcePageSize, defaultView, renderListItem, detailRoute, children }) {
 	
 	// get navigation object - needed for redirecting to different screens from row click events
 	let navigator = useNavigation();
@@ -27,23 +27,63 @@ function TuringList({ endpoint, defaultOrderBy, detailRoute, children }) {
 	const responseReceived = useRef(false);
 	
 	// page data needs to be set together to make sure we don't trigger render more than once
-	const [ pageData, setPageData ] = useState({ page: 0, pageSize: 10, orderField: defaultOrderBy, orderDirection: 'asc', totalRecords: 0, rows: [], showProgress: true });
+	const [ pageData, setPageData ] = useState({
+		page: 0,
+		pageSize: (forcePageSize ? forcePageSize : 10),
+		orderField: defaultOrderBy,
+		orderDirection: defaultOrderDirection,
+		totalRecords: 0,
+		rows: [],
+		showProgress: true
+	});
 	
 	// shown options for page size in the list pagination drop down
-	const pageSizeOptions = [ 10, 25, 100 ];
-	
-	// view changes from table to list for mobile devices
-	const isMobile = () => window.innerWidth <= 900;
-	const [ mobile, setMobile ] = useState(isMobile());
+	const pageSizeOptions = (forcePageSize ? [ forcePageSize ] : [ 10, 25, 100 ]);
 	
 	/**
-	 * event listener to update the mobile view flag - responsive design
+	 * we have two modes of display: table and list item modes - this function determines which one we will use
+	 */
+	const isTableMode = () => {
+		
+		// if caller does not want us to use a particular mode at all times, do that
+		if (defaultView) return (defaultView === 'table');
+		
+		// if the width of the window goes below a certain amount, switch to list item mode
+		return (window.innerWidth > 900);
+	};
+	
+	// we have two modes of display: table and list item modes - this state variable holds which one is in effect
+	const [ tableMode, setTableMode ] = useState(isTableMode());
+	
+	/**
+	 * event listener to update the view for responsive design
 	 */
 	useEffect(() => {
-		const onWindowResize = () => setMobile(isMobile());
+		const onWindowResize = () => setTableMode(isTableMode());
 		window.addEventListener('resize', onWindowResize);
 		return () => window.removeEventListener('resize', onWindowResize);
 	});
+	
+	/**
+	 * returns the list item rendering for list mode (non-table mode)
+	 */
+	const getListItem = (row) => {
+		
+		// if a custom render item logic is given, use that
+		if (renderListItem) return renderListItem(row);
+		
+		// otherwise use the default rendering for list items
+		return (
+			<ListItem onClick={() => onRowClick(row)} className={detailRoute ? 'list-mobile-item-container list-table-detail' : 'list-mobile-item-container'}>
+				{listFields.map(field => (
+					<div key={field.id} className="list-mobile-item">
+						<span className="list-mobile-label">{field.label}:</span>
+						<span className="list-mobile-data">{row[field.id]}</span>
+					</div>
+				))}
+			</ListItem>
+		);
+	};
 	
 	/**
 	 * retrieves the data for a requested page
@@ -77,9 +117,9 @@ function TuringList({ endpoint, defaultOrderBy, detailRoute, children }) {
 		
 		// get the initial page data from API and display it - this is called only on initial render, so progress is already shown initially and we stop it here once we get the api response
 		(async () => {
-			await getPage(endpoint, 0, 10, defaultOrderBy, 'asc');
+			await getPage(endpoint, 0, (forcePageSize ? forcePageSize : 10), defaultOrderBy, 'asc');
 		})();
-	}, [ apiRequestSent, defaultOrderBy, endpoint ]);
+	}, [ apiRequestSent, defaultOrderBy, endpoint, forcePageSize ]);
 	
 	/**
 	 * retrieves the data for a requested page - shows progress if it takes longer than 500 ms
@@ -110,9 +150,9 @@ function TuringList({ endpoint, defaultOrderBy, detailRoute, children }) {
 	};
 	
 	/**
-	 * list sort request event handler for the non-mobile view - reset the page number to the first page and retrieve data with the new sort field/direction
+	 * list sort request event handler for the table view - reset the page number to the first page and retrieve data with the new sort field/direction
 	 */
-	const onOrderChange = orderField => async () => {
+	const onTableOrderChange = orderField => async () => {
 		
 		// switch direction if the same field is clicked multiple times
 		const newOrderDirection = (pageData.orderField === orderField && pageData.orderDirection === 'desc' ? 'asc' : 'desc');
@@ -122,9 +162,9 @@ function TuringList({ endpoint, defaultOrderBy, detailRoute, children }) {
 	};
 	
 	/**
-	 * list sort request event handler for the mobile view - reset the page number to the first page and retrieve data with the new sort field/direction
+	 * list sort request event handler for the list item mode - reset the page number to the first page and retrieve data with the new sort field/direction
 	 */
-	const onMobileOrderChange = async (event) => {
+	const onListOrderChange = async (event) => {
 		
 		// new order comes from sort options dropdown where order field and direction are concatenated with a pipe - split them
 		const orderParts = event.target.value.split('|');
@@ -157,16 +197,17 @@ function TuringList({ endpoint, defaultOrderBy, detailRoute, children }) {
 				{/* no records found in the api data - show that */}
 				{pageData.totalRecords === 0 && <div className="list-no-records">No records found.</div>}
 				
-				{/* desktop view for the list using table components */}
-				{pageData.totalRecords > 0 && !mobile && <Table className="list-table">
+				{/* table mode - list using table components */}
+				{pageData.totalRecords > 0 && tableMode && <Table className="list-table">
 					
 					<TableHead>
 						<TableRow>
 							{listFields.map(field => (
 								<TableCell key={field.id} className="list-table-header" sortDirection={pageData.orderField === field.id ? pageData.orderDirection : false}>
-									<TableSortLabel active={pageData.orderField === field.id} direction={pageData.orderDirection} onClick={onOrderChange(field.id)}>
+									{allowSort && <TableSortLabel active={pageData.orderField === field.id} direction={pageData.orderDirection} onClick={onTableOrderChange(field.id)}>
 										{field.label}
-									</TableSortLabel>
+									</TableSortLabel>}
+									{!allowSort && field.label}
 								</TableCell>
 							))}
 						</TableRow>
@@ -197,12 +238,12 @@ function TuringList({ endpoint, defaultOrderBy, detailRoute, children }) {
 				
 				</Table>}
 				
-				{/* mobile view for the list using list components */}
-				{pageData.totalRecords > 0 && mobile && <>
+				{/* list item mode - list using list components */}
+				{pageData.totalRecords > 0 && !tableMode && <>
 					
-					<div className="list-mobile-sort">
+					{allowSort && <div className="list-mobile-sort">
 						<span>Sort Order:</span> &nbsp;
-						<Select value={`${pageData.orderField}|${pageData.orderDirection}`} onChange={onMobileOrderChange} inputProps={{ name: 'order', id: 'order' }}>
+						<Select value={`${pageData.orderField}|${pageData.orderDirection}`} onChange={onListOrderChange} inputProps={{ name: 'order', id: 'order' }}>
 							{listFields.reduce((res, field) => res.concat([
 								{ ...field, sort: `${field.id}|asc`, label: `${field.label} Ascending` },
 								{ ...field, sort: `${field.id}|desc`, label: `${field.label} Descending` }
@@ -210,22 +251,14 @@ function TuringList({ endpoint, defaultOrderBy, detailRoute, children }) {
 								<MenuItem key={field.sort} value={field.sort}>{field.label}</MenuItem>
 							))}
 						</Select>
-					</div>
-					
-					<Divider />
+					</div>}
+					{allowSort && <Divider />}
 
 					<List>
 						{pageData.rows.map((row, index) => (
 							<div key={index} className="list-mobile-item-divider-wrap">
-								<ListItem onClick={() => onRowClick(row)} className={detailRoute ? 'list-mobile-item-container list-table-detail' : 'list-mobile-item-container'}>
-									{listFields.map(field => (
-										<div key={field.id} className="list-mobile-item">
-											<span className="list-mobile-label">{field.label}:</span>
-											<span className="list-mobile-data">{row[field.id]}</span>
-										</div>
-									))}
-								</ListItem>
-								<Divider />
+								{getListItem(row)}
+								{index !== pageData.rows.length - 1 && <Divider/>}
 							</div>
 						))}
 					</List>
@@ -257,7 +290,11 @@ TuringList.propTypes = {
 	children: PropTypes.node,
 	endpoint: PropTypes.string.isRequired,
 	defaultOrderBy: PropTypes.string.isRequired,
-	detailRoute: PropTypes.any
+	defaultOrderDirection: PropTypes.string,
+	defaultView: PropTypes.string,
+	detailRoute: PropTypes.any,
+	renderListItem: PropTypes.any,
+	forcePageSize: PropTypes.number
 };
 
 export default TuringList;

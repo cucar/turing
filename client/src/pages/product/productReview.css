@@ -1,0 +1,6 @@
+.product-review {
+	padding: 20px;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+}

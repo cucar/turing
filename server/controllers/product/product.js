@@ -243,14 +243,13 @@ class Product extends Controller {
 	 * returns the reviews of a product
 	 */
 	async getProductReviews(ctx) {
-		this.body = await this.db.selectAll(`
-			select c.name, r.review, r.rating, r.created_on
-			from review r
-			join customer c on c.customer_id = r.customer_id
-			where r.product_id = ?
-			order by r.created_on desc
-		`, [ ctx.params.product_id ]
-		);
+		await this.list({
+			table: 'review r join customer c on c.customer_id = r.customer_id',
+			columns: 'c.name as customer_name, r.review, r.rating, r.created_on',
+			filters: [ 'r.product_id = ?' ],
+			params: [ ctx.params.product_id ],
+			forcePageSize: 5
+		});
 	}
 	
 	/**

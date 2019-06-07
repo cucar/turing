@@ -126,11 +126,11 @@ describe('Product Tests', function() {
 	it('should get product reviews', async function() {
 		const response = await callApi('products/81/reviews');
 		global.lastHttpResponseCode.should.equal(200);
-		response.length.should.be.at.least(1);
-		response[0].name.should.exist;
-		response[0].review.should.exist;
-		response[0].rating.should.exist;
-		response[0].created_on.should.exist;
+		response.count.should.be.at.least(1);
+		response.rows[0].customer_name.should.exist;
+		response.rows[0].review.should.exist;
+		response.rows[0].rating.should.exist;
+		response.rows[0].created_on.should.exist;
 	});
 	
 	it('should delete test customer and review that was posted in this test', async function() {

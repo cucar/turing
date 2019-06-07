@@ -143,8 +143,8 @@ class Controller {
 	/**
 	 * lists handling - return a page from database directly to the client side
 	 */
-	async list({ table, columns, filters, params, groupBy, transformations, pagination, order, direction }) {
-		this.body = await this.getListData({ table, columns, filters, params, groupBy, transformations, pagination, order, direction });
+	async list({ table, columns, filters, params, groupBy, transformations, pagination, order, direction, forcePageSize }) {
+		this.body = await this.getListData({ table, columns, filters, params, groupBy, transformations, pagination, order, direction, forcePageSize });
 	}
 
 	/**
@@ -154,11 +154,11 @@ class Controller {
 	 * @throws PAG_03 - Incorrect page number
 	 * @throws PAG_04 - Incorrect page size
 	 */
-	async getListData({ table, columns = '*', filters, params, groupBy, transformations, pagination = true, order, direction }) {
+	async getListData({ table, columns = '*', filters, params, groupBy, transformations, pagination = true, order, direction, forcePageSize }) {
 
 		// get the parameters
 		let pageNumber = parseInt(this.param('page')) || 0;
-		let pageSize = this.param('limit') || 10;
+		let pageSize = forcePageSize || this.param('limit') || 10;
 		let orderBy = order || this.param('order');
 		let orderDirection = direction || this.param('direction');
 
