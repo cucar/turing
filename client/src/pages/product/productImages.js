@@ -32,16 +32,14 @@ export default function ProductImages({ images }) {
 	};
 	
 	return (
-		<div className="product-images">
-			<ImageGallery
-				items={imageGalleryImages}
-				showBullets={false}
-				showFullscreenButton={false}
-				showPlayButton={false}
-				showIndex={false}
-				showNav={false}
-				onImageLoad={onImageLoad}
-			/>
-		</div>
+		<ImageGallery
+			items={imageGalleryImages}
+			showBullets={false}
+			showFullscreenButton={false}
+			showPlayButton={false}
+			showIndex={false}
+			showNav={false}
+			onImageLoad={onImageLoad}
+		/>
 	);
 }

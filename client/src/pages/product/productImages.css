@@ -1,10 +1,5 @@
 @import '../../../node_modules/react-image-gallery/styles/css/image-gallery.css';
 
-.product-images {
-	width: 400px;
-	margin-right: 20px;
-}
-
 .image-gallery {
 	width: 400px;
 }
@@ -17,3 +12,11 @@
 .image-gallery-slide-wrapper {
 	margin-bottom: 10px;
 }
+
+@media only screen and (max-width: 700px) {
+	
+	.image-gallery {
+		width: 200px;
+	}
+}
+

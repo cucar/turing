@@ -30,9 +30,12 @@ const allowedButtons = [ Button, LinkButton ];
 function TuringForm({ endpoint, method, onApiResponseReceived, children }) {
 
 	// build fields, buttons and other elements array from children
-	const fields = children.filter(child => allowedInputs.includes(child.type));
-	const buttons = children.filter(child => allowedButtons.includes(child.type));
-	const otherElements = children.filter(child => !allowedInputs.concat(allowedButtons).includes(child.type));
+	let fields = children.filter(child => allowedInputs.includes(child.type));
+	let buttons = children.filter(child => allowedButtons.includes(child.type));
+	let otherElements = children.filter(child => !Array.isArray(child) && !allowedInputs.concat(allowedButtons).includes(child.type));
+	
+	// when the fields are rendered from an array, they show up as children of an array child - process them separately here - we should do buttons and others as well later
+	children.forEach(child => { if (Array.isArray(child)) for (let grandChild of child) if (allowedInputs.includes(grandChild.type)) fields.push(grandChild); });
 	
 	// input values and errors will be kept in the component state
 	let initialValues = {};
