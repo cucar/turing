@@ -1,6 +1,6 @@
 import React from 'react';
 
-import ProductRating from './productRating';
+import Rating from '../../shared/rating';
 import './productReview.css';
 
 /**
@@ -10,9 +10,9 @@ export default function ProductReview({ review }) {
 	return (
 		<div className="product-review">
 			<div className="product-review-info">
-				<ProductRating rating={review.rating} />
-				{review.customer_name}<br/>
-				{review.created_on}
+				<Rating rating={review.rating} />
+				<div className="product-review-customer">{review.customer_name}</div>
+				<div className="product-review-date">{(new Date(review.created_on)).toLocaleString()}</div>
 			</div>
 			<div className="product-review-text">
 				{review.review}

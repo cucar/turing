@@ -5,7 +5,7 @@ import Button from '@material-ui/core/Button/Button';
 import PubSub from 'pubsub-js';
 
 import LinkButton from '../../shared/linkButton';
-import ProductRating from './productRating';
+import Rating from '../../shared/rating';
 import ProductImages from './productImages';
 import TuringSelectField from '../../shared/turingSelectField';
 import TuringForm, { Validators } from '../../shared/turingForm';
@@ -70,7 +70,7 @@ export default function ProductDetail({ productId }) {
 								</Breadcrumbs>
 							</div>
 							
-							<ProductRating rating={product.avg_rating} />
+							<Rating rating={product.avg_rating} />
 							
 							<h1 className="product-title">{product.name}</h1>
 							<p>{product.description}</p>

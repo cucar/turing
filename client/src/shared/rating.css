@@ -1,0 +1,11 @@
+.rating {
+	padding-top: 10px;
+}
+
+.gold-star {
+	color: #ffc94f;
+}
+
+.disabled-star {
+	color: lightgrey;
+}

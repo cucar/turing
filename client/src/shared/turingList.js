@@ -13,7 +13,18 @@ import MenuItem from '@material-ui/core/MenuItem/MenuItem';
 /**
  * list component used to display records from the api page by page
  */
-function TuringList({ endpoint, defaultOrderBy, defaultOrderDirection = 'asc', allowSort = true, forcePageSize, defaultView, renderListItem, detailRoute, children }) {
+function TuringList({
+						endpoint,
+						defaultOrderBy,
+						defaultOrderDirection = 'asc',
+						allowSort = true,
+						forcePageSize,
+						defaultView,
+						renderListItem,
+						detailRoute,
+						onApiResponseReceived,
+						children
+}) {
 	
 	// get navigation object - needed for redirecting to different screens from row click events
 	let navigator = useNavigation();
@@ -88,11 +99,14 @@ function TuringList({ endpoint, defaultOrderBy, defaultOrderDirection = 'asc', a
 	/**
 	 * retrieves the data for a requested page
 	 */
-	const getPage = async (endpoint, page, pageSize, orderField, orderDirection) => {
+	const getPage = async (endpoint, page, pageSize, orderField, orderDirection, onApiResponseReceived) => {
 		
 		// call the api and get the page data back
 		// if there was an error fetching the data, api response will be null - error will be shown via a dialog - not much we can do in that case
 		const apiResponse = await callApi(endpoint, { page: page, limit: pageSize, order: orderField, direction: orderDirection });
+		
+		// if there are events to be done in the parent, call back the event hook
+		if (onApiResponseReceived) onApiResponseReceived(apiResponse);
 		
 		// page data is successfully retrieved from the api - update state and trigger render
 		setPageData({
@@ -117,21 +131,21 @@ function TuringList({ endpoint, defaultOrderBy, defaultOrderDirection = 'asc', a
 		
 		// get the initial page data from API and display it - this is called only on initial render, so progress is already shown initially and we stop it here once we get the api response
 		(async () => {
-			await getPage(endpoint, 0, (forcePageSize ? forcePageSize : 10), defaultOrderBy, 'asc');
+			await getPage(endpoint, 0, (forcePageSize ? forcePageSize : 10), defaultOrderBy, 'asc', onApiResponseReceived);
 		})();
-	}, [ apiRequestSent, defaultOrderBy, endpoint, forcePageSize ]);
+	}, [ apiRequestSent, defaultOrderBy, endpoint, forcePageSize, onApiResponseReceived ]);
 	
 	/**
 	 * retrieves the data for a requested page - shows progress if it takes longer than 500 ms
 	 */
-	const getPageWithProgress = async (endpoint, page, pageSize, orderField, orderDirection) => {
+	const getPageWithProgress = async (endpoint, page, pageSize, orderField, orderDirection, onApiResponseReceived) => {
 		
 		// start the timer to show the progress - if we get the response within 500 ms, we won't show progress - otherwise show it until response is received
 		responseReceived.current = false;
 		setTimeout(() => { if (!responseReceived.current) setPageData({...pageData, ...{ showProgress: true } }); }, 500);
 
 		// now make the actual call - when the api response is received the progress will be automatically hidden
-		await getPage(endpoint, page, pageSize, orderField, orderDirection);
+		await getPage(endpoint, page, pageSize, orderField, orderDirection, onApiResponseReceived);
 		responseReceived.current = true;
 	};
 	
@@ -139,14 +153,14 @@ function TuringList({ endpoint, defaultOrderBy, defaultOrderDirection = 'asc', a
 	 * list page change event handler - get the data for the requested page
 	 */
 	const onPageChange = async (event, newPage) => {
-		await getPageWithProgress(endpoint, newPage, pageData.pageSize, pageData.orderField, pageData.orderDirection);
+		await getPageWithProgress(endpoint, newPage, pageData.pageSize, pageData.orderField, pageData.orderDirection, onApiResponseReceived);
 	};
 	
 	/**
 	 * list page size change event handler - reset the page number to the first page and retrieve data with the new page size
 	 */
 	const onPageSizeChange = async (event) => {
-		await getPageWithProgress(endpoint, 0, +event.target.value, pageData.orderField, pageData.orderDirection);
+		await getPageWithProgress(endpoint, 0, +event.target.value, pageData.orderField, pageData.orderDirection, onApiResponseReceived);
 	};
 	
 	/**
@@ -158,7 +172,7 @@ function TuringList({ endpoint, defaultOrderBy, defaultOrderDirection = 'asc', a
 		const newOrderDirection = (pageData.orderField === orderField && pageData.orderDirection === 'desc' ? 'asc' : 'desc');
 		
 		// now get the data with the new sort field and direction
-		await getPageWithProgress(endpoint, 0, pageData.pageSize, orderField, newOrderDirection);
+		await getPageWithProgress(endpoint, 0, pageData.pageSize, orderField, newOrderDirection, onApiResponseReceived);
 	};
 	
 	/**
@@ -170,7 +184,7 @@ function TuringList({ endpoint, defaultOrderBy, defaultOrderDirection = 'asc', a
 		const orderParts = event.target.value.split('|');
 		
 		// now get the data with the new sort field and direction
-		await getPageWithProgress(endpoint, 0, pageData.pageSize, orderParts[0], orderParts[1]);
+		await getPageWithProgress(endpoint, 0, pageData.pageSize, orderParts[0], orderParts[1], onApiResponseReceived);
 	};
 
 	/**
@@ -294,7 +308,8 @@ TuringList.propTypes = {
 	defaultView: PropTypes.string,
 	detailRoute: PropTypes.any,
 	renderListItem: PropTypes.any,
-	forcePageSize: PropTypes.number
+	forcePageSize: PropTypes.number,
+	onApiResponseReceived: PropTypes.any
 };
 
 export default TuringList;
