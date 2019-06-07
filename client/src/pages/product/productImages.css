@@ -1,21 +1,19 @@
 @import '../../../node_modules/react-image-gallery/styles/css/image-gallery.css';
 
 .product-images {
-	display: inline-block;
-	width: 500px;
-	height: 581px;
+	width: 400px;
 	margin-right: 20px;
 }
 
+.image-gallery {
+	width: 400px;
+}
+
 .image-gallery-slide img {
-	width: 500px;
+	width: 100%;
 	border: solid grey 1px;
 }
 
 .image-gallery-slide-wrapper {
-	height: 476px;
-}
-
-.image-gallery-thumbnails-wrapper {
-	height: 105px;
+	margin-bottom: 10px;
 }
