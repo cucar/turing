@@ -29,6 +29,7 @@ export default function Notification(props) {
 	 * subscribe to the notifications queue - this is going to be populated by the notification module in utils when any other module calls showError, showSuccess, etc.
 	 */
 	useEffect(() => {
+		
 		PubSub.subscribe('Notification', (msg, notification) => {
 			
 			// show the snackbar with the requested information by setting state variables
@@ -36,6 +37,8 @@ export default function Notification(props) {
 			setNotificationMessage(notification.message);
 			setNotificationDisplay(true);
 		});
+		
+		return () => PubSub.unsubscribe('Notification');
 	}, [ props ]);
 	
 	/**

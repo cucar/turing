@@ -219,11 +219,14 @@ class Product extends Controller {
 			let attributeValueParts = attributeValueString.split('|');
 			let attributeId = attributeValueParts[0];
 			let attributeName = attributeValueParts[1];
-			let attributeValueId = attributeValueParts[2];
 			let attributeValueLabel = attributeValueParts[3];
 			
 			// this is the value object we will add under the attribute
-			let attributeValue = { value: attributeValueId, label: attributeValueLabel };
+			// NOTE: ideally we should be sending back the attribute value id as the value and when we get the add to cart request it should specify the attribute value id
+			// however, the database specs were such that the ordered product attributes are saved as comma separated text in the cart (not normalized). so, in order to
+			// work within that construct, we're sending the value as the text - that's what comes to us at the add to cart request
+			// let attributeValueId = attributeValueParts[2];
+			let attributeValue = { value: attributeValueLabel, label: attributeValueLabel };
 			
 			// find the attribute in the attributes array - if found, add the value to it - if not, add the attribute along with the first value of it
 			let attribute = _.find(attributes, [ 'attribute_id', attributeId ]);

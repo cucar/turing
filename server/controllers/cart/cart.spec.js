@@ -6,10 +6,10 @@
 	let testAttributes = 'L, Red';
 	
 	it('should get new cart ID', async function() {
-		const response = await callApi('shoppingcart/generateUniqueId');
+		const response = await callApi('shoppingcart/add', { product_id: testProductId, attributes: testAttributes }, 'POST');
 		global.lastHttpResponseCode.should.equal(200);
 		response.cart_id.should.exist;
-		testCartId = response.cart_id;
+		response.product_count.should.equal('1');
 	});
 	
 	it('should add product to cart', async function() {

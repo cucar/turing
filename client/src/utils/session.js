@@ -72,4 +72,35 @@ const getAccessToken = () => {
 	return (loggedIn() ? localStorage.getItem('token') : null);
 };
 
-export { saveSession, deleteSession, loggedIn, getSessionCustomer, getAccessToken, updateSessionCustomer };
+/**
+ * saves current cart id
+ */
+const saveSessionCartId = (cartId) => localStorage.setItem('cart_id', cartId);
+
+/**
+ * returns currently saved cart id
+ */
+const getSessionCartId = () => localStorage.getItem('cart_id');
+
+/**
+ * saves current cart product count
+ */
+const saveSessionCartProductCount = (cartProductCount) => localStorage.setItem('cart_product_count', cartProductCount);
+
+/**
+ * returns currently saved cart product count
+ */
+const getSessionCartProductCount = () => localStorage.getItem('cart_product_count');
+
+export {
+	saveSession,
+	deleteSession,
+	loggedIn,
+	getSessionCustomer,
+	getAccessToken,
+	updateSessionCustomer,
+	saveSessionCartId,
+	getSessionCartId,
+	saveSessionCartProductCount,
+	getSessionCartProductCount
+};

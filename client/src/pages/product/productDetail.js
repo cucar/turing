@@ -1,14 +1,17 @@
 import React from 'react';
 import { Card, CardContent, Breadcrumbs } from '@material-ui/core';
-import { Link } from 'react-navi';
+import { Link, useNavigation } from 'react-navi';
+import Button from '@material-ui/core/Button/Button';
+import PubSub from 'pubsub-js';
 
 import LinkButton from '../../shared/linkButton';
-import { Api } from '../../shared/api';
 import ProductRating from './productRating';
 import ProductImages from './productImages';
 import TuringSelectField from '../../shared/turingSelectField';
 import TuringForm, { Validators } from '../../shared/turingForm';
-import Button from '@material-ui/core/Button/Button';
+import { Api } from '../../shared/api';
+import { showSuccess } from '../../utils/notifications';
+import { getSessionCartId, saveSessionCartId, saveSessionCartProductCount } from '../../utils/session';
 
 import './productDetail.css';
 
@@ -17,11 +20,34 @@ import './productDetail.css';
  */
 export default function ProductDetail({ productId }) {
 	
+	let navigator = useNavigation();
+	
+	/**
+	 * returns the api parameters to be sent for adding product to cart - a little transformation is needed from the field values
+	 */
+	const getAddToCartParams = (fieldValues) => {
+		return {
+			cart_id: getSessionCartId(), // if there was no previous cart in session, this call will start a new cart on the server and we'll save that response in session
+			product_id: productId,
+			attributes: Object.values(fieldValues).join(', ') // combine the attribute values (labels) in a single comma separated string (should be normalized in the future)
+		};
+	};
+	
 	/**
 	 * event handler for adding a product to cart - call pub-sub event called "CartUpdate" so that the shopping cart in nav menu can be updated with new product count
 	 */
-	const onAddToCart = () => {
-		console.log('added product to cart');
+	const onAddToCart = (response) => {
+		
+		// save cart ID in session for subsequent calls
+		saveSessionCartId(response.cart_id);
+		saveSessionCartProductCount(response.product_count);
+		
+		// make a call to the mini cart to update the product count
+		PubSub.publish('CartUpdate', response.product_count);
+		
+		// show success notification and redirect to cart page
+		showSuccess('Product successfully added to cart.');
+		navigator.navigate('/cart');
 	};
 	
 	return (
@@ -55,9 +81,9 @@ export default function ProductDetail({ productId }) {
 							</div>
 							
 							<div className="product-add-to-cart">
-								<TuringForm endpoint="shoppingcart/add" method="POST" onApiResponseReceived={onAddToCart}>
+								<TuringForm endpoint="shoppingcart/add" method="POST" getApiParams={getAddToCartParams} onApiResponseReceived={onAddToCart}>
 									{product.attributes.map(attribute => (
-										<TuringSelectField key={attribute.attribute_id} label={attribute.attribute_name} options={attribute.values} validators={[ Validators.required ]} />
+										<TuringSelectField key={`attribute_${attribute.attribute_id}`} label={attribute.attribute_name} options={attribute.values} validators={[ Validators.required ]} />
 									))}
 									<Button key="add-cart" variant="contained" color="primary">Add To Cart</Button>
 									<LinkButton key="continue-shop" href={`/catalog?category_ids=${product.category.category_id}`}>Continue Shopping</LinkButton>

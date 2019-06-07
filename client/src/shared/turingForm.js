@@ -27,7 +27,7 @@ const allowedButtons = [ Button, LinkButton ];
 /**
  * turing form component - takes in fields, buttons and submit event handler function - displays the inputs and calls submit with the entered values when user clicks on buttons
  */
-function TuringForm({ endpoint, method, onApiResponseReceived, children }) {
+function TuringForm({ endpoint, method, getApiParams = fieldValues => fieldValues, onApiResponseReceived, children }) {
 
 	// build fields, buttons and other elements array from children
 	let fields = children.filter(child => allowedInputs.includes(child.type));
@@ -130,7 +130,7 @@ function TuringForm({ endpoint, method, onApiResponseReceived, children }) {
 		}
 		
 		// button does not have an event handler - use the default event handler - do the API call and call onApiResponseReceived when we get the response back
-		const response = await callApi(endpoint, fieldValues, method);
+		const response = await callApi(endpoint, getApiParams(fieldValues), method);
 		
 		// do not continue if there was an error - it is automatically shown
 		if (!response) return;
@@ -186,7 +186,8 @@ TuringForm.propTypes = {
 	children: PropTypes.node.isRequired,
 	endpoint: PropTypes.string,
 	method: PropTypes.string,
-	onApiResponseReceived: PropTypes.any
+	onApiResponseReceived: PropTypes.any,
+	getApiParams: PropTypes.any
 };
 
 export default TuringForm;
