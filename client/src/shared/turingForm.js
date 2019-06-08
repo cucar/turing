@@ -5,9 +5,13 @@ import Button from '@material-ui/core/Button/Button';
 import TuringTextField from './turingTextField';
 import TuringPasswordField from './turingPasswordField';
 import TuringSelectField from './turingSelectField';
+import TuringRatingField from './turingRatingField';
 import LinkButton from './linkButton';
 import { validateCountry, validateEmail, validatePassword, validatePhone, validateZip } from '../utils/validators';
 import callApi from '../utils/callApi';
+import { FormHelperText } from '@material-ui/core';
+import { loggedIn } from '../utils/session';
+import './turingForm.css';
 
 // validator constants to be exported
 export const Validators = {
@@ -21,13 +25,13 @@ export const Validators = {
 };
 
 // input and button elements that can be used with the form
-const allowedInputs = [ TuringTextField, TuringPasswordField, TuringSelectField ];
+const allowedInputs = [ TuringTextField, TuringPasswordField, TuringSelectField, TuringRatingField ];
 const allowedButtons = [ Button, LinkButton ];
 
 /**
  * turing form component - takes in fields, buttons and submit event handler function - displays the inputs and calls submit with the entered values when user clicks on buttons
  */
-function TuringForm({ endpoint, method, getApiParams = fieldValues => fieldValues, onApiResponseReceived, children }) {
+function TuringForm({ endpoint, method, getApiParams = fieldValues => fieldValues, onApiResponseReceived, authenticated = false, children }) {
 
 	// build fields, buttons and other elements array from children
 	let fields = children.filter(child => allowedInputs.includes(child.type));
@@ -44,6 +48,7 @@ function TuringForm({ endpoint, method, getApiParams = fieldValues => fieldValue
 	for (let field of fields) initialErrors[field.key] = '';
 	const [ fieldValues, setFieldValues ] = useState(initialValues);
 	const [ fieldErrors, setFieldErrors ] = useState(initialErrors);
+	const [ globalError, setGlobalError ] = useState('');
 	
 	/**
 	 * callback handler for input changes - we have to use higher level function to be able to pass in the field ids
@@ -129,6 +134,12 @@ function TuringForm({ endpoint, method, getApiParams = fieldValues => fieldValue
 			return;
 		}
 		
+		// if authentication required and we're not logged in, error out
+		if (authenticated && !loggedIn()) {
+			setGlobalError('This operation requires authentication. Please login or register.');
+			return;
+		}
+		
 		// button does not have an event handler - use the default event handler - do the API call and call onApiResponseReceived when we get the response back
 		const response = await callApi(endpoint, getApiParams(fieldValues), method);
 		
@@ -143,7 +154,7 @@ function TuringForm({ endpoint, method, getApiParams = fieldValues => fieldValue
 	 * callback handler for button click - we have to use higher level function to be able to pass in the button ids
 	 */
 	const buttonClick = buttonId => async () => {
-		
+
 		// find the button that generated the event
 		const button = buttons.find(button => button.key === buttonId);
 		
@@ -162,7 +173,9 @@ function TuringForm({ endpoint, method, getApiParams = fieldValues => fieldValue
 	
 	// render form inputs - first the form fields, then other elements and then the buttons
 	return (<>
-
+		
+		<FormHelperText className="global-error">{globalError}</FormHelperText>
+		
 		<div className="formInputs">
 			{fields.map(field => cloneElement(field, {
 				id: field.key,
@@ -186,6 +199,7 @@ TuringForm.propTypes = {
 	children: PropTypes.node.isRequired,
 	endpoint: PropTypes.string,
 	method: PropTypes.string,
+	authenticated: PropTypes.bool,
 	onApiResponseReceived: PropTypes.any,
 	getApiParams: PropTypes.any
 };

@@ -1,0 +1,24 @@
+.rating-control {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	width: 100%;
+	align-items: flex-start;
+}
+
+.rating-label {
+	flex-basis: auto;
+}
+
+.rating-control .rating {
+	padding-top: 0;
+	margin-top: -2px;
+}
+
+.rating-field {
+	flex-basis: 200px;
+}
+
+.rating-editable {
+	cursor: pointer;
+}

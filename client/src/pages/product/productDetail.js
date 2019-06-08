@@ -70,7 +70,7 @@ export default function ProductDetail({ productId }) {
 								</Breadcrumbs>
 							</div>
 							
-							<Rating rating={product.avg_rating} />
+							<Rating rating={product.avg_rating || '5'} />
 							
 							<h1 className="product-title">{product.name}</h1>
 							<p>{product.description}</p>
