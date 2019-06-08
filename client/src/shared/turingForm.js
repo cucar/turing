@@ -24,22 +24,26 @@ export const Validators = {
 	country: 'country'
 };
 
-// input and button elements that can be used with the form
+/**
+ * input and button elements that can be used with the form
+ */
 const allowedInputs = [ TuringTextField, TuringPasswordField, TuringSelectField, TuringRatingField ];
 const allowedButtons = [ Button, LinkButton ];
+const isField = (child) => allowedInputs.includes(child.type);
+const isButton = (child) => allowedButtons.includes(child.type) || (child.type && child.type.options && child.type.options.name && child.type.options.name === 'MuiButton');
 
 /**
  * turing form component - takes in fields, buttons and submit event handler function - displays the inputs and calls submit with the entered values when user clicks on buttons
  */
 function TuringForm({ endpoint, method, getApiParams = fieldValues => fieldValues, onApiResponseReceived, authenticated = false, children }) {
-
+	
 	// build fields, buttons and other elements array from children
-	let fields = children.filter(child => allowedInputs.includes(child.type));
-	let buttons = children.filter(child => allowedButtons.includes(child.type));
-	let otherElements = children.filter(child => !Array.isArray(child) && !allowedInputs.concat(allowedButtons).includes(child.type));
+	let fields = children.filter(isField);
+	let buttons = children.filter(isButton);
+	let otherElements = children.filter(child => !Array.isArray(child) && !isField(child) && !isButton(child));
 	
 	// when the fields are rendered from an array, they show up as children of an array child - process them separately here - we should do buttons and others as well later
-	children.forEach(child => { if (Array.isArray(child)) for (let grandChild of child) if (allowedInputs.includes(grandChild.type)) fields.push(grandChild); });
+	children.forEach(child => { if (Array.isArray(child)) for (let grandChild of child) if (isField(grandChild)) fields.push(grandChild); });
 	
 	// input values and errors will be kept in the component state
 	let initialValues = {};
@@ -154,7 +158,7 @@ function TuringForm({ endpoint, method, getApiParams = fieldValues => fieldValue
 	 * callback handler for button click - we have to use higher level function to be able to pass in the button ids
 	 */
 	const buttonClick = buttonId => async () => {
-
+		
 		// find the button that generated the event
 		const button = buttons.find(button => button.key === buttonId);
 		
@@ -191,7 +195,7 @@ function TuringForm({ endpoint, method, getApiParams = fieldValues => fieldValue
 		<div className="buttons">
 			{buttons.map(button => cloneElement(button, { onClick: buttonClick(button.key) }))}
 		</div>
-		
+	
 	</>);
 }
 
