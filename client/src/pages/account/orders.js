@@ -2,8 +2,8 @@ import React from 'react';
 import { Card, CardContent, CardActions } from '@material-ui/core';
 
 import LinkButton from '../../shared/linkButton';
-import TuringList from '../../shared/turingList';
-import TuringListField from '../../shared/turingListField';
+import TuringList from '../../shared/list/turingList';
+import TuringListField from '../../shared/list/turingListField';
 
 /**
  * orders list screen

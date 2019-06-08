@@ -1,9 +1,10 @@
 import React from 'react';
-import { Card, CardContent, Button } from '@material-ui/core';
+import { Card, CardContent } from '@material-ui/core';
 
-import TuringForm, { Validators } from '../../shared/turingForm';
-import TuringRatingField from '../../shared/turingRatingField';
-import TuringTextField from '../../shared/turingTextField';
+import TuringForm, { Validators } from '../../shared/form/turingForm';
+import TuringRatingField from '../../shared/form/turingRatingField';
+import TuringTextField from '../../shared/form/turingTextField';
+import TuringFormSubmitButton from '../../shared/form/turingFormSubmitButton';
 import { showSuccess } from '../../utils/notifications';
 
 /**
@@ -41,7 +42,7 @@ export default function PostReview({ productId }) {
 					<TuringRatingField key="rating" label="Rating" validators={[ Validators.required ]} />
 					<TuringTextField key="review" label="Review" multiLine={true} />
 					<br/>
-					<Button key="postReview" variant="contained" color="primary">Submit</Button>
+					<TuringFormSubmitButton key="postReview" label="Submit" />
 				</TuringForm>
 			</CardContent>
 		</Card>

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from '@material-ui/core';
-import TuringList from '../../shared/turingList';
-import TuringListField from '../../shared/turingListField';
+import TuringList from '../../shared/list/turingList';
+import TuringListField from '../../shared/list/turingListField';
 
 import './productReviews.css';
 import ProductReview from './productReview';

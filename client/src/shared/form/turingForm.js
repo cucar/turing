@@ -1,16 +1,17 @@
 import React, { useState, cloneElement } from 'react';
 import PropTypes from 'prop-types';
-import Button from '@material-ui/core/Button/Button';
 
 import TuringTextField from './turingTextField';
 import TuringPasswordField from './turingPasswordField';
 import TuringSelectField from './turingSelectField';
 import TuringRatingField from './turingRatingField';
-import LinkButton from './linkButton';
-import { validateCountry, validateEmail, validatePassword, validatePhone, validateZip } from '../utils/validators';
-import callApi from '../utils/callApi';
+import TuringFormSubmitButton from './turingFormSubmitButton';
+import TuringFormCancelButton from './turingFormCancelButton';
+import LinkButton from '../linkButton';
+import { validateCountry, validateEmail, validatePassword, validatePhone, validateZip } from '../../utils/validators';
+import callApi from '../../utils/callApi';
 import { FormHelperText } from '@material-ui/core';
-import { loggedIn } from '../utils/session';
+import { loggedIn } from '../../utils/session';
 import './turingForm.css';
 
 // validator constants to be exported
@@ -28,9 +29,9 @@ export const Validators = {
  * input and button elements that can be used with the form
  */
 const allowedInputs = [ TuringTextField, TuringPasswordField, TuringSelectField, TuringRatingField ];
-const allowedButtons = [ Button, LinkButton ];
+const allowedButtons = [ TuringFormCancelButton, TuringFormSubmitButton ];
 const isField = (child) => allowedInputs.includes(child.type);
-const isButton = (child) => allowedButtons.includes(child.type) || (child.type && child.type.options && child.type.options.name && child.type.options.name === 'MuiButton');
+const isButton = (child) => allowedButtons.includes(child.type);
 
 /**
  * turing form component - takes in fields, buttons and submit event handler function - displays the inputs and calls submit with the entered values when user clicks on buttons

@@ -6,7 +6,7 @@ import { useNavigation } from 'react-navi';
 
 import './turingList.css';
 
-import callApi from '../utils/callApi';
+import callApi from '../../utils/callApi';
 import Select from '@material-ui/core/Select/Select';
 import MenuItem from '@material-ui/core/MenuItem/MenuItem';
 

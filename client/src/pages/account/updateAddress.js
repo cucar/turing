@@ -3,13 +3,13 @@ import { useNavigation } from 'react-navi';
 import { Card, CardContent } from '@material-ui/core';
 
 import { Api } from '../../shared/api';
-import TuringForm, { Validators } from '../../shared/turingForm';
-import TuringTextField from '../../shared/turingTextField';
+import TuringForm, { Validators } from '../../shared/form/turingForm';
+import TuringTextField from '../../shared/form/turingTextField';
+import TuringSelectField from '../../shared/form/turingSelectField';
+import TuringFormSubmitButton from '../../shared/form/turingFormSubmitButton';
+import TuringFormCancelButton from '../../shared/form/turingFormCancelButton';
 import { showSuccess } from '../../utils/notifications';
-import Button from '@material-ui/core/Button/Button';
 import { getSessionCustomer, updateSessionCustomer } from '../../utils/session';
-import TuringSelectField from '../../shared/turingSelectField';
-import LinkButton from '../../shared/linkButton';
 
 /**
  * address update screen
@@ -50,8 +50,8 @@ export default function UpdateAddress() {
 						<TuringTextField key="country" label="Country" validators={[ Validators.required, Validators.country ]} value={customer.country} />
 						<TuringSelectField key="shipping_region_id" label="Shipping Region" value={customer.shipping_region_id} options={getShippingOptions(shippingRegions)} />
 						<br/>
-						<Button key="update" variant="contained" color="primary">Update</Button>
-						<LinkButton key="cancel" href="/account">Cancel</LinkButton>
+						<TuringFormSubmitButton key="update" label="Update" />
+						<TuringFormCancelButton key="cancel" href="/account" label="Cancel" />
 					</TuringForm>
 				)}/>
 			</CardContent>

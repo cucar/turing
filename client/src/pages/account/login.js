@@ -3,9 +3,10 @@ import { useNavigation } from 'react-navi';
 import Button from '@material-ui/core/Button/Button';
 import FacebookLogin from 'react-facebook-login/dist/facebook-login-render-props';
 
-import TuringForm, { Validators } from '../../shared/turingForm';
-import TuringTextField from '../../shared/turingTextField';
-import TuringPasswordField from '../../shared/turingPasswordField';
+import TuringForm, { Validators } from '../../shared/form/turingForm';
+import TuringTextField from '../../shared/form/turingTextField';
+import TuringPasswordField from '../../shared/form/turingPasswordField';
+import TuringFormSubmitButton from '../../shared/form/turingFormSubmitButton';
 import { showSuccess } from '../../utils/notifications';
 import { saveSession } from '../../utils/session';
 import callApi from '../../utils/callApi';
@@ -62,7 +63,7 @@ export default function Login() {
 			<TuringTextField key="email" label="Email" validators={[ Validators.required, Validators.email ]} />
 			<TuringPasswordField key="password" label="Password" validators={[ Validators.required, Validators.password ]} />
 			<br/>
-			<Button key="login" variant="contained" color="primary">Login</Button>
+			<TuringFormSubmitButton key="login" label="Login" />
 		</TuringForm>
 		
 		<div className="facebook-login-text">

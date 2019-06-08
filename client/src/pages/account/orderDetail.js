@@ -3,8 +3,8 @@ import { Card, CardContent, CardActions, TextField } from '@material-ui/core';
 
 import LinkButton from '../../shared/linkButton';
 import { Api } from '../../shared/api';
-import TuringListField from '../../shared/turingListField';
-import TuringList from '../../shared/turingList';
+import TuringListField from '../../shared/list/turingListField';
+import TuringList from '../../shared/list/turingList';
 
 /**
  * order detail screen

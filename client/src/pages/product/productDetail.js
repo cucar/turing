@@ -1,14 +1,14 @@
 import React from 'react';
 import { Card, CardContent, Breadcrumbs } from '@material-ui/core';
 import { Link, useNavigation } from 'react-navi';
-import Button from '@material-ui/core/Button/Button';
 import PubSub from 'pubsub-js';
 
-import LinkButton from '../../shared/linkButton';
 import Rating from '../../shared/rating';
 import ProductImages from './productImages';
-import TuringSelectField from '../../shared/turingSelectField';
-import TuringForm, { Validators } from '../../shared/turingForm';
+import TuringForm, { Validators } from '../../shared/form/turingForm';
+import TuringSelectField from '../../shared/form/turingSelectField';
+import TuringFormSubmitButton from '../../shared/form/turingFormSubmitButton';
+import TuringFormCancelButton from '../../shared/form/turingFormCancelButton';
 import { Api } from '../../shared/api';
 import { showSuccess } from '../../utils/notifications';
 import { getSessionCartId, saveSessionCartId, saveSessionCartProductCount } from '../../utils/session';
@@ -85,8 +85,8 @@ export default function ProductDetail({ productId }) {
 									{product.attributes.map(attribute => (
 										<TuringSelectField key={`attribute_${attribute.attribute_id}`} label={attribute.attribute_name} options={attribute.values} validators={[ Validators.required ]} />
 									))}
-									<Button key="add-cart" variant="contained" color="primary">Add To Cart</Button>
-									<LinkButton key="continue-shop" href={`/catalog?category_ids=${product.category.category_id}`}>Continue Shopping</LinkButton>
+									<TuringFormSubmitButton key="add-cart" label="Add To Cart" />
+									<TuringFormCancelButton key="continue-shop" href={`/catalog?category_ids=${product.category.category_id}`} label="Continue Shopping" />
 								</TuringForm>
 							</div>
 							

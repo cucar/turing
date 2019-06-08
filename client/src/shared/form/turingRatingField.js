@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { FormControl, FormHelperText } from '@material-ui/core';
 
-import Rating from './rating';
+import Rating from '../rating';
 import './turingRatingField.css';
 
 /**

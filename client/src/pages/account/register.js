@@ -1,10 +1,10 @@
 import React from 'react';
 import { useNavigation } from 'react-navi';
-import Button from '@material-ui/core/Button/Button';
 
-import TuringForm, { Validators } from '../../shared/turingForm';
-import TuringTextField from '../../shared/turingTextField';
-import TuringPasswordField from '../../shared/turingPasswordField';
+import TuringForm, { Validators } from '../../shared/form/turingForm';
+import TuringTextField from '../../shared/form/turingTextField';
+import TuringPasswordField from '../../shared/form/turingPasswordField';
+import TuringFormSubmitButton from '../../shared/form/turingFormSubmitButton';
 import { showSuccess } from '../../utils/notifications';
 import { saveSession } from '../../utils/session';
 
@@ -39,7 +39,7 @@ export default function Registration() {
 			<TuringPasswordField key="password" label="Password" validators={[ Validators.required, Validators.password ]} />
 			<TuringPasswordField key="password_confirm" label="Password Confirmation" validators={[ Validators.required, Validators.passwordConfirm ]} />
 			<br/>
-			<Button key="register" variant="contained" color="primary">Register</Button>
+			<TuringFormSubmitButton key="register" label="Register" />
 		</TuringForm>
 	</>);
 }
