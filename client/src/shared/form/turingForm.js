@@ -153,6 +153,9 @@ function TuringForm({ endpoint, method, getApiParams = fieldValues => fieldValue
 		
 		// callback with the API response
 		onApiResponseReceived(response, fieldValues);
+		
+		// reset form field values in case we're not going to another page
+		setFieldValues(initialValues);
 	};
 	
 	/**

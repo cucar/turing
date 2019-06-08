@@ -1,5 +1,6 @@
 import React from 'react';
 import { Card, CardContent } from '@material-ui/core';
+import PubSub from 'pubsub-js';
 
 import TuringForm, { Validators } from '../../shared/form/turingForm';
 import TuringRatingField from '../../shared/form/turingRatingField';
@@ -24,20 +25,18 @@ export default function PostReview({ productId }) {
 	};
 	
 	/**
-	 * event handler after the review is posted
+	 * event handler after the review is posted - update review list by posting notification via pub-sub
 	 */
-	const reviewPosted = (apiResponse) => {
-		
-		console.log(apiResponse);
+	const reviewPosted = () => {
 		showSuccess('Review was posted successfully.');
-		
-		// update review list
+		PubSub.publish('PostReview', true);
+		window.location.hash = 'product-reviews'; // scroll to the beginning of product reviews list so user can see the new review up top
 	};
 	
 	return (
 		<Card>
 			<CardContent>
-				<h1>Add Review</h1>
+				<h2>Add Review</h2>
 				<TuringForm endpoint={`products/${productId}/reviews`} method="POST" authenticated={true} getApiParams={getAddReviewParams} onApiResponseReceived={reviewPosted}>
 					<TuringRatingField key="rating" label="Rating" validators={[ Validators.required ]} />
 					<TuringTextField key="review" label="Review" multiLine={true} />

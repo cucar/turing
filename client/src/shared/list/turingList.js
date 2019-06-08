@@ -23,6 +23,7 @@ function TuringList({
 						renderListItem,
 						detailRoute,
 						onApiResponseReceived,
+						refreshCounter = 0,
 						children
 }) {
 	
@@ -100,7 +101,7 @@ function TuringList({
 	 * retrieves the data for a requested page
 	 */
 	const getPage = async (endpoint, page, pageSize, orderField, orderDirection, onApiResponseReceived) => {
-		
+
 		// call the api and get the page data back
 		// if there was an error fetching the data, api response will be null - error will be shown via a dialog - not much we can do in that case
 		const apiResponse = await callApi(endpoint, { page: page, limit: pageSize, order: orderField, direction: orderDirection });
@@ -124,16 +125,17 @@ function TuringList({
 	 * make initial api call and display the data
 	 */
 	useEffect(() => {
-		
+
 		// if initial api call was made in previous renders, no need to do anything - return - otherwise, set it true since we're about to make that call
 		if (apiRequestSent.current) return;
 		apiRequestSent.current = true;
 		
 		// get the initial page data from API and display it - this is called only on initial render, so progress is already shown initially and we stop it here once we get the api response
 		(async () => {
-			await getPage(endpoint, 0, (forcePageSize ? forcePageSize : 10), defaultOrderBy, 'asc', onApiResponseReceived);
+			await getPage(endpoint, 0, (forcePageSize ? forcePageSize : 10), defaultOrderBy, defaultOrderDirection, onApiResponseReceived);
+			apiRequestSent.current = false;
 		})();
-	}, [ apiRequestSent, defaultOrderBy, endpoint, forcePageSize, onApiResponseReceived ]);
+	}, [ apiRequestSent, defaultOrderBy, defaultOrderDirection, endpoint, forcePageSize, onApiResponseReceived, refreshCounter ]);
 	
 	/**
 	 * retrieves the data for a requested page - shows progress if it takes longer than 500 ms
@@ -199,6 +201,9 @@ function TuringList({
 		navigator.navigate(detailRoute(row));
 	}, [ detailRoute, navigator ]);
 	
+	/**
+	 * template rendering
+	 */
 	return (<>
 
 		{/* show progress until we receive the data from the api */}
@@ -309,7 +314,8 @@ TuringList.propTypes = {
 	detailRoute: PropTypes.any,
 	renderListItem: PropTypes.any,
 	forcePageSize: PropTypes.number,
-	onApiResponseReceived: PropTypes.any
+	onApiResponseReceived: PropTypes.any,
+	refreshCounter: PropTypes.number
 };
 
 export default TuringList;
