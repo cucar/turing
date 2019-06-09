@@ -7,6 +7,10 @@
 	padding-top: 10px;
 }
 
+.cart-product-update-progress {
+	opacity: 0.5;
+}
+
 .cart-product-info {
 	flex-basis: 300px;
 	flex-grow: 1;

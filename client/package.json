@@ -8,6 +8,7 @@
 		"@material-ui/system": "^4.0.0-rc.0",
 		"email-validator": "^2.0.4",
 		"google-libphonenumber": "^3.2.2",
+		"lodash": "^4.17.11",
 		"navi": "^0.12.6",
 		"node-fetch": "^2.6.0",
 		"password-validator": "^4.1.1",
