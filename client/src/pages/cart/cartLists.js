@@ -1,5 +1,4 @@
 import React, { useCallback, useState } from 'react';
-import _ from 'lodash';
 
 import CartProducts from './cartProducts';
 
@@ -17,16 +16,41 @@ export default function CartLists({ cartProducts }) {
 	/**
 	 * update cart product quantity event handler - need to use callback here to not cause re-render of children since it's passed as a prop
 	 */
-	const quantityUpdated = useCallback((productId, quantity) => {
-		let newProducts = _.cloneDeep(products);
-		const productIndex = products.findIndex(product => product.product_id === productId);
-		newProducts[productIndex].quantity = quantity;
-		newProducts[productIndex].subtotal = parseInt(quantity) * parseFloat(newProducts[productIndex].price);
-		setProducts(newProducts);
-	}, [ products ]);
+	const productQuantityUpdated = useCallback((itemId, args) => setProducts(products.map(product =>
+		product.item_id === itemId ? {...product, ...{ quantity: args.quantity, subtotal:  parseInt(args.quantity) * parseFloat(product.price) } } : product
+	)), [ products ]);
+	
+	/**
+	 * remove cart product event handler - need to use callback here to not cause re-render of children since it's passed as a prop
+	 */
+	const productRemoved = useCallback((itemId) => setProducts(products.filter(product => product.item_id !== itemId)), [ products ]);
+	
+	/**
+	 * save cart product for later event handler - need to use callback here to not cause re-render of children since it's passed as a prop
+	 */
+	const productSavedForLater = useCallback((itemId) => setProducts(products.map(product => product.item_id === itemId ? {...product, ...{ buy_now: false } } : product)), [ products ]);
+	
+	/**
+	 * move saved for later product back to cart event handler - need to use callback here to not cause re-render of children since it's passed as a prop
+	 */
+	const productMovedToCart = useCallback((itemId) => setProducts(products.map(product => product.item_id === itemId ? {...product, ...{ buy_now: true } } : product)), [ products ]);
 	
 	return (<>
-		<CartProducts products={products.filter(product => product.buy_now)} savedForLater={false} onQtyUpdate={quantityUpdated} />
-		<CartProducts products={products.filter(product => !product.buy_now)} savedForLater={true} onQtyUpdate={quantityUpdated} />
+		<CartProducts
+			products={products.filter(product => product.buy_now)}
+			savedForLater={false}
+			onQtyUpdate={productQuantityUpdated}
+			onRemove={productRemoved}
+			onSaveForLater={productSavedForLater}
+			onMoveToCart={productMovedToCart}
+		/>
+		<CartProducts
+			products={products.filter(product => !product.buy_now)}
+			savedForLater={true}
+			onQtyUpdate={productQuantityUpdated}
+			onRemove={productRemoved}
+			onSaveForLater={productSavedForLater}
+			onMoveToCart={productMovedToCart}
+		/>
 	</>);
 }

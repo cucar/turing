@@ -8,22 +8,25 @@ import LinkButton from '../../shared/linkButton';
 /**
  * shows products in the cart or the ones saved for later
  */
-export default function CartProducts({ products, savedForLater, onQtyUpdate }) {
+export default function CartProducts({ products, savedForLater, onQtyUpdate, onRemove, onSaveForLater, onMoveToCart }) {
 	
 	/**
-	 * update cart product quantity event handler - need to use callback here to not cause re-render of children since it's passed as a prop
-	 * bubble the event up to the parent so that the products state can be updated globally
+	 * cart update event handlers - need to use callback here to not cause re-render of children since it's passed as a prop
+	 * bubble the events up to the parent so that the products state can be updated globally
 	 */
-	const quantityUpdated = useCallback((productId, quantity) => onQtyUpdate(productId, quantity), [ onQtyUpdate ]);
+	const productQuantityUpdated = useCallback((itemId, args) => onQtyUpdate(itemId, args), [ onQtyUpdate ]);
+	const productRemoved = useCallback((itemId, args) => onRemove(itemId, args), [ onRemove ]);
+	const productSavedForLater = useCallback((itemId, args) => onSaveForLater(itemId, args), [ onSaveForLater ]);
+	const productMovedToCart = useCallback((itemId, args) => onMoveToCart(itemId, args), [ onMoveToCart ]);
 	
 	return (<>
 		{/* if we are displaying products saved for later and there are none, don't show anything at all */}
 		{/* for cart products it's different - we show the title and we say cart is empty */}
-		{products.length > 0 && !savedForLater && <>
+		{(!savedForLater || products.length > 0) && <>
 			<Card>
 				<CardContent className="cart-products">
 					<h2>{savedForLater ? 'Saved For Later' : 'Shopping Cart'}</h2>
-					{products.length === 0 && <h4>Your Shopping Cart is empty</h4>}
+					{products.length === 0 && <div>Your Shopping Cart is empty.</div>}
 					{products.length > 0 && <>
 						<div className="cart-product-headers">
 							<div className="cart-product-header-info">Product</div>
@@ -34,19 +37,27 @@ export default function CartProducts({ products, savedForLater, onQtyUpdate }) {
 						</div>
 						<Divider />
 						{products.map((product, index) => (
-							<CartProduct key={index} product={product} savedForLater={savedForLater} onQtyUpdate={quantityUpdated} />
+							<CartProduct
+								key={index}
+								product={product}
+								savedForLater={savedForLater}
+								onQtyUpdate={productQuantityUpdated}
+								onRemove={productRemoved}
+								onSaveForLater={productSavedForLater}
+								onMoveToCart={productMovedToCart}
+							/>
 						))}
 					</>}
-					<div className="cart-total">
+					{!savedForLater && products.length > 0 && <div className="cart-total">
 						Cart Total:&nbsp;
 						<span className="cart-total-price">
 							${products.reduce((total, product) => total + parseFloat(product.subtotal), 0).toFixed(2)}
 						</span>
-					</div>
-					<div className="cart-links">
+					</div>}
+					{!savedForLater && <div className="cart-links">
 						<LinkButton variant="contained" color="primary" href="/catalog">Continue Shopping</LinkButton>
-						<LinkButton variant="contained" color="primary" href="/checkout">Checkout</LinkButton>
-					</div>
+						{products.length > 0 && <LinkButton variant="contained" color="primary" href="/checkout">Checkout</LinkButton>}
+					</div>}
 				</CardContent>
 			</Card>
 			<br/>

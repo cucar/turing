@@ -8,7 +8,7 @@ class Cart extends Controller {
 	routes() {
 		return [
 			{ path: '/shoppingcart/add', method: 'POST', handler: this.addProductToCart },
-			{ path: '/shoppingcart/:cart_id', handler: this.getCartProducts },
+			{ path: '/shoppingcart/:cart_id', handler: this.returnCartProducts },
 			{ path: '/shoppingcart/update/:item_id', method: 'PUT', handler: this.updateCartProductQuantity },
 			{ path: '/shoppingcart/removeProduct/:item_id', method: 'DELETE', handler: this.removeCartProduct },
 			{ path: '/shoppingcart/saveForLater/:item_id', handler: this.saveCartProductForLater },
@@ -53,7 +53,7 @@ class Cart extends Controller {
 	/**
 	 * returns the products in a cart to be bought now
 	 */
-	async getCartProducts(ctx) {
+	async returnCartProducts(ctx) {
 		
 		// slow response debug: await require('../../common/utils/utils.js').wait(5);
 		
@@ -84,7 +84,7 @@ class Cart extends Controller {
 		
 		await this.db.executeSP('shopping_cart_update', [ ctx.params.item_id, this.param('quantity') ]);
 		
-		await this.getCartProducts({ params: { cart_id: await this.db.selectVal('select cart_id from shopping_cart where item_id = ?', [ ctx.params.item_id ]) } });
+		await this.returnCartProducts({ params: { cart_id: await this.db.selectVal('select cart_id from shopping_cart where item_id = ?', [ ctx.params.item_id ]) } });
 	}
 	
 	/**
@@ -92,9 +92,11 @@ class Cart extends Controller {
 	 */
 	async removeCartProduct(ctx) {
 		
+		let cartId = await this.db.selectVal('select cart_id from shopping_cart where item_id = ?', [ ctx.params.item_id ]);
+		
 		await this.db.executeSP('shopping_cart_remove_product', [ ctx.params.item_id ]);
 		
-		this.body = {};
+		await this.returnCartProducts({ params: { cart_id: cartId } });
 	}
 	
 	/**
@@ -111,10 +113,11 @@ class Cart extends Controller {
 	 * saves a product in cart for later
 	 */
 	async saveCartProductForLater(ctx) {
+
+		// we're not using shopping_cart_save_product_for_later SP because it resets the quantity to 1
+		await this.db.update('shopping_cart', { buy_now: false, item_id: ctx.params.item_id }, 'item_id');
 		
-		await this.db.executeSP('shopping_cart_save_product_for_later', [ ctx.params.item_id ]);
-		
-		this.body = {};
+		await this.returnCartProducts({ params: { cart_id: await this.db.selectVal('select cart_id from shopping_cart where item_id = ?', [ ctx.params.item_id ]) } });
 	}
 	
 	/**
@@ -122,9 +125,10 @@ class Cart extends Controller {
 	 */
 	async moveProductSavedForLaterToCart(ctx) {
 		
-		await this.db.executeSP('shopping_cart_move_product_to_cart', [ ctx.params.item_id ]);
+		// we're not using shopping_cart_move_product_to_cart SP because it resets the quantity to 1
+		await this.db.update('shopping_cart', { buy_now: true, item_id: ctx.params.item_id }, 'item_id');
 		
-		this.body = {};
+		await this.returnCartProducts({ params: { cart_id: await this.db.selectVal('select cart_id from shopping_cart where item_id = ?', [ ctx.params.item_id ]) } });
 	}
 }
 
