@@ -9,13 +9,15 @@ class Cart extends Controller {
 		return [
 			{ path: '/shoppingcart/add', method: 'POST', handler: this.addProductToCart },
 			{ path: '/shoppingcart/:cart_id', handler: this.getCartProducts },
-			{ path: '/shoppingcart/totalAmount/:cart_id', handler: this.getCartTotal },
 			{ path: '/shoppingcart/update/:item_id', method: 'PUT', handler: this.updateCartProductQuantity },
 			{ path: '/shoppingcart/removeProduct/:item_id', method: 'DELETE', handler: this.removeCartProduct },
-			{ path: '/shoppingcart/empty/:cart_id', method: 'DELETE', handler: this.emptyCart },
 			{ path: '/shoppingcart/saveForLater/:item_id', handler: this.saveCartProductForLater },
-			{ path: '/shoppingcart/getSaved/:cart_id', handler: this.getCartProductsSavedForLater },
 			{ path: '/shoppingcart/moveToCart/:item_id', handler: this.moveProductSavedForLaterToCart },
+			
+			// following calls are not used at this point - empty cart could have been used from an admin interface but we have an automatic event that cleans up old carts
+			// get cart total is just not needed either - the design does not have it. I don't think it's good to remind the customer how much money they are spending.
+			{ path: '/shoppingcart/totalAmount/:cart_id', handler: this.getCartTotal },
+			{ path: '/shoppingcart/empty/:cart_id', method: 'DELETE', handler: this.emptyCart },
 		];
 	}
 	
@@ -52,29 +54,15 @@ class Cart extends Controller {
 	 * returns the products in a cart to be bought now
 	 */
 	async getCartProducts(ctx) {
-		this.body = await this.getCartProductsData(ctx.params.cart_id, true);
-	}
-	
-	/**
-	 * returns the products in a cart that are saved for later
-	 */
-	async getCartProductsSavedForLater(ctx) {
-		this.body = await this.getCartProductsData(ctx.params.cart_id, false);
-	}
-	
-	/**
-	 * returns the products in a cart - either saved for later or to be bought now
-	 */
-	getCartProductsData(cartId, buyNow) {
+		
 		// we're not using shopping_cart_get_products or shopping_cart_get_saved_products SP because it seems to be missing product_id and image fields - it's pretty much the same query, though
-		return this.db.selectAll(`
+		this.body = await this.db.selectAll(`
 			select c.item_id, p.name, c.attributes, c.product_id, coalesce(nullif(p.discounted_price, 0), p.price) AS price,
-			       c.quantity, p.image, coalesce(nullif(p.discounted_price, 0), p.price) * c.quantity as subtotal
+			       c.quantity, p.thumbnail as image, coalesce(nullif(p.discounted_price, 0), p.price) * c.quantity as subtotal, c.buy_now
     		from shopping_cart c
     		join product p on c.product_id = p.product_id
     		where c.cart_id = ?
-    		and   c.buy_now = ?
-    	`, [ cartId, buyNow ]);
+    	`, [ ctx.params.cart_id ]);
 	}
 	
 	/**

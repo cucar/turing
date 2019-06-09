@@ -88,23 +88,6 @@
 		emptyResponse.should.exist;
 	});
 	
-	it('should get products in cart that are saved for later', async function() {
-		const productsSavedForLater = await callApi(`shoppingcart/getSaved/${testCartId}`);
-		global.lastHttpResponseCode.should.equal(200);
-		productsSavedForLater.length.should.be.at.least(0);
-		productsSavedForLater[0].item_id.should.exist;
-		productsSavedForLater[0].name.should.exist;
-		productsSavedForLater[0].attributes.should.equal(testAttributes);
-		productsSavedForLater[0].product_id.should.equal(testProductId);
-		productsSavedForLater[0].price.should.exist;
-		productsSavedForLater[0].quantity.should.be.at.least(0);
-		productsSavedForLater[0].image.should.exist;
-		productsSavedForLater[0].subtotal.should.exist;
-		let productInCart = false;
-		for (let item of productsSavedForLater) if (item.product_id === testProductId) productInCart = true;
-		productInCart.should.be.true;
-	});
-	
 	it('should move a product saved for later back to cart', async function() {
 		const moveResponse = await callApi(`shoppingcart/moveToCart/${testItemId}`);
 		global.lastHttpResponseCode.should.equal(200);

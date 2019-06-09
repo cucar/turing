@@ -23,6 +23,7 @@ const onApiResponseReceived = (response) => {
  */
 export default function ProductReviews({ productId }) {
 	
+	// this state variable is used to force refresh on the list component when we get a notification from post review component that there is a new review to be displayed
 	let [ refreshCounter, setRefreshCounter ] = useState(0);
 	const forceRefresh = () => setRefreshCounter(++refreshCounter);
 	

@@ -15,12 +15,10 @@ import RouteLoader from './shared/routeLoader';
 function App() {
 	
 	const routes = mount({
-		'/': 		route({ title: 'Turing Home Page', view: <Home /> }),
+		'/': route({ title: 'Turing Home Page', view: <Home /> }),
 		'/catalog': lazy(() => import('./pages/catalog/catalog')),
 		'/product': lazy(() => import('./pages/product/product')),
 		'/cart': lazy(() => import('./pages/cart/cart')),
-		'/shipping': lazy(() => import('./pages/shipping/shipping')),
-		'/payment': lazy(() => import('./pages/payment/payment')),
 		'/checkout': lazy(() => import('./pages/checkout/checkout')),
 		'/account': lazy(() => import('./pages/account/account'))
 	});
