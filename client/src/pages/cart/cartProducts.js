@@ -15,7 +15,7 @@ export default function CartProducts({ products, savedForLater }) {
 		{/* for cart products it's different - we show the title and we say cart is empty */}
 		{products.length > 0 && !savedForLater && <>
 			<Card>
-				<CardContent>
+				<CardContent className="cart-products">
 					<h2>{savedForLater ? 'Saved For Later' : 'Shopping Cart'}</h2>
 					{products.length === 0 && <h4>Your Shopping Cart is empty</h4>}
 					{products.length > 0 && <>

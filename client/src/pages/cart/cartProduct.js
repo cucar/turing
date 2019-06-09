@@ -21,9 +21,9 @@ export default function CartProduct({ product, savedForLater }) {
 					<div className="cart-product-attributes">{product.attributes}</div>
 				</div>
 			</div>
-			<div className="cart-product-price">${product.price}</div>
-			<div className="cart-product-quantity"><TextField defaultValue={product.quantity} type="number" /></div>
-			<div className="cart-product-subtotal">${product.subtotal}</div>
+			<div className="cart-product-price"><span className="cart-product-price-label">Price:</span>${product.price}</div>
+			<div className="cart-product-quantity"><span className="cart-product-quantity-label">Qty:</span><TextField defaultValue={product.quantity} type="number" /></div>
+			<div className="cart-product-subtotal"><span className="cart-product-subtotal-label">Subtotal:</span>${product.subtotal}</div>
 			<div className="cart-product-options">
 				<Button variant="contained" color="primary">Update Qty</Button>
 				<Button variant="contained" color="primary">Remove</Button>

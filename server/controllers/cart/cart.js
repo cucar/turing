@@ -55,6 +55,8 @@ class Cart extends Controller {
 	 */
 	async getCartProducts(ctx) {
 		
+		// slow response debug: await require('../../common/utils/utils.js').wait(5);
+		
 		// we're not using shopping_cart_get_products or shopping_cart_get_saved_products SP because it seems to be missing product_id and image fields - it's pretty much the same query, though
 		this.body = await this.db.selectAll(`
 			select c.item_id, p.name, c.attributes, c.product_id, coalesce(nullif(p.discounted_price, 0), p.price) AS price,
