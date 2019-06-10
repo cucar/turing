@@ -60,6 +60,7 @@ export default function UpdatePayment(props) {
 		<Card>
 			<CardContent>
 				<h1>Credit Card On File</h1>
+				<p>You can use test card numbers: 4242 4242 4242 4242 or 4111 1111 1111 1111.</p>
 				{customer.credit_card && <p>Please note that you already have a card on file. If you make an update it will be overwritten.</p>}
 				<div id="stripe-inputs" />
 			</CardContent>
