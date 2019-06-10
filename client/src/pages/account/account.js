@@ -21,13 +21,13 @@ export default mount({
 	'/': routeAuth({ title: 'Turing Account Page', view: <Account /> }),
 	'/register': route({ title: 'Sign Up', view: <Registration /> }),
 	'/login': route({ title: 'Login', view: <Login /> }),
-	'/logout': route({ title: 'Logout', view: <Logout /> }),
-	'/update/account': route({ title: 'Update Account', view: <UpdateAccount /> }),
-	'/update/address': route({ title: 'Update Address', view: <UpdateAddress /> }),
-	'/update/payment': route({ title: 'Update Credit Card On File', view: <UpdatePayment /> }),
-	'/orders': route({ title: 'My Orders', view: <Orders /> }),
-	'/orders/:id': route(req => ({ title: 'My Orders', view: <OrderDetail orderId={req.params.id}/> })),
-	'/reviews': route({ title: 'My Reviews', view: <Reviews /> })
+	'/logout': routeAuth({ title: 'Logout', view: <Logout /> }),
+	'/update/account': routeAuth({ title: 'Update Account', view: <UpdateAccount /> }),
+	'/update/address': routeAuth({ title: 'Update Address', view: <UpdateAddress /> }),
+	'/update/payment': routeAuth({ title: 'Update Credit Card On File', view: <UpdatePayment /> }),
+	'/orders': routeAuth({ title: 'My Orders', view: <Orders /> }),
+	'/orders/:id': routeAuth(req => ({ title: 'My Orders', view: <OrderDetail orderId={req.params.id}/> })),
+	'/reviews': routeAuth({ title: 'My Reviews', view: <Reviews /> })
 });
 
 /**

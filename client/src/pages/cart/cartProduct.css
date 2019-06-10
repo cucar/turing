@@ -61,7 +61,7 @@
 }
 
 .cart-product-options {
-	flex-basis: 380px;
+	flex-basis: 400px;
 	flex-grow: 0;
 	flex-shrink: 0;
 	text-align: right;

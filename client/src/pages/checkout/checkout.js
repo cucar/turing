@@ -1,17 +1,19 @@
 import React, { useEffect, useRef, useCallback } from 'react';
-import { mount, route } from 'navi';
+import { mount } from 'navi';
 import TextField from '@material-ui/core/TextField/TextField';
 import Button from '@material-ui/core/Button/Button';
 
+import routeAuth from '../../utils/routeAuth';
 import callApi from '../../utils/callApi';
 import { showSuccess } from '../../utils/notifications';
 import { getStripe, getStripeCardElement } from '../../utils/stripe';
 
 import Order from './order';
+import { getSessionCartId } from '../../utils/session';
 
 export default mount({
-	'/': route({ title: 'Turing Checkout Page', view: <Checkout /> }),
-	'/order': route({ title: 'Turing Order Page', view: <Order /> })
+	'/': routeAuth({ title: 'Turing Checkout Page', view: <Checkout /> }),
+	'/order': routeAuth({ title: 'Turing Order Page', view: <Order /> })
 });
 
 /**
@@ -47,19 +49,9 @@ function Checkout(props) {
 		console.log(token, error);
 		if (error) { alert('Adding card failed with error: ' + error.message); return; }
 		
-		// this is a call setup for testing - normally the login would be done prior to coming to the payment page
-		const loginResponse = await callApi('customers/login', { email: 'test@test.com', password: 'Test1234!' }, 'POST');
-		console.log(loginResponse);
-		if (!loginResponse) return;
-		
-		// this is a call setup for testing - normally the product would be added to the cart prior to coming to the payment page
-		const cartResponse = await callApi('shoppingcart/add', { cart_id: 'test', product_id: 1, attributes: 'L, Red' }, 'POST');
-		console.log(cartResponse);
-		if (!cartResponse) return;
-		
 		// now call our server to collect the charges - this method will call stripe to do that from the server side with the token
 		// cart, shipping and tax IDs are test values - they would normally be entered and saved prior to coming to the payment page
-		const checkoutResponse = await callApi('orders', { cart_id: 'test', shipping_id: 1, tax_id: 1, stripe_token: token.id }, 'POST', { Authorization: loginResponse.accessToken });
+		const checkoutResponse = await callApi('orders', { cart_id: getSessionCartId(), shipping_id: 1, tax_id: 1, stripe_token: token.id }, 'POST');
 		console.log(checkoutResponse);
 		if (!checkoutResponse) return;
 

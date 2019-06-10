@@ -1,5 +1,6 @@
 import React from 'react';
 import { useNavigation } from 'react-navi';
+import { Card, CardContent } from '@material-ui/core';
 
 import TuringForm, { Validators } from '../../shared/form/turingForm';
 import TuringTextField from '../../shared/form/turingTextField';
@@ -30,16 +31,20 @@ export default function Registration() {
 		navigator.navigate('/account');
 	};
 	
-	return (<>
-		<h1>Registration</h1>
-		
-		<TuringForm endpoint="customers" method="POST" onApiResponseReceived={customerRegistered}>
-			<TuringTextField key="email" label="Email" validators={[ Validators.required, Validators.email ]} />
-			<TuringTextField key="name" label="Name" validators={[ Validators.required ]} />
-			<TuringPasswordField key="password" label="Password" validators={[ Validators.required, Validators.password ]} />
-			<TuringPasswordField key="password_confirm" label="Password Confirmation" validators={[ Validators.required, Validators.passwordConfirm ]} />
-			<br/>
-			<TuringFormSubmitButton key="register" label="Register" />
-		</TuringForm>
-	</>);
+	return (
+		<Card>
+			<CardContent>
+				<h1>Registration</h1>
+				
+				<TuringForm endpoint="customers" method="POST" onApiResponseReceived={customerRegistered}>
+					<TuringTextField key="email" label="Email" validators={[ Validators.required, Validators.email ]} />
+					<TuringTextField key="name" label="Name" validators={[ Validators.required ]} />
+					<TuringPasswordField key="password" label="Password" validators={[ Validators.required, Validators.password ]} />
+					<TuringPasswordField key="password_confirm" label="Password Confirmation" validators={[ Validators.required, Validators.passwordConfirm ]} />
+					<br/>
+					<TuringFormSubmitButton key="register" label="Register" />
+				</TuringForm>
+			</CardContent>
+		</Card>
+	);
 }
