@@ -1,9 +1,10 @@
 import React, { useCallback } from 'react';
 import { Card, CardContent, Divider } from '@material-ui/core';
 
+import { loggedIn } from '../../utils/session';
+import LinkButton from '../../shared/linkButton';
 import CartProduct from './cartProduct';
 import './cartProducts.css';
-import LinkButton from '../../shared/linkButton';
 
 /**
  * shows products in the cart or the ones saved for later
@@ -56,7 +57,9 @@ export default function CartProducts({ products, savedForLater, onQtyUpdate, onR
 					</div>}
 					{!savedForLater && <div className="cart-links">
 						<LinkButton variant="contained" color="primary" href="/catalog">Continue Shopping</LinkButton>
-						{products.length > 0 && <LinkButton variant="contained" color="primary" href="/checkout">Checkout</LinkButton>}
+						{products.length > 0 && <LinkButton variant="contained" color="primary" href="/checkout">
+							{loggedIn() ? 'Checkout' : 'Sign In to Checkout'}
+						</LinkButton>}
 					</div>}
 				</CardContent>
 			</Card>
