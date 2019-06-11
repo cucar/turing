@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Divider, List, ListItem, Paper, Table, TableBody, TableCell, TableFooter, TableHead, TablePagination, TableRow, TableSortLabel } from '@material-ui/core';
+import { Divider, List, ListItem, Table, TableBody, TableCell, TableFooter, TableHead, TablePagination, TableRow, TableSortLabel } from '@material-ui/core';
 import PropTypes from 'prop-types';
 import LinearProgress from '@material-ui/core/LinearProgress/LinearProgress';
 import { useNavigation } from 'react-navi';
@@ -210,37 +210,79 @@ function TuringList({
 		{pageData.showProgress && <LinearProgress />}
 		
 		{/* api data received - show it in the list */}
-		{!pageData.showProgress && <Paper className="list-paper">
-			<div className="list-div">
+		{!pageData.showProgress && <div className="list-div">
 
-				{/* no records found in the api data - show that */}
-				{pageData.totalRecords === 0 && <div className="list-no-records">No records found.</div>}
+			{/* no records found in the api data - show that */}
+			{pageData.totalRecords === 0 && <div className="list-no-records">No records found.</div>}
+			
+			{/* table mode - list using table components */}
+			{pageData.totalRecords > 0 && tableMode && <Table className="list-table">
 				
-				{/* table mode - list using table components */}
-				{pageData.totalRecords > 0 && tableMode && <Table className="list-table">
-					
-					<TableHead>
-						<TableRow>
-							{listFields.map(field => (
-								<TableCell key={field.id} className="list-table-header" sortDirection={pageData.orderField === field.id ? pageData.orderDirection : false}>
-									{allowSort && <TableSortLabel active={pageData.orderField === field.id} direction={pageData.orderDirection} onClick={onTableOrderChange(field.id)}>
-										{field.label}
-									</TableSortLabel>}
-									{!allowSort && field.label}
-								</TableCell>
-							))}
-						</TableRow>
-					</TableHead>
-					
-					<TableBody>
-						{pageData.rows.map((row, index) => (
-							<TableRow key={index} onClick={() => onRowClick(row)} className={detailRoute ? 'list-table-detail' : ''}>
-								{listFields.map(field => (<TableCell key={field.id} className="list-table-cell">{row[field.id]}</TableCell>))}
-							</TableRow>
+				<TableHead>
+					<TableRow>
+						{listFields.map(field => (
+							<TableCell key={field.id} className="list-table-header" sortDirection={pageData.orderField === field.id ? pageData.orderDirection : false}>
+								{allowSort && <TableSortLabel active={pageData.orderField === field.id} direction={pageData.orderDirection} onClick={onTableOrderChange(field.id)}>
+									{field.label}
+								</TableSortLabel>}
+								{!allowSort && field.label}
+							</TableCell>
 						))}
-					</TableBody>
-					
-					{pageData.totalRecords > pageData.pageSize && <TableFooter>
+					</TableRow>
+				</TableHead>
+				
+				<TableBody>
+					{pageData.rows.map((row, index) => (
+						<TableRow key={index} onClick={() => onRowClick(row)} className={detailRoute ? 'list-table-detail' : ''}>
+							{listFields.map(field => (<TableCell key={field.id} className="list-table-cell">{row[field.id]}</TableCell>))}
+						</TableRow>
+					))}
+				</TableBody>
+				
+				{pageData.totalRecords > pageData.pageSize && <TableFooter>
+					<TableRow>
+						<TablePagination
+							rowsPerPageOptions={pageSizeOptions}
+							colSpan={listFields.length}
+							count={pageData.totalRecords}
+							rowsPerPage={pageData.pageSize}
+							page={pageData.page}
+							SelectProps={{ native: true }}
+							onChangePage={onPageChange}
+							onChangeRowsPerPage={onPageSizeChange}
+						/>
+					</TableRow>
+				</TableFooter>}
+			
+			</Table>}
+			
+			{/* list item mode - list using list components */}
+			{pageData.totalRecords > 0 && !tableMode && <>
+				
+				{allowSort && <div className="list-mobile-sort">
+					<span>Sort Order:</span> &nbsp;
+					<Select value={`${pageData.orderField}|${pageData.orderDirection}`} onChange={onListOrderChange} inputProps={{ name: 'order', id: 'order' }}>
+						{listFields.reduce((res, field) => res.concat([
+							{ ...field, sort: `${field.id}|asc`, label: `${field.label} Ascending` },
+							{ ...field, sort: `${field.id}|desc`, label: `${field.label} Descending` }
+						]), []).map(field => (
+							<MenuItem key={field.sort} value={field.sort}>{field.label}</MenuItem>
+						))}
+					</Select>
+				</div>}
+				{allowSort && <Divider />}
+
+				<List>
+					{pageData.rows.map((row, index) => (
+						<div key={index} className="list-mobile-item-divider-wrap">
+							{getListItem(row)}
+							{index !== pageData.rows.length - 1 && <Divider/>}
+						</div>
+					))}
+				</List>
+				
+				{pageData.totalRecords > pageData.pageSize && <Table className="pagination">
+					<TableBody>
 						<TableRow>
 							<TablePagination
 								rowsPerPageOptions={pageSizeOptions}
@@ -253,55 +295,11 @@ function TuringList({
 								onChangeRowsPerPage={onPageSizeChange}
 							/>
 						</TableRow>
-					</TableFooter>}
-				
+					</TableBody>
 				</Table>}
+			</>}
 				
-				{/* list item mode - list using list components */}
-				{pageData.totalRecords > 0 && !tableMode && <>
-					
-					{allowSort && <div className="list-mobile-sort">
-						<span>Sort Order:</span> &nbsp;
-						<Select value={`${pageData.orderField}|${pageData.orderDirection}`} onChange={onListOrderChange} inputProps={{ name: 'order', id: 'order' }}>
-							{listFields.reduce((res, field) => res.concat([
-								{ ...field, sort: `${field.id}|asc`, label: `${field.label} Ascending` },
-								{ ...field, sort: `${field.id}|desc`, label: `${field.label} Descending` }
-							]), []).map(field => (
-								<MenuItem key={field.sort} value={field.sort}>{field.label}</MenuItem>
-							))}
-						</Select>
-					</div>}
-					{allowSort && <Divider />}
-
-					<List>
-						{pageData.rows.map((row, index) => (
-							<div key={index} className="list-mobile-item-divider-wrap">
-								{getListItem(row)}
-								{index !== pageData.rows.length - 1 && <Divider/>}
-							</div>
-						))}
-					</List>
-					
-					{pageData.totalRecords > pageData.pageSize && <Table className="pagination">
-						<TableBody>
-							<TableRow>
-								<TablePagination
-									rowsPerPageOptions={pageSizeOptions}
-									colSpan={listFields.length}
-									count={pageData.totalRecords}
-									rowsPerPage={pageData.pageSize}
-									page={pageData.page}
-									SelectProps={{ native: true }}
-									onChangePage={onPageChange}
-									onChangeRowsPerPage={onPageSizeChange}
-								/>
-							</TableRow>
-						</TableBody>
-					</Table>}
-				</>}
-				
-			</div>
-		</Paper>}
+		</div>}
 	</>);
 }
 
