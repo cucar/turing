@@ -1,15 +1,13 @@
-import React, { useEffect, useRef, useCallback } from 'react';
+import React, { useState } from 'react';
 import { mount } from 'navi';
-import TextField from '@material-ui/core/TextField/TextField';
-import Button from '@material-ui/core/Button/Button';
+import { Card, CardContent } from '@material-ui/core';
 
 import routeAuth from '../../utils/routeAuth';
-import callApi from '../../utils/callApi';
-import { showSuccess } from '../../utils/notifications';
-import { getStripe, getStripeCardElement } from '../../utils/stripe';
-
-import Order from './order';
 import { getSessionCartId } from '../../utils/session';
+import { Api } from '../../shared/api';
+import CheckoutSummary from './checkoutSummary';
+import CheckoutPayment from './checkoutPayment';
+import Order from './order';
 
 export default mount({
 	'/': routeAuth({ title: 'Turing Checkout Page', view: <Checkout /> }),
@@ -19,52 +17,25 @@ export default mount({
 /**
  * Payment page - user enters the card and submits the payment
  */
-function Checkout(props) {
+function Checkout() {
 	
-	// initialize stripe, elements and card input
-	const stripe = useRef(getStripe());
-	const elements = useRef(stripe.current.elements());
-	const stripeCardElement = useRef(getStripeCardElement(elements.current));
-	
-	// input refs
-	const nameField = useRef(null);
+	// cart amount, shipping method ID, shipping amount and tax amount are part of state object. we set them together so that when we update them it won't trigger render multiple times.
+	const [ orderData, setOrderData ] = useState({ shippingMethodId: '', cartAmount: 0, shippingAmount: 0, taxAmount: 0 });
 	
 	/**
-	 * executed after render - inject stripe inputs to the prepared div - the input field is in an iframe coming from stripe
-	 * it has to be from them to be able to do the tokenization call without CORS restrictions
+	 * this is called from summary component when the user updates the shipping method. we will in turn pass the method and updated amounts to the payment component so that order can be completed
 	 */
-	useEffect(() => {
-		
-		// if stripe card input is already mounted, nothing to do - otherwise, mount it
-		if (document.getElementById('stripe-inputs').innerHTML === '') stripeCardElement.current.mount('#stripe-inputs');
-	}, [ props ]);
+	const onShippingMethodChange = (shippingMethodId, cartAmount, shippingAmount, taxAmount) => setOrderData({ shippingMethodId, cartAmount, shippingAmount, taxAmount });
 	
-	/**
-	 * checkout event handler - tokenize the entered card and call the server to collect the charges
-	 */
-	const checkout = useCallback(async () => {
-		
-		// call stripe to tokenize the card
-		const { token, error } = await stripe.current.createToken(stripeCardElement.current, { name: nameField.current.value });
-		console.log(token, error);
-		if (error) { alert('Adding card failed with error: ' + error.message); return; }
-		
-		// now call our server to collect the charges - this method will call stripe to do that from the server side with the token
-		// cart, shipping and tax IDs are test values - they would normally be entered and saved prior to coming to the payment page
-		const checkoutResponse = await callApi('orders', { cart_id: getSessionCartId(), shipping_id: 1, tax_id: 1, stripe_token: token.id }, 'POST');
-		console.log(checkoutResponse);
-		if (!checkoutResponse) return;
-
-		showSuccess('Checkout successful. Order ID: ' + checkoutResponse.order_id);
-		
-		// redirect to order page
-		
-	}, [ stripe ]);
-	
-	return (<>
-		<h1>Checkout</h1>
-		<TextField label="Name" inputRef={nameField} />
-		<div id="stripe-inputs" />
-		<Button variant="contained" color="primary" onClick={checkout}>Checkout</Button>
-	</>);
+	return (
+		<Card>
+			<CardContent>
+				<h1>Checkout</h1>
+				<Api endpoint={`shoppingcart/checkout/${getSessionCartId()}`} render={checkoutData => (<>
+					<CheckoutSummary onShippingMethodChange={onShippingMethodChange} checkoutData={checkoutData} />
+					<CheckoutPayment shippingMethodId={orderData.shippingMethodId} cartAmount={orderData.cartAmount} shippingAmount={orderData.shippingAmount} taxAmount={orderData.taxAmount} />
+				</>)} />
+			</CardContent>
+		</Card>
+	);
 }

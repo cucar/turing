@@ -39,6 +39,10 @@
 	border-bottom: solid #bbbbbb 1px;
 }
 
+.invisible {
+	display: none;
+}
+
 @media only screen and (max-width: 600px) {
 
 	td.MuiTablePagination-root .MuiToolbar-gutters {
