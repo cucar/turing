@@ -5,6 +5,7 @@ const emailValidator = require('email-validator');
 const passwordValidator = (new (require('password-validator'))()).is().min(8).is().max(100).has().uppercase().has().lowercase().has().digits().has().symbols();
 const phoneValidator = require('google-libphonenumber').PhoneNumberUtil.getInstance();
 const fetch = require('node-fetch');
+const PasswordGenerator = require('secure-random-password');
 
 const Controller = require('../../common/controller/controller.js');
 const Stripe = require('../../common/stripe/stripe.js');
@@ -86,7 +87,6 @@ class Customer extends Controller {
 	/**
 	 * login via Facebook request
 	 * @throws USR_02 - The field(s) are/is required.
-	 * @throws USR_05 - The email doesn't exist.
 	 * @throws USR_14 - Facebook email information could not be retrieved.
 	 */
 	async loginViaFacebook() {
@@ -94,7 +94,7 @@ class Customer extends Controller {
 		this.validateRequired('USR_02', [ 'access_token' ]);
 		
 		// get customer email by calling Facebook to get access token information
-		let response = await fetch(`https://graph.facebook.com/me?access_token=${this.params.access_token}&fields=email`);
+		let response = await fetch(`https://graph.facebook.com/me?access_token=${this.params.access_token}&fields=name,email`);
 		let facebookCustomer = await response.json();
 		
 		// error out if email cannot be retrieved from access token
@@ -102,8 +102,15 @@ class Customer extends Controller {
 
 		// check if we can find the customer from email
 		let customer = _.omit(await this.getCustomerByEmail(facebookCustomer.email), 'password');
-		if (_.isEmpty(customer)) this.throw('USR_05', 'The email does not exist.');
-
+		
+		// if we can't find the customer from email, automatically register with a random password
+		// user can continue to login with Facebook or reset password later (not implemented yet)
+		if (_.isEmpty(customer)) {
+			const encryptedPassword = await this.encryptPassword(PasswordGenerator.randomPassword());
+			const customerId = await this.db.insert('customer', { name: facebookCustomer.name, email: facebookCustomer.email, password: encryptedPassword });
+			customer = await this.getCustomerReturnDataById(customerId);
+		}
+		
 		// create a token as usual as if the customer email was sent directly for login - no need for password authentication - Facebook did that
 		let token = jwt.sign({ customer_id: customer.customer_id }, this.config.token_encryption_key, { expiresIn: '24h' });
 		

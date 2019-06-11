@@ -69,7 +69,7 @@ export default function Login() {
 				</TuringForm>
 				
 				<div className="facebook-login-text">
-					If you already registered with our site before, you can also login with Facebook:
+					You can also login/register with Facebook:
 				</div>
 				
 				<FacebookLogin appId={facebookAppId} fields="name,email" callback={customerLoggedInToFacebook} isMobile={false} version="3.3" render={renderProps => (
