@@ -9,6 +9,7 @@ class Cart extends Controller {
 		return [
 			{ path: '/shoppingcart/add', method: 'POST', handler: this.addProductToCart },
 			{ path: '/shoppingcart/:cart_id', handler: this.returnCartProducts },
+			{ path: '/shoppingcart/checkout/:cart_id', handler: this.returnCheckoutData, auth: true },
 			{ path: '/shoppingcart/update/:item_id', method: 'PUT', handler: this.updateCartProductQuantity },
 			{ path: '/shoppingcart/removeProduct/:item_id', method: 'DELETE', handler: this.removeCartProduct },
 			{ path: '/shoppingcart/saveForLater/:item_id', handler: this.saveCartProductForLater },
@@ -46,7 +47,7 @@ class Cart extends Controller {
 		// return the cart id with the number of products in it so that it can be shown in cart icon
 		this.body = {
 			cart_id: cartId,
-			product_count: await this.db.selectVal('select sum(quantity) from shopping_cart where cart_id = ? and buy_now = 1', [ cartId ])
+			product_count: parseInt(await this.db.selectVal('select sum(quantity) from shopping_cart where cart_id = ? and buy_now = 1', [ cartId ]))
 		};
 	}
 	
@@ -54,17 +55,59 @@ class Cart extends Controller {
 	 * returns the products in a cart to be bought now
 	 */
 	async returnCartProducts(ctx) {
-		
 		// slow response debug: await require('../../common/utils/utils.js').wait(5);
-		
-		// we're not using shopping_cart_get_products or shopping_cart_get_saved_products SP because it seems to be missing product_id and image fields - it's pretty much the same query, though
-		this.body = await this.db.selectAll(`
+		this.body = await this.getCartProducts(ctx.params.cart_id);
+	}
+	
+	/**
+	 * returns the products in a cart to be bought now
+	 * we're not using shopping_cart_get_products or shopping_cart_get_saved_products SP because it seems to be missing product_id and image fields - it's pretty much the same query, though
+	 */
+	getCartProducts(cartId) {
+		return this.db.selectAll(`
 			select c.item_id, p.name, c.attributes, c.product_id, coalesce(nullif(p.discounted_price, 0), p.price) AS price,
 			       c.quantity, p.thumbnail as image, coalesce(nullif(p.discounted_price, 0), p.price) * c.quantity as subtotal, c.buy_now
     		from shopping_cart c
     		join product p on c.product_id = p.product_id
     		where c.cart_id = ?
-    	`, [ ctx.params.cart_id ]);
+    	`, [ cartId ]);
+	}
+	
+	/**
+	 * returns the shipping methods for the logged in customer - if there is no address on file, returns empty array
+	 * returning empty array here effectively prevents the order from being placed at checkout page. that means customers with no address on file would not be able to place an order.
+	 * checkout page requires the customer to update address on file before placing the order.
+	 */
+	getCheckoutShippingMethods() {
+		if (!this.customerInfo.address_1) return []; // shipping_region_id gets default value at registration so we need to check if there is address on file from the address line field
+		return this.db.selectAll('select * from shipping where shipping_region_id = ?', [ this.customerInfo.shipping_region_id ]);
+	}
+	
+	/**
+	 * returns the tax amount to be used for a cart/order
+	 */
+	getCheckoutTaxAmount(products) {
+		
+		// there would be more logic here in the future - maybe even contact a tax calculation service like Avalara with the order information and get the exact tax amount
+		// until then we're just emulating as if we're doing any processing - if it's California, no tax, otherwise add 8.5% tax
+		return (this.customerInfo.region === 'CA' ? 0 : Math.round(products.reduce((total, product) => total + parseFloat(product.subtotal), 0) * 8.5) / 100);
+	}
+
+	/**
+	 * returns the data used for the checkout screen
+	 */
+	async returnCheckoutData(ctx) {
+		
+		// slow response debug: await require('../../common/utils/utils.js').wait(5);
+		
+		const products = await this.getCartProducts(ctx.params.cart_id);
+		
+		// we're not using shopping_cart_get_products or shopping_cart_get_saved_products SP because it seems to be missing product_id and image fields - it's pretty much the same query, though
+		this.body = {
+			products: products,
+			shipping_methods: await this.getCheckoutShippingMethods(),
+			tax_amount: this.getCheckoutTaxAmount(products)
+		};
 	}
 	
 	/**
