@@ -83,8 +83,7 @@ class Order extends Controller {
 			
 			// now make the actual call to stripe to charge the card
 			const charge = await Stripe.charge(stripeTransaction);
-			// debug:
-			console.log('stripe successful', stripeTransaction, charge);
+			// debug: console.log('stripe successful', stripeTransaction, charge);
 
 			// check to make sure the charges were successful
 			if (!charge || !charge.id || !charge.balance_transaction) this.throw('ORD_04', `Invalid response: ${JSON.stringify(charge)}`);
@@ -97,8 +96,7 @@ class Order extends Controller {
 		}
 		catch (ex) {
 			
-			// debug:
-			console.log('stripe declined', ex);
+			// debug: console.log('stripe declined', ex);
 			
 			// delete the temporary order record
 			await this.db.delete('orders', 'order_id', orderId);

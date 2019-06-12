@@ -33,17 +33,22 @@ const Api = ({ endpoint, args, method, headers, render }) => {
 		// start the timer to show the progress - if we get the response within 500 ms, we won't show progress - otherwise show it until response is received
 		setTimeout(() => { if (!responseReceived.current) setState({ apiResponse: null, showProgress: true }); }, 500);
 		
+		// setup abort controller for fetch unsubscribe - needed for cleanup when api component unmounts
+		const abortController = new AbortController();
+		
 		// make the api call and store the response - hide progress when it is received
-		(async () => {
-			
-			// if we get an error here, the api response will be set to empty string and an error dialog will be shown
-			// at that point we leave it to the caller to handle the error - in any case, we received a response
-			// we also reset api request sent flag used to control progress display at render
-			responseReceived.current = false;
-			setState({ apiResponse: await callApi(endpoint, args, method, headers), showProgress: false });
+		// if we get an error here, the api response will be set to empty string and an error dialog will be shown
+		// at that point we leave it to the caller to handle the error - in any case, we received a response
+		// we also reset api request sent flag used to control progress display at render
+		responseReceived.current = false;
+		callApi(endpoint, args, method, headers, abortController.signal).then(apiResponse => {
+			setState({ apiResponse: apiResponse, showProgress: false });
 			responseReceived.current = true;
 			apiRequestSent.current = false;
-		})();
+		});
+		
+		// clean up function - unsubscribe from fetch
+		return () => abortController.abort();
 	}, [ endpoint, args, method, headers, responseReceived, apiRequestSent ]);
 	
 	// api components are supposed to have only one child which would be a function of what to display with the retrieved response

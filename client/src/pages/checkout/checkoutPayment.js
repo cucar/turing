@@ -1,5 +1,4 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigation } from 'react-navi';
 import { Button, FormControlLabel, Checkbox, LinearProgress } from '@material-ui/core';
 import PubSub from 'pubsub-js';
 
@@ -12,9 +11,7 @@ import './checkoutPayment.css';
 /**
  * shows the payment section in the checkout page
  */
-export default function CheckoutPayment({ shippingMethodId, cartAmount, shippingAmount, taxAmount }) {
-	
-	let navigator = useNavigation();
+export default function CheckoutPayment({ shippingMethodId, cartAmount, shippingAmount, taxAmount, onCheckout }) {
 	
 	// check if the customer has a saved credit card on file or not
 	const customer = getSessionCustomer();
@@ -97,9 +94,9 @@ export default function CheckoutPayment({ shippingMethodId, cartAmount, shipping
 
 		// show success and redirect to order confirmation page
 		showSuccess(`Checkout successful. Order ID: ${orderId}`);
-		navigator.navigate(`/checkout/order/${orderId}`);
+		onCheckout(orderId);
 		
-	}, [ getCardToken, shippingMethodId, cartAmount, navigator ]);
+	}, [ getCardToken, shippingMethodId, cartAmount, onCheckout ]);
 	
 	return (
 		<div className="checkout-payment">

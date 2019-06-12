@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { mount } from 'navi';
+import { useNavigation } from 'react-navi';
 import { Card, CardContent } from '@material-ui/core';
 
 import routeAuth from '../../utils/routeAuth';
@@ -20,6 +21,11 @@ export default mount({
  */
 function Checkout() {
 	
+	let navigator = useNavigation();
+	
+	// if there is no cart in session, we can't do checkout - link to catalog
+	const [ cartId, setCartId ] = useState(getSessionCartId());
+	
 	// cart amount, shipping method ID, shipping amount and tax amount are part of state object. we set them together so that when we update them it won't trigger render multiple times.
 	const [ orderData, setOrderData ] = useState({ shippingMethodId: 0, cartAmount: 0, shippingAmount: 0, taxAmount: 0 });
 
@@ -28,8 +34,13 @@ function Checkout() {
 	 */
 	const onShippingMethodChange = useCallback((shippingMethodId, cartAmount, shippingAmount, taxAmount) => setOrderData({ shippingMethodId, cartAmount, shippingAmount, taxAmount }), []);
 	
-	// if there is no cart in session, we can't do checkout - link to catalog
-	const [ cartId ] = useState(getSessionCartId());
+	/**
+	 * when checkout is successful, this will be called from payment component to redirect to order page
+	 */
+	const onCheckout = useCallback((orderId) => {
+		setCartId('');
+		navigator.navigate(`/checkout/order/${orderId}`);
+	}, [ navigator ]);
 	
 	return (<>
 		{!cartId && <Card>
@@ -43,8 +54,17 @@ function Checkout() {
 			<CardContent>
 				<h1>Checkout</h1>
 				<Api endpoint={`shoppingcart/checkout/${getSessionCartId()}`} render={checkoutData => (<>
-					<CheckoutSummary onShippingMethodChange={onShippingMethodChange} checkoutData={checkoutData} />
-					<CheckoutPayment shippingMethodId={orderData.shippingMethodId} cartAmount={orderData.cartAmount} shippingAmount={orderData.shippingAmount} taxAmount={orderData.taxAmount} />
+					<CheckoutSummary
+						onShippingMethodChange={onShippingMethodChange}
+						checkoutData={checkoutData}
+					/>
+					<CheckoutPayment
+						shippingMethodId={orderData.shippingMethodId}
+						cartAmount={orderData.cartAmount}
+						shippingAmount={orderData.shippingAmount}
+						taxAmount={orderData.taxAmount}
+						onCheckout={onCheckout}
+					/>
 				</>)} />
 			</CardContent>
 		</Card>}
