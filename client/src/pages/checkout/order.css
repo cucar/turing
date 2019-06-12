@@ -3,3 +3,14 @@
 	text-align: center;
 	padding-top: 40px;
 }
+
+.checkout-order img {
+	width: auto;
+}
+
+@media only screen and (max-width: 500px) {
+	
+	.checkout-order img {
+		width: 100%;
+	}
+}
