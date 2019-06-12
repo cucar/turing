@@ -4,7 +4,7 @@ import { Button, FormControlLabel, Checkbox } from '@material-ui/core';
 import { getStripe, getStripeCardElement } from '../../utils/stripe';
 import callApi from '../../utils/callApi';
 import { getSessionCartId, getSessionCustomer } from '../../utils/session';
-import { showSuccess } from '../../utils/notifications';
+import { showSuccess, showError } from '../../utils/notifications';
 import './checkoutPayment.css';
 
 /**
@@ -42,18 +42,36 @@ export default function CheckoutPayment({ shippingMethodId, cartAmount, shipping
 	};
 	
 	/**
+	 * tokenizes stripe token if we are not using card on file - otherwise returns empty string - server will understand that it means "use card on file"
+	 */
+	const getCardToken = useCallback(async () => {
+		
+		// if we are using card on file, we will not tokenize the entered card - just return empty - server will understand that it means "use card on file"
+		if (useCardOnFile) return { token: '', error: '' };
+		
+		// call stripe to tokenize the card if we are not using card on file
+		const { token, error } = await stripe.current.createToken(stripeCardElement.current);
+		console.log(token, error);
+		return { token: token.id, error: error.message };
+	}, [ stripe, useCardOnFile ]);
+	
+	/**
 	 * checkout event handler - tokenize the entered card and call the server to collect the charges
 	 */
 	const checkout = useCallback(async () => {
 		
-		// call stripe to tokenize the card
-		const { token, error } = await stripe.current.createToken(stripeCardElement.current);
-		console.log(token, error);
-		if (error) { alert('Adding card failed with error: ' + error.message); return; }
+		// we need to make sure shipping method is selected
+		if (shippingMethodId === 0) return showError('Shipping method needs to be selected.');
 		
-		// now call our server to collect the charges - this method will call stripe to do that from the server side with the token
-		// cart, shipping and tax IDs are test values - they would normally be entered and saved prior to coming to the payment page
-		const checkoutResponse = await callApi('orders', { cart_id: getSessionCartId(), shipping_id: 1, tax_id: 1, stripe_token: token.id }, 'POST');
+		// we need to make sure there are products in the cart
+		if (cartAmount === 0) return showError('Please add a product to cart to checkout.');
+
+		// get card token to use from stripe if we are not using card on file
+		const { token, error } = await getCardToken();
+		if (error) { showError('Adding card failed with error: ' + error); return; }
+		
+		// now call our server to collect the charges - this method will call stripe to do that from the server side with the token (or card on file)
+		const checkoutResponse = await callApi('orders', { cart_id: getSessionCartId(), shipping_id: shippingMethodId, stripe_token: token }, 'POST');
 		console.log(checkoutResponse);
 		if (!checkoutResponse) return;
 		
@@ -61,7 +79,7 @@ export default function CheckoutPayment({ shippingMethodId, cartAmount, shipping
 		
 		// redirect to order page
 		
-	}, [ stripe ]);
+	}, [ getCardToken, shippingMethodId, cartAmount ]);
 	
 	return (
 		<div className="checkout-payment">

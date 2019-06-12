@@ -21,10 +21,13 @@ class Order extends Controller {
 	 * @throws ORD_01 - fields required.
 	 * @throws ORD_03 - card declined.
 	 * @throws ORD_04 - invalid response from stripe
+	 * @throws ORD_11 - no product in cart
 	 */
 	async createOrder() {
 		
 		this.validateRequired('PRD_01', [ 'cart_id', 'shipping_id' ]);
+		
+		if (this.param('shipping_id') === 0) this.throw('ORD_01', 'Shipping method is required.');
 		
 		// get order total to be charged to the customer from the cart
 		const cartTotal = await this.db.selectVal(`
@@ -34,6 +37,9 @@ class Order extends Controller {
 			where sc.cart_id = ?
 			and sc.buy_now = 1
 		`, [ this.param('cart_id') ]);
+		
+		// if there are no products in cart, do not allow creation of order
+		if (!cartTotal) this.throw('ORD_11', 'No products in cart.');
 		
 		// get the cost of the shipping method
 		const shippingAmount = parseFloat(await this.db.selectVal('select shipping_cost from shipping where shipping_id = ?', [ this.param('shipping_id') ]));
@@ -58,21 +64,28 @@ class Order extends Controller {
 		
 		// we create the order ID initially to be able to send it to stripe but it is not finalized yet. if the charges don't succeed we will delete that order and leave the cart as-is.
 		try {
-		
+
+			// prepare the api parameters to be sent to stripe to charge the card
+			let stripeTransaction = {
+				amount: orderTotal * 100, // needs to be sent in cents
+				currency: 'usd',
+				description: 'Customer Turing Order',
+				metadata: { order_id: orderId },
+				receipt_email: this.customerInfo.email // sends order notification email to the customer from stripe if charges are successful
+			};
+
 			// determine the source to use for the stripe charge. if stripe token is sent, use that. stripe token is created on the client side from credit card data without coming to our server
 			// this makes sure we are PCI compliant. if stripe token is not sent, it means customer wants to use card on file (stripe customer id). collect the charges either with new card or card on file.
 			// if stripe token is not sent and there was no card on file (UI should not allow this to happen) this call would error out.
 			// in order to simulate declined card, just send a bad token - response should include error object with details
-			const charge = await Stripe.charge({
-				amount: orderTotal * 100, // needs to be sent in cents
-				currency: 'usd',
-				description: 'Customer Turing Order',
-				source: this.param('stripe_token') ? this.param('stripe_token') : this.customerInfo.credit_card,
-				metadata: { order_id: orderId },
-				receipt_email: this.customerInfo.email // sends order notification email to the customer from stripe if charges are successful
-			});
-			// debug: console.log('stripe successful', charge);
+			if (this.param('stripe_token')) stripeTransaction.source = this.param('stripe_token');
+			else stripeTransaction.customer = this.customerInfo.credit_card;
 			
+			// now make the actual call to stripe to charge the card
+			const charge = await Stripe.charge(stripeTransaction);
+			// debug:
+			console.log('stripe successful', charge);
+
 			// check to make sure the charges were successful
 			if (!charge || !charge.id || !charge.balance_transaction) this.throw('ORD_04', `Invalid response: ${JSON.stringify(charge)}`);
 			
