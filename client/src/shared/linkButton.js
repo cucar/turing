@@ -4,7 +4,7 @@ import Button from '@material-ui/core/Button';
 
 export default function LinkButton(props) {
 	
-	const linkStyle = { textDecorationLine: 'none', color: 'white' };
+	const linkStyle = { textDecoration: 'none', color: 'white' };
 	
 	return (
 		<Button variant={props.variant || 'contained'} color={props.color || 'primary'}>
