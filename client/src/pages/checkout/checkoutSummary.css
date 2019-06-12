@@ -1,0 +1,59 @@
+.checkout-table * {
+	font-size: 14px;
+	color: black;
+}
+
+.checkout-table > div {
+	width: 100%;
+	display: flex;
+	border-bottom: solid grey 1px;
+}
+
+.checkout-headers {
+	font-weight: bold;
+}
+
+.checkout-table > div > div {
+	flex-basis: 20%;
+	flex-grow: 1;
+	flex-shrink: 1;
+	padding: 10px;
+	text-align: right;
+}
+
+.checkout-table > div > div:first-child {
+	flex-basis: 40%;
+	flex-grow: 2;
+	flex-shrink: 2;
+	text-align: left;
+}
+
+.checkout-table > div > div.checkout-cart-total-label, .checkout-table > div > div.checkout-tax-label, .checkout-table > div > div.checkout-total-label {
+	flex-basis: 80%;
+	flex-grow: 4;
+	flex-shrink: 4;
+}
+
+.checkout-table > div > div.checkout-shipping-methods, .checkout-table > div > div.checkout-no-shipping-methods {
+	flex-basis: 40%;
+	flex-grow: 2;
+	flex-shrink: 2;
+}
+
+.checkout-total-amount {
+	font-weight: bold;
+}
+
+.checkout-shipping-methods > * {
+	width: 100%;
+}
+
+@media only screen and (max-width: 400px) {
+	
+	.checkout-table > div > div.checkout-shipping-methods {
+		flex-basis: 130px;
+		max-width: 130px;
+		flex-grow: 0;
+		flex-shrink: 0;
+	}
+}

@@ -77,9 +77,9 @@ class Cart extends Controller {
 	 * returns the shipping methods for the logged in customer - if there is no address on file, returns empty array
 	 * returning empty array here effectively prevents the order from being placed at checkout page. that means customers with no address on file would not be able to place an order.
 	 * checkout page requires the customer to update address on file before placing the order.
+	 * shipping_region_id gets default value of 1 (select value) at registration and that does not have any shipping methods associated with it, so newly registered customers won't have any methods available.
 	 */
 	getCheckoutShippingMethods() {
-		if (!this.customerInfo.address_1) return []; // shipping_region_id gets default value at registration so we need to check if there is address on file from the address line field
 		return this.db.selectAll('select * from shipping where shipping_region_id = ?', [ this.customerInfo.shipping_region_id ]);
 	}
 	
@@ -98,13 +98,10 @@ class Cart extends Controller {
 	 */
 	async returnCheckoutData(ctx) {
 		
-		// slow response debug: await require('../../common/utils/utils.js').wait(5);
-		
 		const products = await this.getCartProducts(ctx.params.cart_id);
 		
-		// we're not using shopping_cart_get_products or shopping_cart_get_saved_products SP because it seems to be missing product_id and image fields - it's pretty much the same query, though
 		this.body = {
-			products: products,
+			products: products.filter(product => product.buy_now), // filter out the products saved for later
 			shipping_methods: await this.getCheckoutShippingMethods(),
 			tax_amount: this.getCheckoutTaxAmount(products)
 		};

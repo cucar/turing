@@ -5,12 +5,13 @@ import { getStripe, getStripeCardElement } from '../../utils/stripe';
 import callApi from '../../utils/callApi';
 import { getSessionCartId, getSessionCustomer } from '../../utils/session';
 import { showSuccess } from '../../utils/notifications';
+import './checkoutPayment.css';
 
 /**
  * shows the payment section in the checkout page
  */
 export default function CheckoutPayment({ shippingMethodId, cartAmount, shippingAmount, taxAmount }) {
-
+	
 	// check if the customer has a saved credit card on file or not
 	const customerCardOnFile = !!getSessionCustomer().credit_card;
 	
@@ -36,7 +37,6 @@ export default function CheckoutPayment({ shippingMethodId, cartAmount, shipping
 	 * checkbox event handler to show/hide new card input
 	 */
 	const onCardOnFileChange = (event) => {
-		console.log('card on file usage flag changed', event.target.checked);
 		setUseCardOnFile(event.target.checked);
 	};
 	
@@ -64,24 +64,34 @@ export default function CheckoutPayment({ shippingMethodId, cartAmount, shipping
 	
 	return (
 		<div className="checkout-payment">
-			{!customerCardOnFile && <div className="checkout-no-saved-card">
-				<div className="checkout-text">Please enter your credit card number below:</div>
-				<div id="stripe-inputs" />
-				<Button variant="contained" color="primary" onClick={checkout}>Checkout</Button>
+			
+			<br/>
+			
+			{/* shipping method is not selected - cannot continue */}
+			{shippingMethodId === 0 && <div className="checkout-no-shipping-method-selected">
+				Please select a shipping method to continue.
 			</div>}
 			
-			{customerCardOnFile && <div className="checkout-saved-card">
+			{/* shipping method is selected on there is no card on file */}
+			{shippingMethodId > 0 && !customerCardOnFile && <div className="checkout-no-saved-card">
+				<div className="checkout-text">Please enter your credit card number below. You can use 4242 4242 4242 4242 or 4111 1111 1111 1111 with any exp date and CVC to test.</div>
+				<div id="stripe-inputs" />
+			</div>}
+			
+			{/* shipping method is selected on there is card on file */}
+			{shippingMethodId > 0 && customerCardOnFile && <div className="checkout-saved-card">
 				<FormControlLabel
 					control={<Checkbox checked={useCardOnFile} onChange={onCardOnFileChange} />}
 					label="Use Card On File"
 				/>
 				<br/>
 				<div className={`checkout-new-card ${useCardOnFile ? 'invisible' : ''}`}>
-					<div className="checkout-text">Please enter your credit card number below:</div>
+					<div className="checkout-text">Please enter your credit card number below. You can use 4242 4242 4242 4242 or 4111 1111 1111 1111 with any exp date and CVC to test.</div>
 					<div id="stripe-inputs" />
 				</div>
-				<Button variant="contained" color="primary" onClick={checkout}>Checkout</Button>
 			</div>}
+			
+			{shippingMethodId > 0 && <Button variant="contained" color="primary" onClick={checkout}>Pay ${(cartAmount + shippingAmount + taxAmount).toFixed(2)}</Button>}
 		</div>
 	);
 }

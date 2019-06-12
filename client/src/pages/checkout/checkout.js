@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { mount } from 'navi';
 import { Card, CardContent } from '@material-ui/core';
 
@@ -20,12 +20,12 @@ export default mount({
 function Checkout() {
 	
 	// cart amount, shipping method ID, shipping amount and tax amount are part of state object. we set them together so that when we update them it won't trigger render multiple times.
-	const [ orderData, setOrderData ] = useState({ shippingMethodId: '', cartAmount: 0, shippingAmount: 0, taxAmount: 0 });
-	
+	const [ orderData, setOrderData ] = useState({ shippingMethodId: 0, cartAmount: 0, shippingAmount: 0, taxAmount: 0 });
+
 	/**
 	 * this is called from summary component when the user updates the shipping method. we will in turn pass the method and updated amounts to the payment component so that order can be completed
 	 */
-	const onShippingMethodChange = (shippingMethodId, cartAmount, shippingAmount, taxAmount) => setOrderData({ shippingMethodId, cartAmount, shippingAmount, taxAmount });
+	const onShippingMethodChange = useCallback((shippingMethodId, cartAmount, shippingAmount, taxAmount) => setOrderData({ shippingMethodId, cartAmount, shippingAmount, taxAmount }), []);
 	
 	return (
 		<Card>
