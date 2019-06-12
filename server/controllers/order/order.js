@@ -30,28 +30,28 @@ class Order extends Controller {
 		if (this.param('shipping_id') === 0) this.throw('ORD_01', 'Shipping method is required.');
 		
 		// get order total to be charged to the customer from the cart
-		const cartTotal = await this.db.selectVal(`
+		const cartTotal = parseFloat(await this.db.selectVal(`
 			select sum(coalesce(nullif(p.discounted_price, 0), p.price)) as total_amount
 			from shopping_cart sc
 			join product p on sc.product_id = p.product_id
 			where sc.cart_id = ?
 			and sc.buy_now = 1
-		`, [ this.param('cart_id') ]);
+		`, [ this.param('cart_id') ]));
 		
 		// if there are no products in cart, do not allow creation of order
 		if (!cartTotal) this.throw('ORD_11', 'No products in cart.');
 		
 		// get the cost of the shipping method
 		const shippingAmount = parseFloat(await this.db.selectVal('select shipping_cost from shipping where shipping_id = ?', [ this.param('shipping_id') ]));
-		console.log('shipping amount', shippingAmount);
+		// debug: console.log('shipping amount', shippingAmount);
 		
 		// calculate the tax amount we should use - we use the same routine in cart controller that was used to shown the tax amount at checkout
 		const taxAmount = this.getController('cart').getCheckoutTaxAmount(await this.getController('cart').getCartProducts(this.param('cart_id')));
-		console.log('tax amount', taxAmount);
+		// debug: console.log('tax amount', taxAmount);
 		
 		// set the order amount - add up cart products total, tax and shipping
 		const orderTotal = Math.round((cartTotal + shippingAmount + taxAmount) * 100) / 100;
-		console.log('order total', orderTotal);
+		// debug: console.log('order total', orderTotal);
 		
 		// insert a new record into orders and obtain the new order ID
 		const orderId = await this.db.insert('orders', {
@@ -84,7 +84,7 @@ class Order extends Controller {
 			// now make the actual call to stripe to charge the card
 			const charge = await Stripe.charge(stripeTransaction);
 			// debug:
-			console.log('stripe successful', charge);
+			console.log('stripe successful', stripeTransaction, charge);
 
 			// check to make sure the charges were successful
 			if (!charge || !charge.id || !charge.balance_transaction) this.throw('ORD_04', `Invalid response: ${JSON.stringify(charge)}`);

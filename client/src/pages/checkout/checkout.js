@@ -8,10 +8,11 @@ import { Api } from '../../shared/api';
 import CheckoutSummary from './checkoutSummary';
 import CheckoutPayment from './checkoutPayment';
 import Order from './order';
+import LinkButton from '../../shared/linkButton';
 
 export default mount({
 	'/': routeAuth({ title: 'Turing Checkout Page', view: <Checkout /> }),
-	'/order': routeAuth({ title: 'Turing Order Page', view: <Order /> })
+	'/order/:order_id': routeAuth(req => ({ title: 'Turing Order Page', view: <Order orderId={req.params.order_id}/> }))
 });
 
 /**
@@ -27,8 +28,18 @@ function Checkout() {
 	 */
 	const onShippingMethodChange = useCallback((shippingMethodId, cartAmount, shippingAmount, taxAmount) => setOrderData({ shippingMethodId, cartAmount, shippingAmount, taxAmount }), []);
 	
-	return (
-		<Card>
+	// if there is no cart in session, we can't do checkout - link to catalog
+	const [ cartId ] = useState(getSessionCartId());
+	
+	return (<>
+		{!cartId && <Card>
+			<CardContent>
+				<h1>No products in cart</h1>
+				<LinkButton href="/catalog">Add Products to Cart</LinkButton>
+			</CardContent>
+		</Card>}
+		
+		{!!cartId && <Card>
 			<CardContent>
 				<h1>Checkout</h1>
 				<Api endpoint={`shoppingcart/checkout/${getSessionCartId()}`} render={checkoutData => (<>
@@ -36,6 +47,6 @@ function Checkout() {
 					<CheckoutPayment shippingMethodId={orderData.shippingMethodId} cartAmount={orderData.cartAmount} shippingAmount={orderData.shippingAmount} taxAmount={orderData.taxAmount} />
 				</>)} />
 			</CardContent>
-		</Card>
-	);
+		</Card>}
+	</>);
 }
