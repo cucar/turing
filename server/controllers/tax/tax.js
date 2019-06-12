@@ -7,6 +7,10 @@ class Tax extends Controller {
 	 */
 	routes() {
 		return [
+			
+			// NOTE: these calls are not currently used - they are kept here to conform with the specs but the flow of the checkout does not lend itself to a scenario where
+			// the shopper can specify what kind of tax they would want - that's calculated on the server side and shown as information at checkout - tax scheme is not selectable.
+			// when we get the request to create an order from a cart, we calculate the tax amount at that time and record that amount with the order information.
 			{ path: '/tax', handler: this.getTaxes },
 			{ path: '/tax/:tax_id', handler: this.getTax },
 		];

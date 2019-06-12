@@ -13,7 +13,8 @@ import './checkoutPayment.css';
 export default function CheckoutPayment({ shippingMethodId, cartAmount, shippingAmount, taxAmount }) {
 	
 	// check if the customer has a saved credit card on file or not
-	const customerCardOnFile = !!getSessionCustomer().credit_card;
+	const customer = getSessionCustomer();
+	const customerCardOnFile = customer && customer.credit_card && customer.credit_card !== '';
 	
 	// state that determines if customer will use card on file or not - if there is a card on file, by default it will be used
 	const [ useCardOnFile, setUseCardOnFile ] = useState(customerCardOnFile);

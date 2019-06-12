@@ -24,10 +24,10 @@ class Order extends Controller {
 	 */
 	async createOrder() {
 		
-		this.validateRequired('PRD_01', [ 'cart_id', 'shipping_id', 'tax_id', 'stripe_token' ]);
+		this.validateRequired('PRD_01', [ 'cart_id', 'shipping_id' ]);
 		
 		// get order total to be charged to the customer from the cart
-		const orderTotal = await this.db.selectVal(`
+		const cartTotal = await this.db.selectVal(`
 			select sum(coalesce(nullif(p.discounted_price, 0), p.price)) as total_amount
 			from shopping_cart sc
 			join product p on sc.product_id = p.product_id
@@ -35,25 +35,39 @@ class Order extends Controller {
 			and sc.buy_now = 1
 		`, [ this.param('cart_id') ]);
 		
+		// get the cost of the shipping method
+		const shippingAmount = parseFloat(await this.db.selectVal('select shipping_cost from shipping where shipping_id = ?', [ this.param('shipping_id') ]));
+		console.log('shipping amount', shippingAmount);
+		
+		// calculate the tax amount we should use - we use the same routine in cart controller that was used to shown the tax amount at checkout
+		const taxAmount = this.getController('cart').getCheckoutTaxAmount(await this.getController('cart').getCartProducts(this.param('cart_id')));
+		console.log('tax amount', taxAmount);
+		
+		// set the order amount - add up cart products total, tax and shipping
+		const orderTotal = Math.round((cartTotal + shippingAmount + taxAmount) * 100) / 100;
+		console.log('order total', orderTotal);
+		
 		// insert a new record into orders and obtain the new order ID
 		const orderId = await this.db.insert('orders', {
 			created_on: new Date(),
 			customer_id: this.customerInfo.customer_id,
 			shipping_id: this.param('shipping_id'),
-			tax_id: this.param('tax_id'),
+			tax_amount: taxAmount,
 			total_amount: orderTotal
 		});
 		
 		// we create the order ID initially to be able to send it to stripe but it is not finalized yet. if the charges don't succeed we will delete that order and leave the cart as-is.
 		try {
-			
-			// stripe token is created on the client side from credit card data without coming to our server for PCI compliance - we collect the charges here with it
+		
+			// determine the source to use for the stripe charge. if stripe token is sent, use that. stripe token is created on the client side from credit card data without coming to our server
+			// this makes sure we are PCI compliant. if stripe token is not sent, it means customer wants to use card on file (stripe customer id). collect the charges either with new card or card on file.
+			// if stripe token is not sent and there was no card on file (UI should not allow this to happen) this call would error out.
 			// in order to simulate declined card, just send a bad token - response should include error object with details
 			const charge = await Stripe.charge({
 				amount: orderTotal * 100, // needs to be sent in cents
 				currency: 'usd',
 				description: 'Customer Turing Order',
-				source: this.param('stripe_token'),
+				source: this.param('stripe_token') ? this.param('stripe_token') : this.customerInfo.credit_card,
 				metadata: { order_id: orderId },
 				receipt_email: this.customerInfo.email // sends order notification email to the customer from stripe if charges are successful
 			});
@@ -104,10 +118,9 @@ class Order extends Controller {
 	async getOrderShortDetails(ctx) {
 		await this.checkOrderAccess(ctx.params.order_id);
 		this.body = await this.db.selectRow(`
-			select o.order_id, o.total_amount, date_format(o.created_on, "%Y-%m-%d") as created_on, o.auth_code, o.reference, s.shipping_type, t.tax_type
+			select o.order_id, o.total_amount, date_format(o.created_on, "%Y-%m-%d") as created_on, o.auth_code, o.reference, s.shipping_type, o.tax_amount
 			from orders o
 			left join shipping s on o.shipping_id = s.shipping_id
-			left join tax t on o.tax_id = t.tax_id
 			where o.order_id = ?
 		`, [ ctx.params.order_id ]);
 	}
@@ -140,8 +153,8 @@ class Order extends Controller {
 	 */
 	async getCustomerOrders() {
 		await this.list({
-			table: 'orders o left join shipping s on o.shipping_id = s.shipping_id left join tax t on o.tax_id = t.tax_id',
-			columns: 'o.order_id, o.total_amount, date_format(o.created_on, "%Y-%m-%d") as created_on, o.auth_code, o.reference, s.shipping_type, t.tax_type',
+			table: 'orders o left join shipping s on o.shipping_id = s.shipping_id',
+			columns: 'o.order_id, o.total_amount, date_format(o.created_on, "%Y-%m-%d") as created_on, o.auth_code, o.reference, s.shipping_type, o.tax_amount',
 			filters: [ 'customer_id = ?' ],
 			params: [ this.customerInfo.customer_id ]
 		});

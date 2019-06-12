@@ -21,7 +21,7 @@ export default function Orders() {
 					<TuringListField id="auth_code" label="Auth Code" />
 					<TuringListField id="reference" label="Auth Reference" />
 					<TuringListField id="shipping_type" label="Shipping" />
-					<TuringListField id="tax_type" label="Tax" />
+					<TuringListField id="tax_amount" label="Tax" />
 				</TuringList>
 			</CardContent>
 			<CardActions>

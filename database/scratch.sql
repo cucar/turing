@@ -1,5 +1,15 @@
 use turing;
 
+select * from shipping;
+
+insert into review (customer_id, product_id, review, rating, created_on)
+select c.customer_id, r.product_id, r.review, r.rating, now()
+from review r 
+join customer c on c.customer_id != 14;
+
+select * from tax;
+
+
 select p.product_id, p.name, if(length(p.description) <= 200, p.description, concat(left(p.description, 200), '...')) as description, p.price, p.discounted_price, 
        coalesce(nullif(p.discounted_price, 0), p.price) as effective_price, p.thumbnail, p.display
 from product p

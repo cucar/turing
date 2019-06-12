@@ -26,7 +26,7 @@ export default function OrderDetail({ orderId }) {
 						<div style={{ width: '50%' }}>
 							<TextField label="Order Date" value={order.created_on} InputProps={{ readOnly: true }}/>
 							<TextField label="Auth Reference" value={order.reference} InputProps={{ readOnly: true }}/>
-							<TextField label="Tax" value={order.tax_type} InputProps={{ readOnly: true }}/>
+							<TextField label="Tax" value={order.tax_amount} InputProps={{ readOnly: true }}/>
 						</div>
 					</div>
 				)} />

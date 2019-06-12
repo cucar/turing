@@ -93,7 +93,7 @@ export default function CheckoutSummary({ checkoutData, onShippingMethodChange }
 			</div>
 			
 			<div className="checkout-tax-row">
-				<div className="checkout-tax-label">Tax Amount</div>
+				<div className="checkout-tax-label">Tax Amount (estimated)</div>
 				<div className="checkout-tax-amount">${taxTotal.toFixed(2)}</div>
 			</div>
 			
