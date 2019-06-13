@@ -8,7 +8,7 @@ class Shipping extends Controller {
 	routes() {
 		return [
 			{ path: '/shipping/regions', handler: this.getShippingRegions },
-			{ path: '/shipping/regions/:shipping_region_id', handler: this.getShippingRegionMethods },
+			{ path: '/shipping/regions/:shipping_region_id', handler: this.getShippingRegionMethods }, // not currently used
 		];
 	}
 	

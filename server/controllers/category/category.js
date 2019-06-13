@@ -10,7 +10,7 @@ class Category extends Controller {
 			{ path: '/categories', handler: this.getCategories },
 			{ path: '/categories/all', handler: this.getAllCategories },
 			{ path: '/categories/:category_id', handler: this.getCategory },
-			{ path: '/categories/inDepartment/:department_id', handler: this.getDepartmentCategories },
+			{ path: '/categories/inDepartment/:department_id', handler: this.getDepartmentCategories }, // not currently used
 			{ path: '/categories/inProduct/:product_id', handler: this.getProductCategories },
 		];
 	}

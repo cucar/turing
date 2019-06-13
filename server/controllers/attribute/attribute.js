@@ -7,6 +7,7 @@ class Attribute extends Controller {
 	 */
 	routes() {
 		return [
+			// NOTE: these calls are not currently used - they are kept here to conform with the specs but the flow of the UI does not require such calls. we usually send the attributes with the product calls.
 			{ path: '/attributes', handler: this.getAttributes },
 			{ path: '/attributes/:attribute_id', handler: this.getAttribute },
 			{ path: '/attributes/values/:attribute_id', handler: this.getAttributeValues },
