@@ -1,17 +1,40 @@
 import React from 'react';
+import { Card, CardContent } from '@material-ui/core';
 
-import LinkButton from '../../shared/linkButton';
+import HomeSlideShow from './homeSlideShow';
+import HomeCategories from './homeCategories';
+import './home.css';
 
 /**
  * shows home page
  */
 export default function Home() {
-
+	
 	return (<>
-		<h1>Home</h1>
-
-		<p>Welcome. This is a test store currently in development. Implemented for Turing Challenge. Feel free to test it out. You can use a test card in checkout page.</p>
-		<br/>
-		<LinkButton href="/catalog">View Products</LinkButton>
+		
+		<Card>
+			<CardContent className="home-slideshow-container">
+				<div className="home-slideshow">
+					<HomeSlideShow />
+				</div>
+				<div className="home-categories">
+					<HomeCategories />
+				</div>
+			</CardContent>
+		</Card>
+		
+		<div className="home-featured-products">
+			<Card>
+				<CardContent className="home-featured-product">
+					Featured Product 1
+				</CardContent>
+			</Card>
+			<Card>
+				<CardContent className="home-featured-product">
+					Featured Product 2
+				</CardContent>
+			</Card>
+		</div>
+		
 	</>);
 }

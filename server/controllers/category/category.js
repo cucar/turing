@@ -8,6 +8,7 @@ class Category extends Controller {
 	routes() {
 		return [
 			{ path: '/categories', handler: this.getCategories },
+			{ path: '/categories/all', handler: this.getAllCategories },
 			{ path: '/categories/:category_id', handler: this.getCategory },
 			{ path: '/categories/inDepartment/:department_id', handler: this.getDepartmentCategories },
 			{ path: '/categories/inProduct/:product_id', handler: this.getProductCategories },
@@ -19,6 +20,13 @@ class Category extends Controller {
 	 */
 	async getCategories() {
 		await this.list({ table: 'category' });
+	}
+	
+	/**
+	 * returns all categories as an array
+	 */
+	async getAllCategories() {
+		this.body = await this.db.selectAll('select * from category');
 	}
 	
 	/**
