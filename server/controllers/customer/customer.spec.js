@@ -161,19 +161,6 @@
 		response.shipping_region_id.should.equal(2);
 	});
 	
-	it('should fail updating customer credit card due to bad card', async function() {
-		const response = await callApi('customers/creditCard', { credit_card: '4111111111111115' }, 'PUT', { Authorization: testToken });
-		global.lastHttpResponseCode.should.equal(400);
-		response.code.should.equal('USR_08');
-		response.message.should.equal('This is an invalid Credit Card.');
-	});
-	
-	it('should update customer credit card', async function() {
-		const response = await callApi('customers/creditCard', { credit_card: '4111111111111111' }, 'PUT', { Authorization: testToken });
-		global.lastHttpResponseCode.should.equal(200);
-		response.credit_card.should.equal('XXXXXXXXXXXX1111');
-	});
-
 	it('should delete test customer that was registered in this test', async function() {
 		await getDatabaseConnection();
 		await db.delete('customer', 'email', 'test2@test.com');

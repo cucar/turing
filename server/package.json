@@ -9,7 +9,7 @@
   },
   "scripts": {
     "start": "cross-env cross-env NODE_ENV=dev nodemon --config nodemon.json server",
-    "test": "mocha --opts test/mocha.opts ./**/*.spec.js"
+    "test": "mocha --opts test/mocha.opts ./controllers/**/*.spec.js ./common/**/*.spec.js"
   },
   "dependencies": {
     "email-validator": "^2.0.4",

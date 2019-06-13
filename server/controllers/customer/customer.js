@@ -211,7 +211,6 @@ class Customer extends Controller {
 	 * update customer credit card token request handler. Note that this is NOT the actual card number. It's a token from stripe obtained on the client side.
 	 * token creation process does not touch our server. that way we can stay PCI compliant and still charge the customer saved card on file at checkout.
 	 * @throws USR_02 - The field(s) are/is required.
-	 * @throws USR_08 - This is an invalid Credit Card.
 	 */
 	async updateCustomerCreditCard() {
 		
