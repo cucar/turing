@@ -31,7 +31,7 @@ class Order extends Controller {
 		
 		// get order total to be charged to the customer from the cart
 		const cartTotal = parseFloat(await this.db.selectVal(`
-			select sum(coalesce(nullif(p.discounted_price, 0), p.price)) as total_amount
+			select sum(coalesce(nullif(p.discounted_price, 0), p.price) * sc.quantity) as total_amount
 			from shopping_cart sc
 			join product p on sc.product_id = p.product_id
 			where sc.cart_id = ?
@@ -67,7 +67,7 @@ class Order extends Controller {
 
 			// prepare the api parameters to be sent to stripe to charge the card
 			let stripeTransaction = {
-				amount: orderTotal * 100, // needs to be sent in cents
+				amount: Math.round(orderTotal * 100), // needs to be sent in cents
 				currency: 'usd',
 				description: 'Customer Turing Order',
 				metadata: { order_id: orderId },
@@ -115,8 +115,8 @@ class Order extends Controller {
 			and sc.buy_now = 1
 		`, [ orderId, this.param('cart_id') ]);
 		
-		// clear the shopping cart
-		await this.db.executeSP('shopping_cart_empty', [ this.param('cart_id') ]);
+		// clear the shopping cart - leave the products saved for later
+		await this.db.execute('delete from shopping_cart where cart_id = ? and buy_now = 1', [ this.param('cart_id') ]);
 		
 		// return successful response with order ID
 		this.body = { order_id: orderId };

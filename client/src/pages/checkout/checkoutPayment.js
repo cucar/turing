@@ -4,7 +4,7 @@ import PubSub from 'pubsub-js';
 
 import { getStripe, getStripeCardElement } from '../../utils/stripe';
 import callApi from '../../utils/callApi';
-import { getSessionCartId, getSessionCustomer, saveSessionCartId, saveSessionCartProductCount } from '../../utils/session';
+import { getSessionCartId, getSessionCustomer, saveSessionCartProductCount } from '../../utils/session';
 import { showSuccess, showError } from '../../utils/notifications';
 import './checkoutPayment.css';
 
@@ -88,7 +88,6 @@ export default function CheckoutPayment({ shippingMethodId, cartAmount, shipping
 		const orderId = checkoutResponse.order_id;
 		
 		// if the order was successful, reset the cart information in session and update mini cart display
-		saveSessionCartId('');
 		saveSessionCartProductCount(0);
 		PubSub.publish('CartUpdate', 0);
 
