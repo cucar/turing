@@ -1,8 +1,10 @@
 import React from 'react';
 import { Card, CardContent } from '@material-ui/core';
 
+import { Api } from '../../shared/api';
 import HomeSlideShow from './homeSlideShow';
 import HomeCategories from './homeCategories';
+import FeaturedProduct from './featuredProduct';
 import './home.css';
 
 /**
@@ -24,16 +26,7 @@ export default function Home() {
 		</Card>
 		
 		<div className="home-featured-products">
-			<Card>
-				<CardContent className="home-featured-product">
-					Featured Product 1
-				</CardContent>
-			</Card>
-			<Card>
-				<CardContent className="home-featured-product">
-					Featured Product 2
-				</CardContent>
-			</Card>
+			<Api endpoint="products/featured" render={products => products.map(product => <FeaturedProduct key={product.product_id} product={product} />)} />
 		</div>
 		
 	</>);

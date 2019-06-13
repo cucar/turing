@@ -5,10 +5,10 @@ import { useNavigation } from 'react-navi';
 import './homeSlideShow.css';
 
 /**
- * shows home page
+ * shows home page slide show
  */
 export default function SlideShow() {
-	
+
 	let navigator = useNavigation();
 	
 	let imageGalleryImages = [

@@ -14,7 +14,7 @@ export default function HomeCategories() {
 			<h1 className="home-categories-header">Categories</h1>
 			<div className="home-category-links">
 				{categories.map(category =>
-					<div className="home-category-link">
+					<div key={category.category_id} className="home-category-link">
 						<Link href={`/catalog?category_ids=${category.category_id}`}>{category.name}</Link>
 					</div>
 				)}

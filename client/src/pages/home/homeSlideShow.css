@@ -1,2 +1,9 @@
 @import '../../../node_modules/react-image-gallery/styles/css/image-gallery.css';
 
+.home-slideshow .image-gallery {
+	width: 100%;
+}
+
+.home-slideshow .image-gallery-slide-wrapper {
+	margin: 0;
+}

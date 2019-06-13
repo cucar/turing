@@ -9,11 +9,19 @@ class Product extends Controller {
 	routes() {
 		return [
 			{ path: '/products', handler: this.getProducts },
+			{ path: '/products/featured', handler: this.getFeaturedProducts },
 			{ path: '/products/:product_id', handler: this.getProduct },
 			{ path: '/products/:product_id/reviews', handler: this.getProductReviews },
 			{ path: '/products/:product_id/reviews', method: 'POST', handler: this.postProductReview, auth: true },
 			{ path: '/products/reviews/inCustomer', handler: this.getCustomerReviews, auth: true },
 		];
+	}
+	
+	/**
+	 * returns featured products - just random 10 products for now - in the future there would be featured flag in products that would be set from admin UI
+	 */
+	async getFeaturedProducts() {
+		this.body = await this.db.selectAll('select * from product order by rand() limit 10');
 	}
 	
 	/**
